@@ -1,0 +1,525 @@
+
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sandbox.sandbox_api &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/translations.js"></script>
+    <link rel="index" title="Índice" href="../../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fonte de sandbox.sandbox_api</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">panel</span> <span class="k">as</span> <span class="nn">pn</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">_calibration_dir</span><span class="p">,</span> <span class="n">set_logger</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">set_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">_platform</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span>
+
+<span class="c1"># Store the name of the sensor as a global variable, and the projector resolution</span>
+<span class="c1"># so it can be used and changed in the same session for all the functions</span>
+<span class="n">name_sensor</span> <span class="o">=</span> <span class="s2">&quot;kinect_v2&quot;</span>
+<span class="n">p_width</span> <span class="o">=</span> <span class="mi">1280</span>
+<span class="n">p_height</span> <span class="o">=</span> <span class="mi">800</span>
+
+
+<div class="viewcode-block" id="calibrate_projector"><a class="viewcode-back" href="../../sandbox.html#sandbox.sandbox_api.calibrate_projector">[documentos]</a><span class="k">def</span> <span class="nf">calibrate_projector</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">sandbox.projector</span> <span class="kn">import</span> <span class="n">Projector</span>
+    <span class="n">proj</span> <span class="o">=</span> <span class="n">Projector</span><span class="p">(</span><span class="n">use_panel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">widget</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">calibrate_projector</span><span class="p">()</span>
+    <span class="n">widget</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">proj</span></div>
+
+
+<div class="viewcode-block" id="calibrate_sensor"><a class="viewcode-back" href="../../sandbox.html#sandbox.sandbox_api.calibrate_sensor">[documentos]</a><span class="k">def</span> <span class="nf">calibrate_sensor</span><span class="p">(</span><span class="n">calibprojector</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_calibration_dir</span> <span class="o">+</span> <span class="s2">&quot;my_projector_calibration.json&quot;</span><span class="p">,</span>
+                     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">name_sensor</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name_sensor</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">name_sensor</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="kn">from</span> <span class="nn">sandbox.sensor</span> <span class="kn">import</span> <span class="n">CalibSensor</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">CalibSensor</span><span class="p">(</span><span class="n">calibprojector</span><span class="o">=</span><span class="n">calibprojector</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">widget</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">calibrate_sensor</span><span class="p">()</span>
+    <span class="n">widget</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">module</span><span class="o">.</span><span class="n">sensor</span></div>
+
+
+<div class="viewcode-block" id="start_server"><a class="viewcode-back" href="../../sandbox.html#sandbox.sandbox_api.start_server">[documentos]</a><span class="k">def</span> <span class="nf">start_server</span><span class="p">(</span><span class="n">calibprojector</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># _calibration_dir + &quot;my_projector_calibration.json&quot;,</span>
+                 <span class="n">calibsensor</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># _calibration_dir + &quot;my_sensor_calibration.json&quot;,</span>
+                 <span class="n">sensor_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">aruco_marker</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">kwargs_external_modules</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span>
+                 <span class="n">kwargs_gempy_module</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span>
+                 <span class="n">kwargs_projector</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span>
+                 <span class="n">kwargs_sensor</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span>
+                 <span class="n">kwargs_aruco</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span>
+                 <span class="p">):</span>
+    <span class="k">global</span> <span class="n">name_sensor</span><span class="p">,</span> <span class="n">p_width</span><span class="p">,</span> <span class="n">p_height</span>
+    <span class="k">if</span> <span class="n">sensor_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sensor_name</span> <span class="o">=</span> <span class="n">name_sensor</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">name_sensor</span> <span class="o">=</span> <span class="n">sensor_name</span>
+
+    <span class="kn">from</span> <span class="nn">sandbox.projector</span> <span class="kn">import</span> <span class="n">Projector</span>
+    <span class="k">if</span> <span class="n">kwargs_projector</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;p_width&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">p_width</span> <span class="o">=</span> <span class="n">kwargs_projector</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;p_width&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">kwargs_projector</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;p_height&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">p_height</span> <span class="o">=</span> <span class="n">kwargs_projector</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;p_height&quot;</span><span class="p">)</span>
+    <span class="n">projector</span> <span class="o">=</span> <span class="n">Projector</span><span class="p">(</span><span class="n">calibprojector</span><span class="o">=</span><span class="n">calibprojector</span><span class="p">,</span> <span class="n">use_panel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_projector</span><span class="p">)</span>
+
+    <span class="kn">from</span> <span class="nn">sandbox.sensor</span> <span class="kn">import</span> <span class="n">Sensor</span>
+    <span class="n">sensor</span> <span class="o">=</span> <span class="n">Sensor</span><span class="p">(</span><span class="n">calibsensor</span><span class="o">=</span><span class="n">calibsensor</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">sensor_name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_sensor</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">aruco_marker</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">sandbox.markers</span> <span class="kn">import</span> <span class="n">MarkerDetection</span>
+        <span class="n">aruco</span> <span class="o">=</span> <span class="n">MarkerDetection</span><span class="p">(</span><span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_aruco</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">aruco</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">module</span> <span class="o">=</span> <span class="n">Sandbox</span><span class="p">(</span><span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span>
+                     <span class="n">projector</span><span class="o">=</span><span class="n">projector</span><span class="p">,</span>
+                     <span class="n">aruco</span><span class="o">=</span><span class="n">aruco</span><span class="p">,</span>
+                     <span class="n">kwargs_gempy_module</span><span class="o">=</span><span class="n">kwargs_gempy_module</span><span class="p">,</span>
+                     <span class="n">kwargs_external_modules</span><span class="o">=</span><span class="n">kwargs_external_modules</span><span class="p">)</span>
+
+    <span class="n">module</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">module</span></div>
+
+
+<div class="viewcode-block" id="Sandbox"><a class="viewcode-back" href="../../sandbox.html#sandbox.sandbox_api.Sandbox">[documentos]</a><span class="k">class</span> <span class="nc">Sandbox</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapping API-class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">sensor</span><span class="p">,</span>  <span class="c1"># : Sensor,</span>
+                 <span class="n">projector</span><span class="p">,</span>  <span class="c1"># : Projector,</span>
+                 <span class="n">aruco</span><span class="p">,</span>  <span class="c1"># : MarkerDetection = None,</span>
+                 <span class="n">kwargs_contourlines</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span>
+                 <span class="n">kwargs_cmap</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span>
+                 <span class="n">kwargs_external_modules</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span>
+                 <span class="n">kwargs_gempy_module</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span>
+                 <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gempy_import</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_devito_import</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pygimli_import</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_torch_import</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_import</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs_external_modules</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span> <span class="o">=</span> <span class="n">sensor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sensor_calib</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">json_filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projector</span> <span class="o">=</span> <span class="n">projector</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_projector_calib</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">json_filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aruco</span> <span class="o">=</span> <span class="n">aruco</span>
+        <span class="kn">from</span> <span class="nn">sandbox.markers</span> <span class="kn">import</span> <span class="n">MarkerDetection</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco</span><span class="p">,</span> <span class="n">MarkerDetection</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_disable_aruco</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ARUCO_ACTIVE</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_disable_aruco</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ARUCO_ACTIVE</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Modules</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_active</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_modules</span><span class="p">(</span><span class="n">kwargs_gempy_module</span><span class="o">=</span><span class="n">kwargs_gempy_module</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_external_modules</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_main_thread</span><span class="p">(</span><span class="n">kwargs_contourlines</span><span class="o">=</span><span class="n">kwargs_contourlines</span><span class="p">,</span>
+                                                  <span class="n">kwargs_cmap</span><span class="o">=</span><span class="n">kwargs_cmap</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">lock</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Sandbox server ready&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_import</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">gempy_module</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                      <span class="n">gimli_module</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                      <span class="n">torch_module</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                      <span class="n">devito_module</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                      <span class="p">):</span>
+        <span class="k">if</span> <span class="n">gempy_module</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>  <span class="c1"># Importing Gempy for GempyModule</span>
+                <span class="kn">import</span> <span class="nn">gempy</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_gempy_import</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">del</span> <span class="n">gempy</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_platform</span> <span class="o">==</span> <span class="s2">&quot;Linux&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">devito_module</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>  <span class="c1"># Importing Devito for SeismicModule - Only working for Linux system</span>
+                    <span class="kn">import</span> <span class="nn">devito</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_devito_import</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">del</span> <span class="n">devito</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_devito_import</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">gimli_module</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>  <span class="c1"># Importing pygimli for GeoelectricsModule</span>
+                <span class="kn">import</span> <span class="nn">pygimli</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_pygimli_import</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">del</span> <span class="n">pygimli</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">torch_module</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>  <span class="c1"># Importing pytorch for LandscapeGeneration</span>
+                <span class="kn">import</span> <span class="nn">torch</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_torch_import</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">del</span> <span class="n">torch</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Sandbox.load_modules"><a class="viewcode-back" href="../../sandbox.html#sandbox.sandbox_api.Sandbox.load_modules">[documentos]</a>    <span class="k">def</span> <span class="nf">load_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                     <span class="n">gempy_module</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                     <span class="n">gimli_module</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                     <span class="n">torch_module</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                     <span class="n">devito_module</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                     <span class="n">kwargs_gempy_module</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span>
+                     <span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sandbox.modules</span> <span class="kn">import</span> <span class="p">(</span><span class="n">TopoModule</span><span class="p">,</span> <span class="n">GradientModule</span><span class="p">,</span> <span class="n">LoadSaveTopoModule</span><span class="p">,</span> <span class="n">LandslideSimulation</span><span class="p">,</span>
+                                     <span class="n">SearchMethodsModule</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">sandbox.projector</span> <span class="kn">import</span> <span class="n">ContourLinesModule</span><span class="p">,</span> <span class="n">CmapModule</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Modules</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ContourLinesModule&#39;</span><span class="p">:</span> <span class="n">ContourLinesModule</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">),</span>
+                        <span class="s1">&#39;CmapModule&#39;</span><span class="p">:</span> <span class="n">CmapModule</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">),</span>
+                        <span class="s1">&#39;TopoModule&#39;</span><span class="p">:</span> <span class="n">TopoModule</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">),</span>
+                        <span class="s1">&#39;GradientModule&#39;</span><span class="p">:</span> <span class="n">GradientModule</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">),</span>
+                        <span class="s1">&#39;LoadSaveTopoModule&#39;</span><span class="p">:</span> <span class="n">LoadSaveTopoModule</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">),</span>
+                        <span class="s1">&#39;LandslideSimulation&#39;</span><span class="p">:</span> <span class="n">LandslideSimulation</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">),</span>
+                        <span class="s1">&#39;SearchMethodsModule&#39;</span><span class="p">:</span> <span class="n">SearchMethodsModule</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">)}</span>
+        <span class="c1">#self.Modules[&#39;SearchMethodsModule&#39;].update_mesh(self.sensor.get_frame(),</span>
+        <span class="c1">#                                                margins_crop=self.Modules[&#39;SearchMethodsModule&#39;].margins_crop,</span>
+        <span class="c1">#                                                fill_value=0)</span>
+        <span class="c1">#self.Modules[&#39;SearchMethodsModule&#39;].activate_frame_capture = False</span>
+        <span class="k">if</span> <span class="n">gempy_module</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gempy_import</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sandbox.modules.gempy</span> <span class="kn">import</span> <span class="n">GemPyModule</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Modules</span><span class="p">[</span><span class="s1">&#39;GemPyModule&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">GemPyModule</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">,</span>
+                                                      <span class="n">box</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">physical_dimensions</span><span class="p">,</span>
+                                                      <span class="o">**</span><span class="n">kwargs_gempy_module</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">devito_module</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_devito_import</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sandbox.modules.devito</span> <span class="kn">import</span> <span class="n">SeismicModule</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Modules</span><span class="p">[</span><span class="s1">&#39;SeismicModule&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">SeismicModule</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">gimli_module</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pygimli_import</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sandbox.modules.gimli</span> <span class="kn">import</span> <span class="n">GeoelectricsModule</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Modules</span><span class="p">[</span><span class="s1">&#39;GeoelectricsModule&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">GeoelectricsModule</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">torch_module</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_torch_import</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sandbox.modules.pytorch</span> <span class="kn">import</span> <span class="n">LandscapeGeneration</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Modules</span><span class="p">[</span><span class="s1">&#39;LandscapeGeneration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">LandscapeGeneration</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Sandbox.start_main_thread"><a class="viewcode-back" href="../../sandbox.html#sandbox.sandbox_api.Sandbox.start_main_thread">[documentos]</a>    <span class="k">def</span> <span class="nf">start_main_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs_contourlines</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">kwargs_cmap</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}):</span>
+        <span class="kn">from</span> <span class="nn">sandbox.main_thread</span> <span class="kn">import</span> <span class="n">MainThread</span>
+        <span class="n">thread</span> <span class="o">=</span> <span class="n">MainThread</span><span class="p">(</span><span class="n">sensor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="p">,</span> <span class="n">projector</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="p">,</span> <span class="n">aruco</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco</span><span class="p">,</span>
+                            <span class="n">kwargs_contourlines</span><span class="o">=</span><span class="n">kwargs_contourlines</span><span class="p">,</span> <span class="n">kwargs_cmap</span><span class="o">=</span><span class="n">kwargs_cmap</span><span class="p">)</span>
+        <span class="n">thread</span><span class="o">.</span><span class="n">_modules</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Modules</span>
+        <span class="n">thread</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">thread</span></div>
+
+<div class="viewcode-block" id="Sandbox.add_to_main_thread"><a class="viewcode-back" href="../../sandbox.html#sandbox.sandbox_api.Sandbox.add_to_main_thread">[documentos]</a>    <span class="k">def</span> <span class="nf">add_to_main_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">module_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Modules</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">add_module</span><span class="p">(</span><span class="n">module_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Modules</span><span class="p">[</span><span class="n">module_name</span><span class="p">])</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">new_tab</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Tabs</span><span class="p">((</span><span class="n">module_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Modules</span><span class="p">[</span><span class="n">module_name</span><span class="p">]</span><span class="o">.</span><span class="n">show_widgets</span><span class="p">()),</span>
+                                  <span class="p">(</span><span class="s1">&#39;Main Thread Controller&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">widget_plot_module</span><span class="p">()))</span>
+                <span class="n">new_tab</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;No module to add with name: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">module_name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Sandbox.remove_from_main_thread"><a class="viewcode-back" href="../../sandbox.html#sandbox.sandbox_api.Sandbox.remove_from_main_thread">[documentos]</a>    <span class="k">def</span> <span class="nf">remove_from_main_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">module_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">module_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Modules</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">remove_module</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;No module to remove with name: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">module_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># TODO: Is this the best way to delete the modules except the colormap and the contourlines?</span>
+            <span class="c1">#all = self.Main_Thread.modules.keys()</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="s1">&#39;CmapModule&#39;</span> <span class="ow">and</span> <span class="n">name</span> <span class="o">!=</span> <span class="s1">&#39;ContourLinesModule&#39;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">remove_module</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">clear_axes</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Sandbox.start"><a class="viewcode-back" href="../../sandbox.html#sandbox.sandbox_api.Sandbox.start">[documentos]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#self.Main_Thread.run()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">show_widgets</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">_update_widget_module_selector</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_create_widgets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Local Modules</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_main_thread</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;MainThread_Controllers&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_main_thread</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_main_thread</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_gradient</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;GradientModule&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_gradient</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_gradient</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_load_save_topo</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;LoadSaveTopoModule&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_load_save_topo</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_load_save</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_topo</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;TopoModule&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_topo</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_topo</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_landslide</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;LandslideSimulation&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_landslide</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_landslide</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_search</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;SearchMethodsModule&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_search</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_search</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># External Modules</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_gempy</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;GempyModule&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_gempy</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_gempy</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_pygimli</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;GeoelectricsModule&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_pygimli</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_pygimli</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_devito</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;SeismicModule&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_devito</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_devito</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_torch</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;LandscapeGeneration&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_torch</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_torch</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_calibration_projector</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">FileInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Load projector calibration&quot;</span><span class="p">,</span> <span class="n">accept</span><span class="o">=</span><span class="s2">&quot;.json&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_calibration_projector</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_calibration_projector</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_calibration_sensor</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">FileInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Load sensor calibration&quot;</span><span class="p">,</span> <span class="n">accept</span><span class="o">=</span><span class="s2">&quot;.json&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_calibration_sensor</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_calibration_sensor</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_create_calibration_projector</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Calibrate projector&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_create_calibration_projector</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_create_calibration_projector</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span>
+                                                              <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_create_calibration_sensor</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Calibrate Sensor&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_create_calibration_sensor</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_create_calibration_sensor</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span>
+                                                           <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_new_server</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;New Server&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;warning&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_new_server</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_new_server</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_thread_selector</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">RadioButtonGroup</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Thread controller&#39;</span><span class="p">,</span>
+                                                                   <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Start&quot;</span><span class="p">,</span> <span class="s2">&quot;Stop&quot;</span><span class="p">],</span>
+                                                                   <span class="n">value</span><span class="o">=</span><span class="s2">&quot;Start&quot;</span><span class="p">,</span>
+                                                                   <span class="n">button_type</span><span class="o">=</span><span class="s1">&#39;success&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_thread_selector</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_thread_selector</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Aruco Detection&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ARUCO_ACTIVE</span><span class="p">,</span>
+                                                 <span class="n">disabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_disable_aruco</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_aruco</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                       <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="Sandbox.show_widgets"><a class="viewcode-back" href="../../sandbox.html#sandbox.sandbox_api.Sandbox.show_widgets">[documentos]</a>    <span class="k">def</span> <span class="nf">show_widgets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_widgets</span><span class="p">()</span>
+        <span class="n">widgets</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;# Module selector&quot;</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_main_thread</span><span class="p">,</span>
+                            <span class="s1">&#39;&lt;b&gt;Select the module you want to show the widgets and start &lt;/b&gt;&#39;</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_topo</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_gradient</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_load_save_topo</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_landslide</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_search</span><span class="p">,</span>
+                            <span class="s1">&#39;&lt;b&gt;External modules&lt;/b&gt;&#39;</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_gempy</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Modules</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;GemPyModule&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_pygimli</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Modules</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;GeoelectricsModule&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_devito</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Modules</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SeismicModule&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_torch</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Modules</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;LandscapeGeneration&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="s1">&#39;&lt;b&gt;Change the calibration file&lt;/b&gt;&#39;</span><span class="p">,</span>
+                            <span class="n">pn</span><span class="o">.</span><span class="n">WidgetBox</span><span class="p">(</span><span class="s1">&#39;Projector&#39;</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">_widget_calibration_projector</span><span class="p">,</span>
+                                         <span class="s1">&#39;Sensor&#39;</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">_widget_calibration_sensor</span><span class="p">),</span>
+                            <span class="s1">&#39;&lt;b&gt;Create new projector calibration file&lt;/b&gt;&#39;</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_create_calibration_projector</span><span class="p">,</span>
+                            <span class="s1">&#39;&lt;b&gt;Create new sensor calibration file&lt;/b&gt;&#39;</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_create_calibration_sensor</span><span class="p">,</span>
+                            <span class="p">)</span>
+        <span class="n">thread</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;##&lt;b&gt;Thread Controller&lt;/b&gt;&quot;</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_thread_selector</span><span class="p">,</span>
+                           <span class="s1">&#39;&lt;b&gt;Start a new server&lt;/b&gt;&#39;</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_new_server</span><span class="p">,</span>
+                           <span class="s2">&quot;&lt;b&gt;Deactivate or activate aruco detection&lt;/b&gt;&quot;</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco</span><span class="p">,</span>
+                           <span class="s2">&quot;&lt;b&gt;Manager of all modules&lt;/b&gt;&quot;</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">_widget_module_selector</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">_widget_clear_axes</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">_widget_error_markdown</span><span class="p">)</span>
+
+        <span class="n">panel</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Row</span><span class="p">(</span><span class="n">widgets</span><span class="p">,</span> <span class="n">thread</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">panel</span></div>
+
+    <span class="k">def</span> <span class="nf">_callback_main_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">widget_plot_module</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="c1">#self.remove_from_main_thread()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_to_main_thread</span><span class="p">(</span><span class="s1">&#39;GradientModule&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_load_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="c1">#self.remove_from_main_thread()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_to_main_thread</span><span class="p">(</span><span class="s1">&#39;LoadSaveTopoModule&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_topo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="c1">#self.remove_from_main_thread()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_to_main_thread</span><span class="p">(</span><span class="s1">&#39;TopoModule&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_landslide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="c1">#self.remove_from_main_thread()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_to_main_thread</span><span class="p">(</span><span class="s1">&#39;LandslideSimulation&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="c1">#self.remove_from_main_thread()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_to_main_thread</span><span class="p">(</span><span class="s1">&#39;SearchMethodsModule&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_gempy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="c1">#self.remove_from_main_thread()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_to_main_thread</span><span class="p">(</span><span class="s1">&#39;GemPyModule&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_pygimli</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_to_main_thread</span><span class="p">(</span><span class="s1">&#39;GeoelectricsModule&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_devito</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_to_main_thread</span><span class="p">(</span><span class="s1">&#39;SeismicModule&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_torch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_to_main_thread</span><span class="p">(</span><span class="s1">&#39;LandscapeGeneration&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_calibration_projector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">p_width</span><span class="p">,</span> <span class="n">p_height</span>
+        <span class="n">data_bytes</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+        <span class="n">data_decode</span> <span class="o">=</span> <span class="n">data_bytes</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_projector_calib</span> <span class="o">=</span> <span class="n">data_decode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data_decode</span><span class="p">,</span> <span class="n">p_width</span><span class="o">=</span><span class="n">p_width</span><span class="p">,</span> <span class="n">p_height</span><span class="o">=</span><span class="n">p_height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">projector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projector</span>
+
+    <span class="k">def</span> <span class="nf">_callback_calibration_sensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">name_sensor</span>
+        <span class="n">data_bytes</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+        <span class="n">data_decode</span> <span class="o">=</span> <span class="n">data_bytes</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sensor_calib</span> <span class="o">=</span> <span class="n">data_decode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data_decode</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name_sensor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">sensor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span>
+
+    <span class="k">def</span> <span class="nf">_callback_create_calibration_projector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projector</span> <span class="o">=</span> <span class="n">calibrate_projector</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">projector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projector</span>
+
+    <span class="k">def</span> <span class="nf">_callback_create_calibration_sensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span> <span class="o">=</span> <span class="n">calibrate_sensor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">sensor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span>
+
+    <span class="k">def</span> <span class="nf">_callback_new_server</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">p_width</span><span class="p">,</span> <span class="n">p_height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_projector_calib</span><span class="p">,</span> <span class="n">p_width</span><span class="o">=</span><span class="n">p_width</span><span class="p">,</span> <span class="n">p_height</span><span class="o">=</span><span class="n">p_height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">projector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projector</span>
+
+    <span class="k">def</span> <span class="nf">_callback_thread_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span> <span class="o">==</span> <span class="s2">&quot;Start&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span> <span class="o">==</span> <span class="s2">&quot;Stop&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_aruco</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Main_Thread</span><span class="o">.</span><span class="n">ARUCO_ACTIVE</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span></div>
+
+
+
+
+
+
+
+
+
+
+
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Código do módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

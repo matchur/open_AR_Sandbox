@@ -1,0 +1,461 @@
+
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sandbox.modules.landslides &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/translations.js"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fonte de sandbox.modules.landslides</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">panel</span> <span class="k">as</span> <span class="nn">pn</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">from</span> <span class="nn">matplotlib.figure</span> <span class="kn">import</span> <span class="n">Figure</span>
+<span class="kn">from</span> <span class="nn">.template</span> <span class="kn">import</span> <span class="n">ModuleTemplate</span>
+<span class="kn">from</span> <span class="nn">.load_save_topography</span> <span class="kn">import</span> <span class="n">LoadSaveTopoModule</span>
+<span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">_test_data</span>
+<span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">set_logger</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">set_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="LandslideSimulation"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation">[documentos]</a><span class="k">class</span> <span class="nc">LandslideSimulation</span><span class="p">(</span><span class="n">ModuleTemplate</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Module to show the results of landslides simulations</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#TODO: set the vmix and vmax of the landslides frames constant</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">extent</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">pn</span><span class="o">.</span><span class="n">extension</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">extent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vmin</span> <span class="o">=</span> <span class="n">extent</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vmax</span> <span class="o">=</span> <span class="n">extent</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_area</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_area_all</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lan</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">#For the real time simulations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">height_flow</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocity_flow</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">flow_selector</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_selector</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">counter</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulation_frame</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">running_simulation</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">real_time</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulation_folder</span> <span class="o">=</span> <span class="n">_test_data</span><span class="p">[</span><span class="s1">&#39;landslide_simulation&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_folder</span> <span class="o">=</span> <span class="n">_test_data</span><span class="p">[</span><span class="s1">&#39;landslide_release&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topo_folder</span> <span class="o">=</span> <span class="n">_test_data</span><span class="p">[</span><span class="s1">&#39;landslide_topo&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_options</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_id_all</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;None&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">box_release_area</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Load_Area</span> <span class="o">=</span> <span class="n">LoadSaveTopoModule</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Load_Area</span><span class="o">.</span><span class="n">data_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">topo_folder</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">figure</span> <span class="o">=</span> <span class="n">Figure</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">211</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">212</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_flow_frame</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">pane</span><span class="o">.</span><span class="n">Matplotlib</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="p">,</span> <span class="n">tight</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span>  <span class="c1"># close figure to prevent inline display</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;LandslideSimulation loaded successfully&quot;</span><span class="p">)</span>
+        <span class="c1">#self.widget_all = self.show_widgets()</span>
+
+<div class="viewcode-block" id="LandslideSimulation.update"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation.update">[documentos]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sb_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;frame&#39;</span><span class="p">)</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ax&#39;</span><span class="p">)</span>
+        <span class="c1">#self.Load_Area.frame = frame</span>
+        <span class="c1">#self.Load_Area.plot(frame, ax)</span>
+        <span class="n">sb_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Load_Area</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">sb_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">sb_params</span></div>
+
+<div class="viewcode-block" id="LandslideSimulation.plot"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation.plot">[documentos]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_polygon</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_land</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_release_area</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">show_box_release</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">release_area</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_landslide_frame</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LandslideSimulation.delete_polygon"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation.delete_polygon">[documentos]</a>    <span class="k">def</span> <span class="nf">delete_polygon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="LandslideSimulation.delete_land"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation.delete_land">[documentos]</a>    <span class="k">def</span> <span class="nf">delete_land</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lan</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lan</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lan</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="LandslideSimulation.plot_landslide_frame"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation.plot_landslide_frame">[documentos]</a>    <span class="k">def</span> <span class="nf">plot_landslide_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot from the current landslide frame depending of the type of flow (Height or velocity)</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ax: The image to plot the frame</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">running_simulation</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">real_time</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">simulation_frame</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_start</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">simulation_frame</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="c1">#3plt.pause(5) #TODO: maybe find a better way to stop the time but not the thread</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_frame</span> <span class="o">==</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">counter</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">simulation_frame</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_selector</span> <span class="o">==</span> <span class="s1">&#39;Height&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">height_flow</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">running_simulation</span><span class="p">:</span>
+                <span class="n">move</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height_flow</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_frame</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">move</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height_flow</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_selector</span><span class="p">]</span>
+            <span class="n">move</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">move</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">move</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">move</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">move</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lan</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_lan</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">move</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;hot&#39;</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span>
+                                      <span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Load_Area</span><span class="o">.</span><span class="n">to_box_extent</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_lan</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">move</span><span class="p">)</span>
+
+            <span class="c1">#move = self.Load_Area.modify_to_box_coordinates(move)</span>
+            <span class="c1">#self._lan = ax.pcolormesh(move, cmap=&#39;hot&#39;, shading=&#39;gouraud&#39;)</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_selector</span> <span class="o">==</span> <span class="s1">&#39;Velocity&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">velocity_flow</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">running_simulation</span><span class="p">:</span>
+                <span class="n">move</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">velocity_flow</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_frame</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">move</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">velocity_flow</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_selector</span><span class="p">]</span>
+            <span class="n">move</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">move</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">move</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">move</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">move</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lan</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_lan</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">move</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;hot&#39;</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span>
+                                      <span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Load_Area</span><span class="o">.</span><span class="n">to_box_extent</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_lan</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">move</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lan</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_lan</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_lan</span> <span class="o">=</span> <span class="kc">None</span></div>
+            <span class="c1">#move = numpy.round(move, decimals=1)</span>
+            <span class="c1">#move[move == 0] = numpy.nan</span>
+            <span class="c1">#move = self.Load_Area.modify_to_box_coordinates(move)</span>
+            <span class="c1">#self._lan = ax.pcolormesh(move, cmap=&#39;hot&#39;, shading=&#39;gouraud&#39;)</span>
+
+<div class="viewcode-block" id="LandslideSimulation.plot_frame_panel"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation.plot_frame_panel">[documentos]</a>    <span class="k">def</span> <span class="nf">plot_frame_panel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the current frame to be displayed in the panel server&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">height_flow</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">velocity_flow</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax1</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax2</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+
+            <span class="n">x_move</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">height_flow</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_selector</span><span class="p">],</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">x_move</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">x_move</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x_move</span><span class="p">)</span>
+            <span class="n">hor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">x_move</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;hot&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax1</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax1</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Flow Height&#39;</span><span class="p">)</span>
+            <span class="n">cb1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">hor</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ax1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;meter&#39;</span><span class="p">)</span>
+
+            <span class="n">y_move</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">velocity_flow</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_selector</span><span class="p">],</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">y_move</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">y_move</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">y_move</span><span class="p">)</span>
+            <span class="n">ver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">y_move</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;hot&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax2</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax2</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Flow Velocity&#39;</span><span class="p">)</span>
+            <span class="n">cb2</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">ver</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ax2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;meter/sec&#39;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot_flow_frame</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">trigger</span><span class="p">(</span><span class="s1">&#39;object&#39;</span><span class="p">)</span>
+
+            <span class="n">cb1</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+            <span class="n">cb2</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="LandslideSimulation.load_simulation_data_npz"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation.load_simulation_data_npz">[documentos]</a>    <span class="k">def</span> <span class="nf">load_simulation_data_npz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load landslide simulation from a .npz file &quot;&quot;&quot;</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocity_flow</span> <span class="o">=</span> <span class="n">files</span><span class="p">[</span><span class="s1">&#39;arr_0&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">height_flow</span> <span class="o">=</span> <span class="n">files</span><span class="p">[</span><span class="s1">&#39;arr_1&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">counter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height_flow</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Load successful&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LandslideSimulation.load_release_area"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation.load_release_area">[documentos]</a>    <span class="k">def</span> <span class="nf">load_release_area</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;load all possible release areas from the same topography to show the simulation&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_options</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_id_all</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_area_all</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">list_files</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">list_files</span><span class="p">:</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">i</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">temp</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">Load_Area</span><span class="o">.</span><span class="n">file_id</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">release_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">release_id_all</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">release_area_all</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">data_path</span><span class="o">+</span><span class="n">i</span><span class="p">))</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;file </span><span class="si">%s</span><span class="s2"> is not compatible with the loading format&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LandslideSimulation.show_box_release"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation.show_box_release">[documentos]</a>    <span class="k">def</span> <span class="nf">show_box_release</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">xy</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Show the options for painting release areas at origin xy &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">Polygon</span><span class="p">(</span><span class="n">xy</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_patch</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LandslideSimulation.select_simulation_data"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation.select_simulation_data">[documentos]</a>    <span class="k">def</span> <span class="nf">select_simulation_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulation_path</span><span class="p">,</span> <span class="n">release_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Make sure that the simulation data corresponds to the loaded topography&quot;&quot;&quot;</span>
+        <span class="n">list_files</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">simulation_path</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">list_files</span><span class="p">:</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">i</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">Load_Area</span><span class="o">.</span><span class="n">file_id</span> <span class="ow">and</span> <span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">release_id</span><span class="p">:</span>
+                    <span class="n">file_name</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="n">file_location</span> <span class="o">=</span> <span class="n">simulation_path</span> <span class="o">+</span> <span class="n">file_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_simulation_data_npz</span><span class="p">(</span><span class="n">file_location</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LandslideSimulation.modify_to_box_coordinates"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation.modify_to_box_coordinates">[documentos]</a>    <span class="k">def</span> <span class="nf">modify_to_box_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Move the origin of the release areas to be correctly displayed in the sandbox&quot;&quot;&quot;</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">release_area_all</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_area</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">temp</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">Load_Area</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">temp</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">Load_Area</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span><span class="o">.</span><span class="n">T</span></div>
+
+    <span class="c1"># Widgets</span>
+<div class="viewcode-block" id="LandslideSimulation.show_widgets"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation.show_widgets">[documentos]</a>    <span class="k">def</span> <span class="nf">show_widgets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tabs</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Tabs</span><span class="p">((</span><span class="s1">&#39;Load and Save Module&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Load_Area</span><span class="o">.</span><span class="n">show_widgets</span><span class="p">()),</span>
+                       <span class="p">(</span><span class="s1">&#39;Landslide simulation module&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_landslide_widgets</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Load_Area</span><span class="o">.</span><span class="n">_widget_npz_filename</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">topo_folder</span> <span class="o">+</span> <span class="s2">&quot;Topography1.npz&quot;</span>
+
+        <span class="k">return</span> <span class="n">tabs</span></div>
+
+<div class="viewcode-block" id="LandslideSimulation.show_landslide_widgets"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation.show_landslide_widgets">[documentos]</a>    <span class="k">def</span> <span class="nf">show_landslide_widgets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tabs</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Tabs</span><span class="p">((</span><span class="s1">&#39;Load Simulation&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">widgets_load_simulation</span><span class="p">()),</span>
+                       <span class="p">(</span><span class="s1">&#39;Controllers&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">widgets_controller_simulation</span><span class="p">())</span>
+                       <span class="p">)</span>
+        <span class="k">return</span> <span class="n">tabs</span></div>
+
+<div class="viewcode-block" id="LandslideSimulation.widgets_controller_simulation"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation.widgets_controller_simulation">[documentos]</a>    <span class="k">def</span> <span class="nf">widgets_controller_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_show_release</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Show release area&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_release_area</span><span class="p">,</span>
+                                                        <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_show_release</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_show_release</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                              <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_select_direction</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">RadioButtonGroup</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Flow history selector&#39;</span><span class="p">,</span>
+            <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="s1">&#39;Height&#39;</span><span class="p">,</span> <span class="s1">&#39;Velocity&#39;</span><span class="p">],</span>
+            <span class="n">value</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;None&#39;</span><span class="p">],</span>
+            <span class="n">button_type</span><span class="o">=</span><span class="s1">&#39;success&#39;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_select_direction</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_set_direction</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_frame_selector</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;5 seconds time step&#39;</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_selector</span><span class="p">,</span>
+            <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">counter</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_frame_selector</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_select_frame</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_simulation</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">RadioButtonGroup</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Run or stop simulation&#39;</span><span class="p">,</span>
+            <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Run&#39;</span><span class="p">,</span> <span class="s1">&#39;Stop&#39;</span><span class="p">],</span>
+            <span class="n">value</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Stop&#39;</span><span class="p">],</span>
+            <span class="n">button_type</span><span class="o">=</span><span class="s1">&#39;success&#39;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_simulation</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_simulation</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_real_time</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Show simulation in real time&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">real_time</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_real_time</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_real_time</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                              <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">widgets</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;### Interaction widgets&quot;</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_show_release</span><span class="p">,</span>
+                            <span class="s1">&#39;&lt;b&gt;Select Flow &lt;/b&gt;&#39;</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_select_direction</span><span class="p">,</span>
+                            <span class="s1">&#39;&lt;b&gt;Select Frame &lt;/b&gt;&#39;</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_frame_selector</span><span class="p">,</span>
+                            <span class="s1">&#39;&lt;b&gt;Run Simulation&lt;/b&gt;&#39;</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_simulation</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_real_time</span>
+                            <span class="p">)</span>
+        <span class="n">panel</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Row</span><span class="p">(</span><span class="n">widgets</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_flow_frame</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">panel</span></div>
+
+<div class="viewcode-block" id="LandslideSimulation.widgets_load_simulation"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.landslides.LandslideSimulation.widgets_load_simulation">[documentos]</a>    <span class="k">def</span> <span class="nf">widgets_load_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_simulation_folder</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Specify the folder path to load the simulation:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_simulation_folder</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_available_release_areas</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">RadioBoxGroup</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Available release areas&#39;</span><span class="p">,</span>
+                                                                        <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">release_id_all</span><span class="p">,</span>
+                                                                        <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                                                        <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_load</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Refresh list&#39;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s1">&#39;warning&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_load_release_area</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Load selected release area&#39;</span><span class="p">,</span>
+                                                           <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_simulation_folder</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_filename</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_available_release_areas</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_available_release_areas</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                                         <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_load</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_load_files_folder</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_load_release_area</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_load_release_area</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span>
+                                                   <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">col1</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;## Load widget&quot;</span><span class="p">,</span>
+                            <span class="s1">&#39;&lt;b&gt;File path&lt;/b&gt;&#39;</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_simulation_folder</span><span class="p">,</span>
+                            <span class="s1">&#39;&lt;b&gt; Load possible release areas&lt;/b&gt;&#39;</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_load</span><span class="p">)</span>
+        <span class="n">col2</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s1">&#39;&lt;b&gt;Load Simulation&lt;/b&gt;&#39;</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_widget_load_release_area</span><span class="p">,</span>
+                          <span class="s1">&#39;&lt;b&gt;Select a release area&lt;/b&gt;&#39;</span><span class="p">,</span>
+                          <span class="n">pn</span><span class="o">.</span><span class="n">WidgetBox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget_available_release_areas</span><span class="p">))</span>
+        <span class="n">panel</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Row</span><span class="p">(</span><span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">panel</span></div>
+
+    <span class="k">def</span> <span class="nf">_callback_set_direction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flow_selector</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_frame_panel</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulation_folder</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_load_files_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_folder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_release_area</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">release_folder</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_available_release_areas</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">release_id_all</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_available_release_areas</span><span class="o">.</span><span class="n">sizing_mode</span> <span class="o">=</span> <span class="s2">&quot;scale_both&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_callback_select_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_selector</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+        <span class="c1">#self.plot_landslide_frame()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_frame_panel</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span> <span class="o">==</span> <span class="s1">&#39;Run&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">running_simulation</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">running_simulation</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_callback_available_release_areas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">release_id</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">modify_to_box_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">release_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">box_release_area</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_show_release</span><span class="o">.</span><span class="n">disabled</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_show_release</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_release_area</span>
+
+    <span class="k">def</span> <span class="nf">_callback_load_release_area</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_folder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">select_simulation_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulation_folder</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">release_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_frame_selector</span><span class="o">.</span><span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">counter</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot_frame_panel</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_show_release</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">box_release_area</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_real_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">real_time</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Código do módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

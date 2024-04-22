@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>sandbox.utils package &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/translations.js"></script>
+    <link rel="index" title="Índice" href="genindex.html" />
+    <link rel="search" title="Pesquisar" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="sandbox-utils-package">
+<h1>sandbox.utils package<a class="headerlink" href="#sandbox-utils-package" title="Permalink to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="module-sandbox.utils.download_sample_datasets">
+<span id="sandbox-utils-download-sample-datasets-module"></span><h2>sandbox.utils.download_sample_datasets module<a class="headerlink" href="#module-sandbox.utils.download_sample_datasets" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.utils.download_sample_datasets.create_pooch">
+<span class="sig-prename descclassname"><span class="pre">sandbox.utils.download_sample_datasets.</span></span><span class="sig-name descname"><span class="pre">create_pooch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/utils/download_sample_datasets.html#create_pooch"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.utils.download_sample_datasets.create_pooch" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Create POOCH class to fetch files from a website
+Args:</p>
+<blockquote>
+<div><p>base_url: Base URL for the remote data source.
+files: A record of the files that are managed by this Pooch.
+target: The path to the local data storage folder</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>POOCH class</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.utils.download_sample_datasets.download_benisson_model">
+<span class="sig-prename descclassname"><span class="pre">sandbox.utils.download_sample_datasets.</span></span><span class="sig-name descname"><span class="pre">download_benisson_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/utils/download_sample_datasets.html#download_benisson_model"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.utils.download_sample_datasets.download_benisson_model" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Dowload data for construction of Benisson model with gempy</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.utils.download_sample_datasets.download_example_gempy_model">
+<span class="sig-prename descclassname"><span class="pre">sandbox.utils.download_sample_datasets.</span></span><span class="sig-name descname"><span class="pre">download_example_gempy_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/utils/download_sample_datasets.html#download_example_gempy_model"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.utils.download_sample_datasets.download_example_gempy_model" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Dowload data for construction of example models with gempy</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.utils.download_sample_datasets.download_landscape_all">
+<span class="sig-prename descclassname"><span class="pre">sandbox.utils.download_sample_datasets.</span></span><span class="sig-name descname"><span class="pre">download_landscape_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/utils/download_sample_datasets.html#download_landscape_all"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.utils.download_sample_datasets.download_landscape_all" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Download all trained models available</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.utils.download_sample_datasets.download_landscape_name">
+<span class="sig-prename descclassname"><span class="pre">sandbox.utils.download_sample_datasets.</span></span><span class="sig-name descname"><span class="pre">download_landscape_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/utils/download_sample_datasets.html#download_landscape_name"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.utils.download_sample_datasets.download_landscape_name" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Download an specific trained model</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.utils.download_sample_datasets.download_landslides_data">
+<span class="sig-prename descclassname"><span class="pre">sandbox.utils.download_sample_datasets.</span></span><span class="sig-name descname"><span class="pre">download_landslides_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/utils/download_sample_datasets.html#download_landslides_data"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.utils.download_sample_datasets.download_landslides_data" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Download all available to display the landslide simulations</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.utils.download_sample_datasets.download_test_data">
+<span class="sig-prename descclassname"><span class="pre">sandbox.utils.download_sample_datasets.</span></span><span class="sig-name descname"><span class="pre">download_test_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/utils/download_sample_datasets.html#download_test_data"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.utils.download_sample_datasets.download_test_data" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Download all data for testing
+Returns:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.utils.download_sample_datasets.download_topography_data">
+<span class="sig-prename descclassname"><span class="pre">sandbox.utils.download_sample_datasets.</span></span><span class="sig-name descname"><span class="pre">download_topography_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/utils/download_sample_datasets.html#download_topography_data"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.utils.download_sample_datasets.download_topography_data" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Download all available DEMs to SaveTopoModule
+Returns:</p>
+</dd></dl>
+
+</section>
+<section id="module-sandbox.utils.logger">
+<span id="sandbox-utils-logger-module"></span><h2>sandbox.utils.logger module<a class="headerlink" href="#module-sandbox.utils.logger" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.utils.logger.ColoredFormatter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.utils.logger.</span></span><span class="sig-name descname"><span class="pre">ColoredFormatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/utils/logger.html#ColoredFormatter"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.utils.logger.ColoredFormatter" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Formatter</span></code></p>
+<p>Colored log formatter.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.utils.logger.ColoredFormatter.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/sandbox/utils/logger.html#ColoredFormatter.format"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.utils.logger.ColoredFormatter.format" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Format the specified record as text.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.utils.logger.set_level">
+<span class="sig-prename descclassname"><span class="pre">sandbox.utils.logger.</span></span><span class="sig-name descname"><span class="pre">set_level</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/utils/logger.html#set_level"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.utils.logger.set_level" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.utils.logger.set_logger">
+<span class="sig-prename descclassname"><span class="pre">sandbox.utils.logger.</span></span><span class="sig-name descname"><span class="pre">set_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/utils/logger.html#set_logger"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.utils.logger.set_logger" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Create a new handle in any destination
+Args:</p>
+<blockquote>
+<div><p>name: name of new handle</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+</section>
+<section id="module-sandbox.utils">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-sandbox.utils" title="Permalink to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/sandbox.utils.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

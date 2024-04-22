@@ -1,0 +1,365 @@
+
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sandbox.sensor.sensor_api &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/translations.js"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fonte de sandbox.sensor.sensor_api</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">import</span> <span class="nn">scipy.ndimage</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">set_logger</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">set_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Sensor"><a class="viewcode-back" href="../../../sandbox.sensor.html#sandbox.sensor.sensor_api.Sensor">[documentos]</a><span class="k">class</span> <span class="nc">Sensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapping API-class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calibsensor</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;kinect_v2&#39;</span><span class="p">,</span> <span class="n">crop_values</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">clip_values</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">gauss_filter</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">n_frames</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">gauss_sigma</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">invert</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sensor Api class to manage the different sensor for the frame adquisition</span>
+<span class="sd">        Args:</span>
+<span class="sd">            calibsensor: file path for the .json calibration file of the sensor</span>
+<span class="sd">            name: type of sensor to use. Current [&#39;kinect_v1&#39;, &#39;kinect_v2&#39;, &#39;lidar&#39;, &#39;dummy&#39;]. Predefined is &#39;kinect_v2&#39;</span>
+<span class="sd">            crop_values: to crop the frame according to the calibration file</span>
+<span class="sd">            clip_values: clip the values to the maximum and minimum extent</span>
+<span class="sd">            gauss_filter: apply a gaussian filter to the data</span>
+<span class="sd">            n_frames: number of frames to get the average. Avoids anomalies</span>
+<span class="sd">            gauss_sigma: How strong the filter is</span>
+<span class="sd">            inverted: The data is measured from the sensor outwards. \</span>
+<span class="sd">                        This will normalize the data according to the maximun value of the sensor</span>
+<span class="sd">            **kwargs:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">json_filename</span> <span class="o">=</span> <span class="n">calibsensor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="s1">&#39;2.1.s&#39;</span>
+        <span class="k">if</span> <span class="n">calibsensor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s_name</span> <span class="o">=</span> <span class="n">name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s_top</span> <span class="o">=</span> <span class="mi">10</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s_right</span> <span class="o">=</span> <span class="mi">10</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s_bottom</span> <span class="o">=</span> <span class="mi">10</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s_left</span> <span class="o">=</span> <span class="mi">10</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s_min</span> <span class="o">=</span> <span class="mi">700</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s_max</span> <span class="o">=</span> <span class="mi">1500</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s_width</span> <span class="o">=</span> <span class="mi">512</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s_height</span> <span class="o">=</span> <span class="mi">424</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">box_width</span> <span class="o">=</span> <span class="mi">1000</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">box_height</span> <span class="o">=</span> <span class="mi">800</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_json</span><span class="p">(</span><span class="n">calibsensor</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;kinect_v1&#39;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.kinectV1</span> <span class="kn">import</span> <span class="n">KinectV1</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="kn">import</span> <span class="nn">freenect</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sensor</span> <span class="o">=</span> <span class="n">KinectV1</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Kinect v1 dependencies are not installed&#39;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">&#39;Kinect v1 dependencies are not installed&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;kinect_v2&#39;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.kinectV2</span> <span class="kn">import</span> <span class="n">KinectV2</span><span class="p">,</span> <span class="n">_platform</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">_platform</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span><span class="p">:</span>
+                    <span class="kn">import</span> <span class="nn">pykinect2</span>
+                <span class="k">elif</span> <span class="n">_platform</span> <span class="o">==</span> <span class="s1">&#39;Linux&#39;</span><span class="p">:</span>
+                    <span class="kn">import</span> <span class="nn">freenect2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sensor</span> <span class="o">=</span> <span class="n">KinectV2</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Kinect v2 dependencies are not installed&#39;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">&#39;Kinect v2 dependencies are not installed&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;lidar&#39;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.lidar_l515</span> <span class="kn">import</span> <span class="n">LiDAR</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="kn">import</span> <span class="nn">pyrealsense2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sensor</span> <span class="o">=</span> <span class="n">LiDAR</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;LiDAR dependencies are not installed&#39;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">&#39;LiDAR dependencies are not installed&#39;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;dummy&#39;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.dummy</span> <span class="kn">import</span> <span class="n">DummySensor</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sensor</span> <span class="o">=</span> <span class="n">DummySensor</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.dummy</span> <span class="kn">import</span> <span class="n">DummySensor</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unrecognized sensor name. Activating dummy sensor&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sensor</span> <span class="o">=</span> <span class="n">DummySensor</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># filter parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter</span> <span class="o">=</span> <span class="n">gauss_filter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_frames</span> <span class="o">=</span> <span class="n">n_frames</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_gauss</span> <span class="o">=</span> <span class="n">gauss_sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invert</span> <span class="o">=</span> <span class="n">invert</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sensor</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sensor</span><span class="o">.</span><span class="n">depth_width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sensor</span><span class="o">.</span><span class="n">depth_height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">crop</span> <span class="o">=</span> <span class="n">crop_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clip</span> <span class="o">=</span> <span class="n">clip_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Sensor.get_raw_frame"><a class="viewcode-back" href="../../../sandbox.sensor.html#sandbox.sensor.sensor_api.Sensor.get_raw_frame">[documentos]</a>    <span class="k">def</span> <span class="nf">get_raw_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gauss_filter</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Grab a new height numpy array</span>
+
+<span class="sd">        With the Dummy sensor it will sample noise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># collect last n frames in a stack</span>
+        <span class="n">depth_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sensor</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_frames</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">depth_array</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">depth_array</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sensor</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()])</span>
+        <span class="c1"># calculate mean values ignoring zeros by masking them</span>
+        <span class="n">depth_array_masked</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">depth_array</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">depth_array</span><span class="p">)</span>  <span class="c1"># needed for V2?</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">depth_array_masked</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">gauss_filter</span><span class="p">:</span>
+            <span class="c1"># apply gaussian filter</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">gaussian_filter</span><span class="p">(</span><span class="n">depth</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_gauss</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">depth</span><span class="o">.</span><span class="n">data</span>
+
+        <span class="k">return</span> <span class="n">depth</span></div>
+
+<div class="viewcode-block" id="Sensor.get_inverted_frame"><a class="viewcode-back" href="../../../sandbox.sensor.html#sandbox.sensor.sensor_api.Sensor.get_inverted_frame">[documentos]</a>    <span class="k">def</span> <span class="nf">get_inverted_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the current frame and invert the values to get the normalized height,</span>
+<span class="sd">        being the maximum value of the calibrated sensor data 0.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            frame: Sensor frame to invert</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            inverted frame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_max</span> <span class="o">-</span> <span class="n">frame</span></div>
+
+    <span class="c1"># computed parameters for easy access</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">s_frame_width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_width</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_left</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_right</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">s_frame_height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_height</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_top</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_bottom</span>
+
+<div class="viewcode-block" id="Sensor.load_json"><a class="viewcode-back" href="../../../sandbox.sensor.html#sandbox.sensor.sensor_api.Sensor.load_json">[documentos]</a>    <span class="k">def</span> <span class="nf">load_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">         Load a calibration file (.JSON format) and actualizes the panel parameters</span>
+<span class="sd">         Args:</span>
+<span class="sd">             file: address of the calibration to load</span>
+
+<span class="sd">         Returns:</span>
+
+<span class="sd">         &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">json_load</span><span class="p">(</span><span class="n">dict_data</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">s_name</span> <span class="o">=</span> <span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;s_name&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">s_top</span> <span class="o">=</span> <span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;s_top&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">s_right</span> <span class="o">=</span> <span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;s_right&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">s_bottom</span> <span class="o">=</span> <span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;s_bottom&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">s_left</span> <span class="o">=</span> <span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;s_left&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">s_min</span> <span class="o">=</span> <span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;s_min&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">s_max</span> <span class="o">=</span> <span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;s_max&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">s_width</span> <span class="o">=</span> <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;s_frame_width&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;s_right&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;s_left&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">s_height</span> <span class="o">=</span> <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;s_frame_height&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;s_top&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;s_bottom&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">box_width</span> <span class="o">=</span> <span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;box_width&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">box_height</span> <span class="o">=</span> <span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;box_height&#39;</span><span class="p">]</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;JSON configuration loaded for sensor.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;JSON configuration incompatible.&quot;</span>
+                               <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Please select a valid calibration file or start a new calibration!&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">calibration_json</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">calibration_json</span><span class="p">)</span>
+                <span class="n">json_load</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="n">json_load</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Sensor.save_json"><a class="viewcode-back" href="../../../sandbox.sensor.html#sandbox.sensor.sensor_api.Sensor.save_json">[documentos]</a>    <span class="k">def</span> <span class="nf">save_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;sensor_calibration.json&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Saves the current state of the sensor in a .JSON calibration file</span>
+<span class="sd">        Args:</span>
+<span class="sd">            file: address to save the calibration</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">calibration_json</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+                    <span class="s2">&quot;s_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_name</span><span class="p">,</span>
+                    <span class="s2">&quot;s_top&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_top</span><span class="p">,</span>
+                    <span class="s2">&quot;s_right&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_right</span><span class="p">,</span>
+                    <span class="s2">&quot;s_bottom&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_bottom</span><span class="p">,</span>
+                    <span class="s2">&quot;s_left&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_left</span><span class="p">,</span>
+                    <span class="s2">&quot;s_frame_width&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_frame_width</span><span class="p">,</span>
+                    <span class="s2">&quot;s_frame_height&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_frame_height</span><span class="p">,</span>
+                    <span class="s2">&quot;s_min&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_min</span><span class="p">,</span>
+                    <span class="s2">&quot;s_max&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_max</span><span class="p">,</span>
+                    <span class="s2">&quot;box_width&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_width</span><span class="p">,</span>
+                    <span class="s2">&quot;box_height&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_height</span><span class="p">}</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">calibration_json</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;JSON configuration file saved: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Sensor.crop_frame"><a class="viewcode-back" href="../../../sandbox.sensor.html#sandbox.sensor.sensor_api.Sensor.crop_frame">[documentos]</a>    <span class="k">def</span> <span class="nf">crop_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Crops the data frame according to the horizontal margins set up in the calibration</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO: Does not work yet for s_top = 0 and s_right = 0, which currently returns an empty frame!</span>
+        <span class="c1"># TODO: Workaround: do not allow zeroes in calibration widget and use default value = 1</span>
+        <span class="c1"># TODO: File numpy issue?</span>
+        <span class="n">crop</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">s_bottom</span><span class="p">:</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">s_top</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_left</span><span class="p">:</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">s_right</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">crop</span></div>
+
+<div class="viewcode-block" id="Sensor.crop_frame_workaround"><a class="viewcode-back" href="../../../sandbox.sensor.html#sandbox.sensor.sensor_api.Sensor.crop_frame_workaround">[documentos]</a>    <span class="k">def</span> <span class="nf">crop_frame_workaround</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="c1"># bullet proof working example</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_top</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_right</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">crop</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">s_bottom</span><span class="p">:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_left</span><span class="p">:]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_top</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">crop</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">s_bottom</span><span class="p">:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_left</span><span class="p">:</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">s_right</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_right</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">crop</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">s_bottom</span><span class="p">:</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">s_top</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_left</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">crop</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">s_bottom</span><span class="p">:</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">s_top</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_left</span><span class="p">:</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">s_right</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">crop</span></div>
+
+<div class="viewcode-block" id="Sensor.depth_mask"><a class="viewcode-back" href="../../../sandbox.sensor.html#sandbox.sensor.sensor_api.Sensor.depth_mask">[documentos]</a>    <span class="k">def</span> <span class="nf">depth_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Creates a boolean mask with True for all values within the set sensor range and False for every pixel</span>
+<span class="sd">        above and below. If you also want to use clipping, make sure to use the mask before.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: depth mask is masking everything. returning empty</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getmask</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_outside</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_max</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">mask</span></div>
+
+<div class="viewcode-block" id="Sensor.clip_frame"><a class="viewcode-back" href="../../../sandbox.sensor.html#sandbox.sensor.sensor_api.Sensor.clip_frame">[documentos]</a>    <span class="k">def</span> <span class="nf">clip_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Clips all values outside of the sensor range to the set s_min and s_max values.</span>
+<span class="sd">        If you want to create a mask make sure to call depth_mask before performing the clip.</span>
+<span class="sd">        ???&quot;&quot;&quot;</span>
+
+        <span class="n">clip</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_min</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_max</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">clip</span></div>
+
+<div class="viewcode-block" id="Sensor.get_frame"><a class="viewcode-back" href="../../../sandbox.sensor.html#sandbox.sensor.sensor_api.Sensor.get_frame">[documentos]</a>    <span class="k">def</span> <span class="nf">get_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_raw_frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sensor</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;dummy&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">=</span> <span class="n">frame</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop</span><span class="p">:</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">clip</span><span class="p">:</span>
+            <span class="c1"># frame = self.depth_mask(frame) #TODO: When is this needed?</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clip_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">invert</span><span class="p">:</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_inverted_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">=</span> <span class="n">frame</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">vmax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;return the maximum extent of the sensor according to the calibration file &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">s_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_min</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">extent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;returns the extent in pixels used for the modules to indicate the dimensions of the plot in the sandbox</span>
+<span class="sd">        [0, width_pixels, 0, height_pixels, 0, distance from maximum point of the sensor to the minimun</span>
+<span class="sd">        point(total height in mm)] &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_frame_width</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_frame_height</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vmax</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">physical_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;returns the physical extent of the sandbox in mm. Used for scaling gempy models&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">box_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_height</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Código do módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

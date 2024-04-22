@@ -1,0 +1,925 @@
+
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>sandbox.modules package &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/translations.js"></script>
+    <link rel="index" title="Índice" href="genindex.html" />
+    <link rel="search" title="Pesquisar" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="sandbox-modules-package">
+<h1>sandbox.modules package<a class="headerlink" href="#sandbox-modules-package" title="Permalink to this heading">¶</a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sandbox.modules.block_module.html">sandbox.modules.block_module package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.block_module.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.block_module.html#module-sandbox.modules.block_module.block_module">sandbox.modules.block_module.block_module module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.block_module.html#module-sandbox.modules.block_module.rms_grid">sandbox.modules.block_module.rms_grid module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.block_module.html#module-sandbox.modules.block_module">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sandbox.modules.devito.html">sandbox.modules.devito package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.devito.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.devito.html#sandbox-modules-devito-model-module">sandbox.modules.devito.model module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.devito.html#sandbox-modules-devito-seismic-sandbox-module">sandbox.modules.devito.seismic_sandbox module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.devito.html#sandbox-modules-devito-source-module">sandbox.modules.devito.source module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.devito.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sandbox.modules.gempy.html">sandbox.modules.gempy package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.gempy.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.gempy.html#sandbox-modules-gempy-example-models-module">sandbox.modules.gempy.example_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.gempy.html#sandbox-modules-gempy-gempy-module-module">sandbox.modules.gempy.gempy_module module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.gempy.html#sandbox-modules-gempy-plot-module">sandbox.modules.gempy.plot module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.gempy.html#sandbox-modules-gempy-utils-module">sandbox.modules.gempy.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.gempy.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sandbox.modules.gimli.html">sandbox.modules.gimli package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.gimli.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.gimli.html#sandbox-modules-gimli-geoelectrics-module">sandbox.modules.gimli.geoelectrics module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.gimli.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sandbox.modules.pynoddy.html">sandbox.modules.pynoddy package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.pynoddy.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.pynoddy.html#sandbox-modules-pynoddy-pynoddy-module-module">sandbox.modules.pynoddy.pynoddy_module module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.pynoddy.html#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sandbox.modules.pytorch.html">sandbox.modules.pytorch package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.pytorch.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.pytorch.html#module-sandbox.modules.pytorch.landscape_generation">sandbox.modules.pytorch.landscape_generation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sandbox.modules.pytorch.html#module-sandbox.modules.pytorch">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="module-sandbox.modules.gradients">
+<span id="sandbox-modules-gradients-module"></span><h2>sandbox.modules.gradients module<a class="headerlink" href="#module-sandbox.modules.gradients" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.modules.gradients.GradientModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.modules.gradients.</span></span><span class="sig-name descname"><span class="pre">GradientModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/gradients.html#GradientModule"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.gradients.GradientModule" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sandbox.modules.template.ModuleTemplate" title="sandbox.modules.template.ModuleTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleTemplate</span></code></a></p>
+<p>Module to display the gradient of the topography and the topography as a vector field.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.gradients.GradientModule.delete_quiver_ax">
+<span class="sig-name descname"><span class="pre">delete_quiver_ax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/gradients.html#GradientModule.delete_quiver_ax"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.gradients.GradientModule.delete_quiver_ax" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.gradients.GradientModule.delete_stream_ax">
+<span class="sig-name descname"><span class="pre">delete_stream_ax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/gradients.html#GradientModule.delete_stream_ax"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.gradients.GradientModule.delete_stream_ax" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.gradients.GradientModule.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/gradients.html#GradientModule.plot"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.gradients.GradientModule.plot" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.gradients.GradientModule.set_gradient">
+<span class="sig-name descname"><span class="pre">set_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/gradients.html#GradientModule.set_gradient"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.gradients.GradientModule.set_gradient" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Change implicit between all gradient types.
+Args:</p>
+<blockquote>
+<div><p>i: string indicating the number to run.</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.gradients.GradientModule.set_lightsource">
+<span class="sig-name descname"><span class="pre">set_lightsource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">azdeg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">315</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">altdeg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ve</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/gradients.html#GradientModule.set_lightsource"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.gradients.GradientModule.set_lightsource" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>modify the azimuth, altitude and vertical exageration for the lightsource mode
+Args:</p>
+<blockquote>
+<div><p>azdeg: 0 - North, 90- East, 180 - south, 270 - West, 360 - North
+altdeg: degree of the sun . 0 - 180 - being 90 the vertical position of the sun
+ve: float, vertical exageration</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.gradients.GradientModule.show_widgets">
+<span class="sig-name descname"><span class="pre">show_widgets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/gradients.html#GradientModule.show_widgets"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.gradients.GradientModule.show_widgets" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Create and show the widgets associated to this module
+Returns:</p>
+<blockquote>
+<div><p>widget</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.gradients.GradientModule.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sb_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/gradients.html#GradientModule.update"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.gradients.GradientModule.update" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.gradients.GradientModule.widget_gradient">
+<span class="sig-name descname"><span class="pre">widget_gradient</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/gradients.html#GradientModule.widget_gradient"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.gradients.GradientModule.widget_gradient" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.gradients.GradientModule.widget_lightsource">
+<span class="sig-name descname"><span class="pre">widget_lightsource</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/gradients.html#GradientModule.widget_lightsource"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.gradients.GradientModule.widget_lightsource" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-sandbox.modules.landslides">
+<span id="sandbox-modules-landslides-module"></span><h2>sandbox.modules.landslides module<a class="headerlink" href="#module-sandbox.modules.landslides" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.modules.landslides.</span></span><span class="sig-name descname"><span class="pre">LandslideSimulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sandbox.modules.template.ModuleTemplate" title="sandbox.modules.template.ModuleTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleTemplate</span></code></a></p>
+<p>Module to show the results of landslides simulations</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation.delete_land">
+<span class="sig-name descname"><span class="pre">delete_land</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation.delete_land"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation.delete_land" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation.delete_polygon">
+<span class="sig-name descname"><span class="pre">delete_polygon</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation.delete_polygon"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation.delete_polygon" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation.load_release_area">
+<span class="sig-name descname"><span class="pre">load_release_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation.load_release_area"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation.load_release_area" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>load all possible release areas from the same topography to show the simulation</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation.load_simulation_data_npz">
+<span class="sig-name descname"><span class="pre">load_simulation_data_npz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation.load_simulation_data_npz"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation.load_simulation_data_npz" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Load landslide simulation from a .npz file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation.modify_to_box_coordinates">
+<span class="sig-name descname"><span class="pre">modify_to_box_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation.modify_to_box_coordinates"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation.modify_to_box_coordinates" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Move the origin of the release areas to be correctly displayed in the sandbox</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation.plot"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation.plot" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation.plot_frame_panel">
+<span class="sig-name descname"><span class="pre">plot_frame_panel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation.plot_frame_panel"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation.plot_frame_panel" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Update the current frame to be displayed in the panel server</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation.plot_landslide_frame">
+<span class="sig-name descname"><span class="pre">plot_landslide_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation.plot_landslide_frame"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation.plot_landslide_frame" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Plot from the current landslide frame depending of the type of flow (Height or velocity)
+Args:</p>
+<blockquote>
+<div><p>ax: The image to plot the frame</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation.select_simulation_data">
+<span class="sig-name descname"><span class="pre">select_simulation_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">release_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation.select_simulation_data"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation.select_simulation_data" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Make sure that the simulation data corresponds to the loaded topography</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation.show_box_release">
+<span class="sig-name descname"><span class="pre">show_box_release</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xy</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation.show_box_release"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation.show_box_release" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Show the options for painting release areas at origin xy</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation.show_landslide_widgets">
+<span class="sig-name descname"><span class="pre">show_landslide_widgets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation.show_landslide_widgets"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation.show_landslide_widgets" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation.show_widgets">
+<span class="sig-name descname"><span class="pre">show_widgets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation.show_widgets"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation.show_widgets" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sb_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation.update"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation.update" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation.widgets_controller_simulation">
+<span class="sig-name descname"><span class="pre">widgets_controller_simulation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation.widgets_controller_simulation"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation.widgets_controller_simulation" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.landslides.LandslideSimulation.widgets_load_simulation">
+<span class="sig-name descname"><span class="pre">widgets_load_simulation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/landslides.html#LandslideSimulation.widgets_load_simulation"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides.LandslideSimulation.widgets_load_simulation" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-sandbox.modules.landslides_raw_data">
+<span id="sandbox-modules-landslides-raw-data-module"></span><h2>sandbox.modules.landslides_raw_data module<a class="headerlink" href="#module-sandbox.modules.landslides_raw_data" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.modules.landslides_raw_data.Raw_landslides_simulation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.modules.landslides_raw_data.</span></span><span class="sig-name descname"><span class="pre">Raw_landslides_simulation</span></span><a class="reference internal" href="_modules/sandbox/modules/landslides_raw_data.html#Raw_landslides_simulation"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.landslides_raw_data.Raw_landslides_simulation" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+</section>
+<section id="module-sandbox.modules.load_save_topography">
+<span id="sandbox-modules-load-save-topography-module"></span><h2>sandbox.modules.load_save_topography module<a class="headerlink" href="#module-sandbox.modules.load_save_topography" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.modules.load_save_topography.</span></span><span class="sig-name descname"><span class="pre">LoadSaveTopoModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sandbox.modules.template.ModuleTemplate" title="sandbox.modules.template.ModuleTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleTemplate</span></code></a></p>
+<p>Module to save the current topography in a subset of the sandbox
+and recreate it at a later time
+two different representations are saved to the numpy file:</p>
+<p>absolute Topography:
+deviation from the mean height inside the bounding box in millimeter</p>
+<p>relative Height:
+height of each pixel relative to the vmin and vmax of the currently used calibration.
+use relative height with the gempy module to get the same geologic map with different calibration settings.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.add_release_area_origin">
+<span class="sig-name descname"><span class="pre">add_release_area_origin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.add_release_area_origin"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.add_release_area_origin" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Add a box origin [x,y] to highlight a zone on the image.
+This method also manages the aruco release areas if detected
+Args:</p>
+<blockquote>
+<div><p>x: x coordinte of origin
+y: y coordinte of origin</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.delete_contourns">
+<span class="sig-name descname"><span class="pre">delete_contourns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.delete_contourns"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.delete_contourns" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.delete_im_ax">
+<span class="sig-name descname"><span class="pre">delete_im_ax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.delete_im_ax"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.delete_im_ax" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.delete_rectangles_ax">
+<span class="sig-name descname"><span class="pre">delete_rectangles_ax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.delete_rectangles_ax"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.delete_rectangles_ax" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.extractDifference">
+<span class="sig-name descname"><span class="pre">extractDifference</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.extractDifference"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.extractDifference" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>This will return a numpy array comparing the difference between the current frame and the saved frame</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.extractGradDifference">
+<span class="sig-name descname"><span class="pre">extractGradDifference</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.extractGradDifference"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.extractGradDifference" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>This will return a numpy array comparing the difference of second degree (gradients)
+between the current frame and the saved frame</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.extractTopo">
+<span class="sig-name descname"><span class="pre">extractTopo</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.extractTopo"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.extractTopo" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Extract the topography of the current frame and stores the value internally
+Returns:</p>
+<blockquote>
+<div><p>absolute topography and relative topography</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.getBoxFrame">
+<span class="sig-name descname"><span class="pre">getBoxFrame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.getBoxFrame"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.getBoxFrame" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Get the absolute and relative topography of the current.
+Crop frame image to dimensions of box
+Args:</p>
+<blockquote>
+<div><p>frame: frame of the actual topography</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>absolute_topo, the cropped frame minus the mean value and relative_topo,
+the absolute topo normalized to the extent of the sandbox</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.getBoxShape">
+<span class="sig-name descname"><span class="pre">getBoxShape</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.getBoxShape"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.getBoxShape" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>This will return the shape of the current saved topography</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.loadTopo">
+<span class="sig-name descname"><span class="pre">loadTopo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'00_savedTopography.npz'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.loadTopo"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.loadTopo" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Load the absolute topography and relative topography from a .npz file.
+If usinng a single .npy is assumed to be an outside DEM</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.modify_to_box_coordinates">
+<span class="sig-name descname"><span class="pre">modify_to_box_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.modify_to_box_coordinates"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.modify_to_box_coordinates" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Since the box is not in the origin of the frame,
+this will correctly display the loaded topography inside the box
+Args:</p>
+<blockquote>
+<div><p>frame: the frame that need to be modified to box coordintes</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>The modified frame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.moveBox_possible">
+<span class="sig-name descname"><span class="pre">moveBox_possible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.moveBox_possible"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.moveBox_possible" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Dinamicaly modify the size of the box when the margins extend more than frame
+Args:</p>
+<blockquote>
+<div><p>x: x coordinte of the box origin
+y: y coordinate of the box origin
+width: of the box
+height: of the box</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.norm_difference">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">norm_difference</span></span><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.norm_difference" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Creates a custom made norm</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.normalize_topography">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">normalize_topography</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_extent</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.normalize_topography"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.normalize_topography" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Normalize any size of numpy array to fit the sandbox frame.
+Useful when passing DEM with resolution bigger than sandbox sensor.
+Args:</p>
+<blockquote>
+<div><p>dem:
+target_extent: [minx, maxx, miny, maxy, vmin, vmax] -&gt;
+[0, frame_width, 0, frame_height, vmin_sensor, vmax_sensor]</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>normalized frame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.plot"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.plot" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.plot_release_area">
+<span class="sig-name descname"><span class="pre">plot_release_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.plot_release_area"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.plot_release_area" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Plot small boxes in the frame according to the dataframe origin and width, height specifiend.
+Args:</p>
+<blockquote>
+<div><p>ax: matplotlib axes to plot
+origin: pandas dataframe indicating the x and y coordintes of the boxes to plot
+width: width of the box to plot
+height: height of the box to plot</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.saveTopo">
+<span class="sig-name descname"><span class="pre">saveTopo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'00_savedTopography.npz'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.saveTopo"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.saveTopo" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Save the absolute topography and relative topography in a .npz file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.saveTopoVector">
+<span class="sig-name descname"><span class="pre">saveTopoVector</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.saveTopoVector"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.saveTopoVector" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>saves a vector graphic of the contour map to disk</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.save_release_area">
+<span class="sig-name descname"><span class="pre">save_release_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'00_releaseArea.npy'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.save_release_area"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.save_release_area" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Save the release areas as a .npy file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.set_show">
+<span class="sig-name descname"><span class="pre">set_show</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.set_show"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.set_show" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.showBox">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">showBox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.showBox"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.showBox" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Draws a wide rectangle outline in the live view
+Args:</p>
+<blockquote>
+<div><p>ax: the axes where the patch will be drawed on
+origin: relative position from bottom left in sensor pixel space
+width: width of box in sensor pixels
+height: height of box in sensor pixels</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.showContourTopo">
+<span class="sig-name descname"><span class="pre">showContourTopo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.showContourTopo"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.showContourTopo" title="Link permanente para esta definição">¶</a></dt>
+<dd><blockquote>
+<div><p>If a topography is saved internally, display the saved topograhy on the sandbox</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Args:</dt><dd><p>ax: axes to plot the saved topography</p>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.showDifference">
+<span class="sig-name descname"><span class="pre">showDifference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.showDifference"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.showDifference" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Displays the calculated difference of the previous frame with the actual frame
+Args:</p>
+<blockquote>
+<div><p>ax: Axes to plot the difference</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.showGradDifference">
+<span class="sig-name descname"><span class="pre">showGradDifference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.showGradDifference"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.showGradDifference" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Displays the calculated gradient difference of the previous frame with the actual frame
+Args:</p>
+<blockquote>
+<div><p>ax: Axes to plot the difference</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.showLoadedTopo">
+<span class="sig-name descname"><span class="pre">showLoadedTopo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.showLoadedTopo"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.showLoadedTopo" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>If a topography is saved internally, display the saved topograhy on the sandbox
+Args:</p>
+<blockquote>
+<div><p>ax: axes to plot the saved topography</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.show_widgets">
+<span class="sig-name descname"><span class="pre">show_widgets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.show_widgets"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.show_widgets" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.snapshotFrame">
+<span class="sig-name descname"><span class="pre">snapshotFrame</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.snapshotFrame"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.snapshotFrame" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>This will display the saved topography and display it in the panel bokeh</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.to_box_extent">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_box_extent</span></span><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.to_box_extent" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>When using imshow to plot data over the image. pass this as extent argumment to display the
+image in the correct area of the sandbox box-area</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sb_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.update"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.update" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.widgets_box">
+<span class="sig-name descname"><span class="pre">widgets_box</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.widgets_box"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.widgets_box" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.widgets_load">
+<span class="sig-name descname"><span class="pre">widgets_load</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.widgets_load"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.widgets_load" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.widgets_release_area">
+<span class="sig-name descname"><span class="pre">widgets_release_area</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.widgets_release_area"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.widgets_release_area" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.load_save_topography.LoadSaveTopoModule.widgets_save">
+<span class="sig-name descname"><span class="pre">widgets_save</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/load_save_topography.html#LoadSaveTopoModule.widgets_save"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.load_save_topography.LoadSaveTopoModule.widgets_save" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-sandbox.modules.prototyping">
+<span id="sandbox-modules-prototyping-module"></span><h2>sandbox.modules.prototyping module<a class="headerlink" href="#module-sandbox.modules.prototyping" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.modules.prototyping.PrototypingModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.modules.prototyping.</span></span><span class="sig-name descname"><span class="pre">PrototypingModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/prototyping.html#PrototypingModule"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.prototyping.PrototypingModule" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sandbox.modules.template.ModuleTemplate" title="sandbox.modules.template.ModuleTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleTemplate</span></code></a></p>
+<p>Class for the connectivity between Notebook plotting and sandbox image in live thread</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.prototyping.PrototypingModule.aruco_inside">
+<span class="sig-name descname"><span class="pre">aruco_inside</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/prototyping.html#PrototypingModule.aruco_inside"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.prototyping.PrototypingModule.aruco_inside" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.prototyping.PrototypingModule.plot_sandbox">
+<span class="sig-name descname"><span class="pre">plot_sandbox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/prototyping.html#PrototypingModule.plot_sandbox"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.prototyping.PrototypingModule.plot_sandbox" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Pass as an argument the function to run in the thread
+Args:</p>
+<blockquote>
+<div><p>func: see notebook in tutorials fro example</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.prototyping.PrototypingModule.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/prototyping.html#PrototypingModule.setup"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.prototyping.PrototypingModule.setup" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.prototyping.PrototypingModule.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/prototyping.html#PrototypingModule.update"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.prototyping.PrototypingModule.update" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-sandbox.modules.search_methods">
+<span id="sandbox-modules-search-methods-module"></span><h2>sandbox.modules.search_methods module<a class="headerlink" href="#module-sandbox.modules.search_methods" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.modules.search_methods.</span></span><span class="sig-name descname"><span class="pre">SearchMethodsModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sandbox.modules.template.ModuleTemplate" title="sandbox.modules.template.ModuleTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleTemplate</span></code></a></p>
+<p>Module for visualization of different search techniques based on gradients and
+#TODO: have deterministic and probabilistic search methods and later combine them</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule.create_mesh">
+<span class="sig-name descname"><span class="pre">create_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">nan</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">margins_crop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule.create_mesh"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule.create_mesh" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Create a mseh from the topography that can be evaluated in every point.
+Avoid conflicts between pixels(int) and floats
+Args:</p>
+<blockquote>
+<div><p>frame: kinect frame
+fill_value:
+margins_crop:</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule.gradient_descent">
+<span class="sig-name descname"><span class="pre">gradient_descent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule.gradient_descent"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule.gradient_descent" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule.hist_distribution">
+<span class="sig-name descname"><span class="pre">hist_distribution</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule.hist_distribution"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule.hist_distribution" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Histogram showing the distribution of the sampled points and the targer
+Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule.mcmc_adaptiveMH">
+<span class="sig-name descname"><span class="pre">mcmc_adaptiveMH</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule.mcmc_adaptiveMH"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule.mcmc_adaptiveMH" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule.mcmc_adaptiveMH_step">
+<span class="sig-name descname"><span class="pre">mcmc_adaptiveMH_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule.mcmc_adaptiveMH_step"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule.mcmc_adaptiveMH_step" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule.mcmc_hamiltonianMC">
+<span class="sig-name descname"><span class="pre">mcmc_hamiltonianMC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx_mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy_mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">700</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule.mcmc_hamiltonianMC"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule.mcmc_hamiltonianMC" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule.mcmc_hamiltonianMC_step">
+<span class="sig-name descname"><span class="pre">mcmc_hamiltonianMC_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx_mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy_mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule.mcmc_hamiltonianMC_step"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule.mcmc_hamiltonianMC_step" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule.mcmc_random">
+<span class="sig-name descname"><span class="pre">mcmc_random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule.mcmc_random"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule.mcmc_random" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule.mcmc_random_step">
+<span class="sig-name descname"><span class="pre">mcmc_random_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule.mcmc_random_step"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule.mcmc_random_step" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule.plot"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule.plot" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule.plot_search">
+<span class="sig-name descname"><span class="pre">plot_search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule.plot_search"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule.plot_search" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>selected over the possible options a search algorithm
+Args:</p>
+<blockquote>
+<div><p>method:
+xy:
+ax:</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule.remove_lines">
+<span class="sig-name descname"><span class="pre">remove_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule.remove_lines"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule.remove_lines" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule.show_widgets">
+<span class="sig-name descname"><span class="pre">show_widgets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule.show_widgets"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule.show_widgets" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sb_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule.update"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule.update" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.search_methods.SearchMethodsModule.update_mesh">
+<span class="sig-name descname"><span class="pre">update_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">nan</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">margins_crop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/search_methods.html#SearchMethodsModule.update_mesh"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.search_methods.SearchMethodsModule.update_mesh" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>create the mesh for the current frame and its derivatives
+Args:</p>
+<blockquote>
+<div><p>frame:
+fill_value:
+margins_crop:</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-sandbox.modules.template">
+<span id="sandbox-modules-template-module"></span><h2>sandbox.modules.template module<a class="headerlink" href="#module-sandbox.modules.template" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.modules.template.ModuleTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.modules.template.</span></span><span class="sig-name descname"><span class="pre">ModuleTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/template.html#ModuleTemplate"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.template.ModuleTemplate" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.template.ModuleTemplate.plot">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/template.html#ModuleTemplate.plot"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.template.ModuleTemplate.plot" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.template.ModuleTemplate.show_widgets">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">show_widgets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/template.html#ModuleTemplate.show_widgets"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.template.ModuleTemplate.show_widgets" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.template.ModuleTemplate.update">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sb_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/template.html#ModuleTemplate.update"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.template.ModuleTemplate.update" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-sandbox.modules.topography">
+<span id="sandbox-modules-topography-module"></span><h2>sandbox.modules.topography module<a class="headerlink" href="#module-sandbox.modules.topography" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.modules.topography.TopoModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.modules.topography.</span></span><span class="sig-name descname"><span class="pre">TopoModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/topography.html#TopoModule"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.topography.TopoModule" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#sandbox.modules.template.ModuleTemplate" title="sandbox.modules.template.ModuleTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleTemplate</span></code></a></p>
+<p>Module for simple Topography visualization without computing a geological model</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.topography.TopoModule.animate_texture">
+<span class="sig-name descname"><span class="pre">animate_texture</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/topography.html#TopoModule.animate_texture"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.topography.TopoModule.animate_texture" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Move the texture image to give the appearance of moving like waves
+Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.topography.TopoModule.create_paths">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contour_val</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/topography.html#TopoModule.create_paths"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.topography.TopoModule.create_paths" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Create compound path for given contour value
+Args:</p>
+<blockquote>
+<div><p>frame: sensor frame
+contour_val (float): value of contour</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>path: matplotlib.Path object for contour polygon</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.topography.TopoModule.find_single_path">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_single_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/topography.html#TopoModule.find_single_path"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.topography.TopoModule.find_single_path" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>From a frame, find the point that contains the point and start changing the contour val excluding isolated
+contours
+Args:</p>
+<blockquote>
+<div><p>frame: frame of sandbox
+point: Aruco point coordinate (x, y)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>path:
+contour_val:</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.topography.TopoModule.load_fluid">
+<span class="sig-name descname"><span class="pre">load_fluid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/topography.html#TopoModule.load_fluid"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.topography.TopoModule.load_fluid" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.topography.TopoModule.normalize_topography">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">normalize_topography</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_height</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/topography.html#TopoModule.normalize_topography"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.topography.TopoModule.normalize_topography" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Change the max an min value of the frame and normalize accordingly
+Args:</p>
+<blockquote>
+<div><p>frame: sensor frame
+extent: sensor extent
+max_height: Target max height
+min_height: Target min height</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>normalized frame and new extent</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.topography.TopoModule.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/topography.html#TopoModule.plot"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.topography.TopoModule.plot" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Deals with everything related to plotting in the axes
+Args:</p>
+<blockquote>
+<div><p>frame: Sandbox frame
+ax: axes of matplotlib figure to paint on</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.topography.TopoModule.reshape">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/topography.html#TopoModule.reshape"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.topography.TopoModule.reshape" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Reshape any image to the desired shape. Change shape of numpy array to desired shape
+Args:</p>
+<blockquote>
+<div><p>image:
+shape: sandbox shape</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>reshaped frame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.topography.TopoModule.set_texture">
+<span class="sig-name descname"><span class="pre">set_texture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/topography.html#TopoModule.set_texture"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.topography.TopoModule.set_texture" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.topography.TopoModule.show_widgets">
+<span class="sig-name descname"><span class="pre">show_widgets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/topography.html#TopoModule.show_widgets"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.topography.TopoModule.show_widgets" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.topography.TopoModule.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sb_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/topography.html#TopoModule.update"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.topography.TopoModule.update" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Acquire the information from th sb_params dict and call the functions to modify
+the frame and/or plot in the axes
+Args:</p>
+<blockquote>
+<div><p>sb_params:</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-sandbox.modules">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-sandbox.modules" title="Permalink to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/sandbox.modules.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

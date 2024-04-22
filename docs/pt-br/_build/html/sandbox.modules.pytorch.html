@@ -1,0 +1,217 @@
+
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>sandbox.modules.pytorch package &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/translations.js"></script>
+    <link rel="index" title="Índice" href="genindex.html" />
+    <link rel="search" title="Pesquisar" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="sandbox-modules-pytorch-package">
+<h1>sandbox.modules.pytorch package<a class="headerlink" href="#sandbox-modules-pytorch-package" title="Permalink to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="module-sandbox.modules.pytorch.landscape_generation">
+<span id="sandbox-modules-pytorch-landscape-generation-module"></span><h2>sandbox.modules.pytorch.landscape_generation module<a class="headerlink" href="#module-sandbox.modules.pytorch.landscape_generation" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.modules.pytorch.landscape_generation.LandscapeGeneration">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.modules.pytorch.landscape_generation.</span></span><span class="sig-name descname"><span class="pre">LandscapeGeneration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/pytorch/landscape_generation.html#LandscapeGeneration"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.pytorch.landscape_generation.LandscapeGeneration" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="sandbox.modules.html#sandbox.modules.template.ModuleTemplate" title="sandbox.modules.template.ModuleTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleTemplate</span></code></a></p>
+<p>Class to generate landscapes using DEMs from the sandbox and a pre-trained model with the
+pytorch-CycleGAN-and-pix2pix library</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.get_image_modify">
+<span class="sig-name descname"><span class="pre">get_image_modify</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/pytorch/landscape_generation.html#LandscapeGeneration.get_image_modify"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.get_image_modify" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>From the LoadSaveTopoModule acquire the dem. If a frame have not been yet loaded then capture a new frame.
+at today 27/08/2020 the image must be doubled for the method to work</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.image_landscape">
+<span class="sig-name descname"><span class="pre">image_landscape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/pytorch/landscape_generation.html#LandscapeGeneration.image_landscape"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.image_landscape" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Show the loaded image in the sandbox
+Args:</p>
+<blockquote>
+<div><p>ax: axes of the sandbox</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/pytorch/landscape_generation.html#LandscapeGeneration.plot"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.plot" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.read_result">
+<span class="sig-name descname"><span class="pre">read_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'landscape_image.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'C:\\Users\\Matheus\\Desktop\\forked_sandbox\\open_AR_Sandbox-main\\notebooks\\tutorials\\09_LandscapeGeneration\\results'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/pytorch/landscape_generation.html#LandscapeGeneration.read_result"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.read_result" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Read the result image from the self.run_cmd(<a href="#id1"><span class="problematic" id="id2">*</span></a>args) function. It reads the results from the
+“result_dir” that have name “name”. Be sure to include the .png extension
+Args:</p>
+<blockquote>
+<div><p>name: name of image input (.png)
+result_dir: folder of results</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.remove_image">
+<span class="sig-name descname"><span class="pre">remove_image</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/pytorch/landscape_generation.html#LandscapeGeneration.remove_image"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.remove_image" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>For each frame we need to clear the loaded image so if we change position size or the image
+itself then it will display the most actual one without occupying memory</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.run_cmd">
+<span class="sig-name descname"><span class="pre">run_cmd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">package_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataroot_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'C:\\Users\\Matheus\\Desktop\\forked_sandbox\\open_AR_Sandbox-main\\notebooks\\tutorials\\09_LandscapeGeneration\\saved_DEMs/'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoints_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'C:\\Users\\Matheus\\Desktop\\forked_sandbox\\open_AR_Sandbox-main\\notebooks\\tutorials\\09_LandscapeGeneration\\checkpoints/'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'C:\\Users\\Matheus\\Desktop\\forked_sandbox\\open_AR_Sandbox-main\\notebooks\\tutorials\\09_LandscapeGeneration\\results/'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmd_string</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_environment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sandbox-gempy'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/pytorch/landscape_generation.html#LandscapeGeneration.run_cmd"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.run_cmd" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Construct the string that will be run in the command line command.
+Args:</p>
+<blockquote>
+<div><p>package_dir: The location of the pytorch-CycleGAN-and-pix2pix folder
+dataroot_dir: The location of the image
+checkpoints_dir: The location of the trained model
+results_dir: The location where the results will be saved
+name_model: Name of the trained model to be used
+cmd_string: If not None then it will run this string instead of the previous arguments
+name_environment: name of the conda environment to properly run the cmd</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.save_image">
+<span class="sig-name descname"><span class="pre">save_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'landscape_image.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pathname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'C:\\Users\\Matheus\\Desktop\\forked_sandbox\\open_AR_Sandbox-main\\notebooks\\tutorials\\09_LandscapeGeneration\\saved_DEMs/test/'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/pytorch/landscape_generation.html#LandscapeGeneration.save_image"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.save_image" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Takes the image and saves it as a .png “image” in the “patchname” folder with “name” as name
+Args:</p>
+<blockquote>
+<div><p>image: Takes a numpy array to be saved as an image. If none then it gets a new image from
+self.get_image_modify
+name: name of the image. Must include the .png extension
+pathname: location of the image to be saved</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>the figure that will be saved</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.set_package_dir">
+<span class="sig-name descname"><span class="pre">set_package_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">package_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/pytorch/landscape_generation.html#LandscapeGeneration.set_package_dir"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.set_package_dir" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.show_widgets">
+<span class="sig-name descname"><span class="pre">show_widgets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/pytorch/landscape_generation.html#LandscapeGeneration.show_widgets"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.show_widgets" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sb_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/pytorch/landscape_generation.html#LandscapeGeneration.update"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.update" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.update_model">
+<span class="sig-name descname"><span class="pre">update_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/modules/pytorch/landscape_generation.html#LandscapeGeneration.update_model"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.modules.pytorch.landscape_generation.LandscapeGeneration.update_model" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-sandbox.modules.pytorch">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-sandbox.modules.pytorch" title="Permalink to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/sandbox.modules.pytorch.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

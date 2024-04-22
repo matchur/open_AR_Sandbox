@@ -1,0 +1,1008 @@
+
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sandbox.modules.search_methods &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/translations.js"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fonte de sandbox.modules.search_methods</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">panel</span> <span class="k">as</span> <span class="nn">pn</span>
+<span class="kn">from</span> <span class="nn">.template</span> <span class="kn">import</span> <span class="n">ModuleTemplate</span>
+<span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">set_logger</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">set_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SearchMethodsModule"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule">[documentos]</a><span class="k">class</span> <span class="nc">SearchMethodsModule</span><span class="p">(</span><span class="n">ModuleTemplate</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Module for visualization of different search techniques based on gradients and</span>
+<span class="sd">    #TODO: have deterministic and probabilistic search methods and later combine them</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extent</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">speed_alpha</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span> <span class="o">=</span> <span class="mf">1e-10</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">show_frame</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">search_active</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sleep</span> <span class="o">=</span> <span class="mf">0.4</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_contour_xy</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_xy</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh_dx</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh_dy</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">=</span> <span class="p">(</span><span class="n">extent</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">margins_crop</span> <span class="o">=</span> <span class="mi">20</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span> <span class="o">=</span> <span class="mi">400</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_search</span> <span class="o">=</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_grad</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_grad</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_samples</span> <span class="o">=</span> <span class="mi">5000</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">burn_in_period</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">counter_t</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_plotting</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">point_color</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">marker</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linestyle</span> <span class="o">=</span> <span class="s2">&quot;None&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">marker_size</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">direction_search</span> <span class="o">=</span> <span class="s2">&quot;Maximum&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xy_aruco</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bins</span> <span class="o">=</span> <span class="mi">100</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">activate_frame_capture</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_variance</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span><span class="p">]</span>
+        <span class="c1"># self.init_variance = [150]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_search_covariance</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># step for generate a new cov</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">memory_steps</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># memory steps, per 100 steps, calculate the accept again</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_sample</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># ratio of acceptance of samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">counter_total</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_gradient_descend</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">hamiltonian</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_hm</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh_hm</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh_dx_hm</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh_dy_hm</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_step</span> <span class="o">=</span> <span class="mf">0.08</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_points</span> <span class="o">=</span> <span class="mi">30</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;None&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Random walk&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Random walk step&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Adaptive HM&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Adaptive HM step&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Hamiltonian MC&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Hamiltonian MC step&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;None&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">histogram</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">pane</span><span class="o">.</span><span class="n">Matplotlib</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(),</span> <span class="n">tight</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># , height=335)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trigger</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_norm</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_widgets</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;SearchMethodsModule loaded successfully&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SearchMethodsModule.update"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule.update">[documentos]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sb_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;frame&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;lock_thread&#39;</span><span class="p">)</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ax&#39;</span><span class="p">)</span>
+        <span class="c1"># extent=sb_params.get(&#39;extent&#39;)</span>
+        <span class="n">same_frame</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;same_frame&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trigger</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;trigger&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># create a mesh for the very first time</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_mesh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="p">,</span> <span class="n">margins_crop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">margins_crop</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">activate_frame_capture</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">same_frame</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update_mesh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="p">,</span> <span class="n">margins_crop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">margins_crop</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;freeze_frame&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;freeze_frame&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">marker</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;marker&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">marker</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xy_aruco</span> <span class="o">=</span> <span class="n">marker</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">marker</span><span class="o">.</span><span class="n">is_inside_box</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;box_x&#39;</span><span class="p">,</span> <span class="s1">&#39;box_y&#39;</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xy_aruco</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">sb_params</span></div>
+
+<div class="viewcode-block" id="SearchMethodsModule.plot"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule.plot">[documentos]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_lines</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_gradient_descend</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_grad</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_grad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_descent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xy_aruco</span><span class="p">,</span>
+                                                             <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+                                                             <span class="bp">self</span><span class="o">.</span><span class="n">mesh_dx</span><span class="p">,</span>
+                                                             <span class="bp">self</span><span class="o">.</span><span class="n">mesh_dy</span><span class="p">,</span>
+                                                             <span class="bp">self</span><span class="o">.</span><span class="n">direction_search</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_grad</span><span class="p">)):</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_grad</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_grad</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s2">&quot;r*-&quot;</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_grad</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_grad</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;b*&quot;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_active</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot_search</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xy</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SearchMethodsModule.remove_lines"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule.remove_lines">[documentos]</a>    <span class="k">def</span> <span class="nf">remove_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+        <span class="p">[</span><span class="n">lines</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="k">for</span> <span class="n">lines</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">lines</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="SearchMethodsModule.create_mesh"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule.create_mesh">[documentos]</a>    <span class="k">def</span> <span class="nf">create_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">margins_crop</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a mseh from the topography that can be evaluated in every point.</span>
+<span class="sd">        Avoid conflicts between pixels(int) and floats</span>
+<span class="sd">        Args:</span>
+<span class="sd">            frame: kinect frame</span>
+<span class="sd">            fill_value:</span>
+<span class="sd">            margins_crop:</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">margins_crop</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="n">margins_crop</span><span class="p">:</span><span class="o">-</span><span class="n">margins_crop</span><span class="p">,</span> <span class="n">margins_crop</span><span class="p">:</span><span class="o">-</span><span class="n">margins_crop</span><span class="p">]</span>
+
+        <span class="n">height_i</span><span class="p">,</span> <span class="n">width_i</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">margins_crop</span><span class="p">,</span> <span class="n">width_i</span> <span class="o">+</span> <span class="n">margins_crop</span><span class="p">)</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">margins_crop</span><span class="p">,</span> <span class="n">height_i</span> <span class="o">+</span> <span class="n">margins_crop</span><span class="p">)</span>
+        <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+
+        <span class="n">points</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">xx</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">yy</span><span class="o">.</span><span class="n">ravel</span><span class="p">()])</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">interpolate</span><span class="o">.</span><span class="n">LinearNDInterpolator</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">fill_value</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mesh</span></div>
+
+<div class="viewcode-block" id="SearchMethodsModule.update_mesh"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule.update_mesh">[documentos]</a>    <span class="k">def</span> <span class="nf">update_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">margins_crop</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        create the mesh for the current frame and its derivatives</span>
+<span class="sd">        Args:</span>
+<span class="sd">            frame:</span>
+<span class="sd">            fill_value:</span>
+<span class="sd">            margins_crop:</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">der_y</span><span class="p">,</span> <span class="n">der_x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh_dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_mesh</span><span class="p">(</span><span class="n">der_x</span><span class="p">,</span> <span class="n">margins_crop</span><span class="o">=</span><span class="n">margins_crop</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">fill_value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh_dy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_mesh</span><span class="p">(</span><span class="n">der_y</span><span class="p">,</span> <span class="n">margins_crop</span><span class="o">=</span><span class="n">margins_crop</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">fill_value</span><span class="p">)</span>
+
+        <span class="n">frame</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span> <span class="o">*</span> <span class="n">frame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_mesh</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">margins_crop</span><span class="o">=</span><span class="n">margins_crop</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">fill_value</span><span class="p">)</span>
+
+        <span class="n">hm_frame</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">frame</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh_hm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_mesh</span><span class="p">(</span><span class="n">hm_frame</span><span class="p">,</span> <span class="n">margins_crop</span><span class="o">=</span><span class="n">margins_crop</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">fill_value</span><span class="p">)</span>
+        <span class="n">der_y_hm</span><span class="p">,</span> <span class="n">der_x_hm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">hm_frame</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh_dx_hm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_mesh</span><span class="p">(</span><span class="n">der_x_hm</span><span class="p">,</span> <span class="n">margins_crop</span><span class="o">=</span><span class="n">margins_crop</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">fill_value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh_dy_hm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_mesh</span><span class="p">(</span><span class="n">der_y_hm</span><span class="p">,</span> <span class="n">margins_crop</span><span class="o">=</span><span class="n">margins_crop</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">fill_value</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_norm</span> <span class="o">=</span> <span class="n">frame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_hm</span> <span class="o">=</span> <span class="n">hm_frame</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="SearchMethodsModule.plot_search"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule.plot_search">[documentos]</a>    <span class="k">def</span> <span class="nf">plot_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        selected over the possible options a search algorithm</span>
+<span class="sd">        Args:</span>
+<span class="sd">            method:</span>
+<span class="sd">            xy:</span>
+<span class="sd">            ax:</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_contour_xy</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">collections</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># TODO: Improve this</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trigger</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_xy</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_list</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span><span class="p">,</span>
+                    <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">point_color</span><span class="p">,</span>
+                    <span class="n">marker</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">marker</span><span class="p">,</span>
+                    <span class="n">markersize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">marker_size</span><span class="p">,</span>
+                    <span class="n">linestyle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">linestyle</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="c1"># self.activate_frame_capture = True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_random</span><span class="p">(</span><span class="n">xy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+            <span class="c1"># self.activate_frame_capture = False</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">x_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="n">xy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">xy</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_search</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_random_step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+            <span class="c1"># self.activate_frame_capture = True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_adaptiveMH</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="mi">4</span><span class="p">]:</span>
+            <span class="c1"># self.activate_frame_capture = False</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">x_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="n">xy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">xy</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_search</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_adaptiveMH_step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="mi">5</span><span class="p">]:</span>
+            <span class="c1"># self.activate_frame_capture = True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_hamiltonianMC</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh_hm</span><span class="p">,</span>
+                                                               <span class="bp">self</span><span class="o">.</span><span class="n">mesh_dx_hm</span><span class="p">,</span>
+                                                               <span class="bp">self</span><span class="o">.</span><span class="n">mesh_dy_hm</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="mi">6</span><span class="p">]:</span>
+            <span class="c1"># self.activate_frame_capture = False</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">x_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="n">xy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">xy</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_search</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_hamiltonianMC_step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh_hm</span><span class="p">,</span>
+                                                          <span class="bp">self</span><span class="o">.</span><span class="n">mesh_dx_hm</span><span class="p">,</span>
+                                                          <span class="bp">self</span><span class="o">.</span><span class="n">mesh_dy_hm</span><span class="p">,</span>
+                                                          <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                                          <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="SearchMethodsModule.gradient_descent"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule.gradient_descent">[documentos]</a>    <span class="k">def</span> <span class="nf">gradient_descent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">direction</span><span class="p">):</span>
+        <span class="n">x_sol</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">y_sol</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xy</span><span class="p">)):</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">xy</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">z1</span> <span class="o">=</span> <span class="n">mesh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">z2</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">x_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span>
+            <span class="n">y_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span><span class="p">]</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">z1</span> <span class="o">-</span> <span class="n">z2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span> <span class="ow">and</span> <span class="n">count</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_samples</span><span class="p">:</span>
+                <span class="n">z1</span> <span class="o">=</span> <span class="n">mesh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Maximum&quot;</span><span class="p">:</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">speed_alpha</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+                    <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">speed_alpha</span> <span class="o">*</span> <span class="n">dy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">speed_alpha</span> <span class="o">*</span> <span class="n">dx</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+                    <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">speed_alpha</span> <span class="o">*</span> <span class="n">dy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+
+                <span class="n">z2</span> <span class="o">=</span> <span class="n">mesh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+                <span class="n">x_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">y_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">x_sol</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_list</span><span class="p">)</span>
+            <span class="n">y_sol</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_list</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x_sol</span><span class="p">,</span> <span class="n">y_sol</span></div>
+
+<div class="viewcode-block" id="SearchMethodsModule.mcmc_random"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule.mcmc_random">[documentos]</a>    <span class="k">def</span> <span class="nf">mcmc_random</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">mesh</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">xy</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">xy</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_search</span>
+
+        <span class="n">ax</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ay</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">burn_in_period</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_samples</span><span class="p">):</span>
+            <span class="n">x_1</span><span class="p">,</span> <span class="n">y_1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span>
+                                                        <span class="n">cov</span><span class="o">=</span><span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span><span class="p">]])</span>
+            <span class="c1"># if self.margins_crop &lt; x_1 &lt; self.xmax - self.margins_crop and</span>
+            <span class="c1"># self.margins_crop &lt; y_1 &lt; self.ymax - self.margins_crop:</span>
+            <span class="n">x_sample</span> <span class="o">=</span> <span class="n">x_1</span>
+            <span class="n">y_sample</span> <span class="o">=</span> <span class="n">y_1</span>
+            <span class="n">accept_prob</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mesh</span><span class="p">(</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">)</span> <span class="o">/</span> <span class="n">mesh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.0</span><span class="p">)</span>
+
+            <span class="n">u</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">u</span> <span class="o">&lt;</span> <span class="n">accept_prob</span><span class="p">:</span>  <span class="c1">#</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x_sample</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">y_sample</span>
+
+            <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">burn_in_period</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">ay</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ay</span></div>
+
+<div class="viewcode-block" id="SearchMethodsModule.mcmc_random_step"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule.mcmc_random_step">[documentos]</a>    <span class="k">def</span> <span class="nf">mcmc_random_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+        <span class="n">x_1</span><span class="p">,</span> <span class="n">y_1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span>
+                                                    <span class="n">cov</span><span class="o">=</span><span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                                         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span><span class="p">]])</span>
+
+        <span class="c1"># if self.margins_crop &lt; x_1 &lt; self.xmax - self.margins_crop and \</span>
+        <span class="c1">#       self.margins_crop &lt; y_1 &lt; self.ymax - self.margins_crop:</span>
+        <span class="n">x_sample</span> <span class="o">=</span> <span class="n">x_1</span>
+        <span class="n">y_sample</span> <span class="o">=</span> <span class="n">y_1</span>
+        <span class="n">accept_prob</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mesh</span><span class="p">(</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">)</span> <span class="o">/</span> <span class="n">mesh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_plotting</span><span class="p">:</span>
+            <span class="c1"># point = self.plot.ax.plot(x, y, &quot;r.&quot;)</span>
+            <span class="n">circle1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span><span class="p">),</span> <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+            <span class="n">circle2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">circle1</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">circle2</span><span class="p">)</span>
+            <span class="n">arrow</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">arrow</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+                             <span class="p">(</span><span class="n">x_sample</span> <span class="o">-</span> <span class="n">x</span><span class="p">),</span>
+                             <span class="p">(</span><span class="n">y_sample</span> <span class="o">-</span> <span class="n">y</span><span class="p">),</span>
+                             <span class="n">length_includes_head</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                             <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trigger</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sleep</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">u</span> <span class="o">&lt;</span> <span class="n">accept_prob</span><span class="p">:</span>  <span class="c1">#</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x_sample</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">y_sample</span>
+            <span class="c1"># green</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_plotting</span><span class="p">:</span>
+                <span class="n">arrow</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">trigger</span><span class="p">()</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sleep</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_plotting</span><span class="p">:</span>
+                <span class="n">arrow</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">trigger</span><span class="p">()</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sleep</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_plotting</span><span class="p">:</span>
+            <span class="n">circle1</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+            <span class="n">circle2</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+            <span class="n">arrow</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">counter_t</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">burn_in_period</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start_plotting</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">counter_t</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div>
+
+<div class="viewcode-block" id="SearchMethodsModule.mcmc_adaptiveMH"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule.mcmc_adaptiveMH">[documentos]</a>    <span class="k">def</span> <span class="nf">mcmc_adaptiveMH</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">mesh</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="mi">50</span>  <span class="c1"># burn in period</span>
+        <span class="c1"># n = 5000  # sample numbers, and n/L must be an int</span>
+        <span class="n">K_s</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># the original cov</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># memory steps, per 100 steps, calculate the accept again</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="mf">0.23</span>  <span class="c1"># resable accept_prob</span>
+        <span class="n">epil</span> <span class="o">=</span> <span class="mf">0.01</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">K</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">K_s</span><span class="p">)</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># step for generate a new cov</span>
+
+        <span class="n">bx_sample</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">by_sample</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">P_sample</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># for the number of accpet probi</span>
+
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_samples</span> <span class="o">/</span> <span class="n">L</span><span class="p">)):</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># count how many samples have been accept</span>
+
+            <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">m</span>
+
+            <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">L</span> <span class="o">+</span> <span class="n">m</span><span class="p">:</span>
+                <span class="n">x_1</span><span class="p">,</span> <span class="n">y_1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">cov</span><span class="o">=</span><span class="p">[[</span><span class="n">K</span><span class="p">[</span><span class="n">t</span><span class="p">],</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">]])</span>
+                <span class="c1"># print(x_1)</span>
+                <span class="c1"># if self.margins_crop &lt; x_1 &lt; self.xmax - self.margins_crop and</span>
+                <span class="c1"># self.margins_crop &lt; y_1 &lt; self.ymax - self.margins_crop:</span>
+                <span class="n">x_sample</span> <span class="o">=</span> <span class="n">x_1</span>
+                <span class="n">y_sample</span> <span class="o">=</span> <span class="n">y_1</span>
+                <span class="c1"># print(x_sample)</span>
+
+                <span class="n">accept_prob</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="p">(</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">)</span> <span class="o">/</span> <span class="n">z</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.0</span><span class="p">)</span>
+                <span class="c1"># print(&#39;accept_prob:&#39;,accept_prob)</span>
+                <span class="n">u</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="c1"># print(&#39;u:&#39;,u)</span>
+                <span class="c1"># ax_sample.append(x_sample)</span>
+                <span class="c1"># ay_sample.append(y_sample)</span>
+
+                <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># no burn in period</span>
+
+                    <span class="k">if</span> <span class="n">u</span> <span class="o">&lt;</span> <span class="n">accept_prob</span><span class="p">:</span>  <span class="c1">#</span>
+                        <span class="n">x</span> <span class="o">=</span> <span class="n">x_sample</span>
+                        <span class="n">y</span> <span class="o">=</span> <span class="n">y_sample</span>
+                        <span class="n">count</span> <span class="o">=</span> <span class="n">count</span> <span class="o">+</span> <span class="mi">1</span>
+
+                    <span class="n">bx_sample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                    <span class="n">by_sample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># only the first time has burn in period</span>
+
+                    <span class="k">if</span> <span class="n">u</span> <span class="o">&lt;</span> <span class="n">accept_prob</span><span class="p">:</span>  <span class="c1">#</span>
+                        <span class="n">x</span> <span class="o">=</span> <span class="n">x_sample</span>
+                        <span class="n">y</span> <span class="o">=</span> <span class="n">y_sample</span>
+
+                        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">m</span><span class="p">:</span>
+                            <span class="n">count</span> <span class="o">=</span> <span class="n">count</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># after burn in period, the number of acceptance</span>
+
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">m</span><span class="p">:</span>
+                        <span class="n">bx_sample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                        <span class="n">by_sample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+                <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+
+            <span class="n">P_accept</span> <span class="o">=</span> <span class="n">count</span> <span class="o">*</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">L</span>
+            <span class="n">P_sample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">P_accept</span><span class="p">)</span>
+            <span class="n">tau</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">P_sample</span><span class="p">)</span>
+            <span class="n">K</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">K</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="o">-</span> <span class="n">epil</span> <span class="o">&lt;</span> <span class="n">P_accept</span> <span class="o">&lt;</span> <span class="n">a</span> <span class="o">+</span> <span class="n">epil</span><span class="p">:</span>
+                <span class="n">K</span><span class="p">[</span><span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">K</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">tau</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">P_sample</span><span class="p">[</span><span class="n">tau</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">P_sample</span><span class="p">[</span><span class="n">tau</span> <span class="o">-</span> <span class="mi">2</span><span class="p">]):</span>
+                    <span class="n">K</span><span class="p">[</span><span class="n">tau</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">K</span><span class="p">[</span><span class="n">tau</span> <span class="o">-</span> <span class="mi">2</span><span class="p">]</span>
+                <span class="n">K</span><span class="p">[</span><span class="n">tau</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">K</span><span class="p">[</span><span class="n">tau</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">step</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">bx_sample</span><span class="p">,</span> <span class="n">by_sample</span></div>
+
+<div class="viewcode-block" id="SearchMethodsModule.mcmc_adaptiveMH_step"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule.mcmc_adaptiveMH_step">[documentos]</a>    <span class="k">def</span> <span class="nf">mcmc_adaptiveMH_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="mf">0.23</span>  <span class="c1"># resable accept_prob</span>
+        <span class="n">epil</span> <span class="o">=</span> <span class="mf">0.01</span>
+
+        <span class="n">x_1</span><span class="p">,</span> <span class="n">y_1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span>
+                                                    <span class="n">cov</span><span class="o">=</span><span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">init_variance</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span><span class="p">]])</span>
+        <span class="c1"># if self.margins_crop &lt; x_1 &lt; self.xmax - self.margins_crop and</span>
+        <span class="c1"># self.margins_crop &lt; y_1 &lt; self.ymax - self.margins_crop:</span>
+        <span class="n">x_sample</span> <span class="o">=</span> <span class="n">x_1</span>
+        <span class="n">y_sample</span> <span class="o">=</span> <span class="n">y_1</span>
+        <span class="n">accept_prob</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mesh</span><span class="p">(</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">)</span> <span class="o">/</span> <span class="n">mesh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.0</span><span class="p">)</span>
+
+        <span class="n">u</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">counter_t</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">u</span> <span class="o">&lt;</span> <span class="n">accept_prob</span><span class="p">:</span>  <span class="c1">#</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x_sample</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">y_sample</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">counter_total</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">burn_in_period</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">x_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">counter_t</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">counter_total</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">counter_total</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">counter_t</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start_plotting</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_plotting</span><span class="p">:</span>
+                <span class="n">ellipse1</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">Ellipse</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                                                      <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_variance</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+                                                      <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span><span class="p">),</span>
+                                                      <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                                      <span class="n">linewidth</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+                <span class="n">ellipse2</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">Ellipse</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                                                      <span class="mi">2</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_variance</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+                                                      <span class="mi">2</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span><span class="p">),</span>
+                                                      <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                                      <span class="n">linewidth</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">ellipse1</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">ellipse2</span><span class="p">)</span>
+                <span class="n">arrow</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">arrow</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+                                 <span class="p">(</span><span class="n">x_sample</span> <span class="o">-</span> <span class="n">x</span><span class="p">),</span>
+                                 <span class="p">(</span><span class="n">y_sample</span> <span class="o">-</span> <span class="n">y</span><span class="p">),</span>
+                                 <span class="n">length_includes_head</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                 <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                 <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">trigger</span><span class="p">()</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sleep</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">u</span> <span class="o">&lt;</span> <span class="n">accept_prob</span><span class="p">:</span>  <span class="c1">#</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x_sample</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">y_sample</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">x_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">counter_total</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_plotting</span><span class="p">:</span>
+                    <span class="n">arrow</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">trigger</span><span class="p">()</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sleep</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_plotting</span><span class="p">:</span>
+                    <span class="n">arrow</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">trigger</span><span class="p">()</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sleep</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">counter_t</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_plotting</span><span class="p">:</span>
+            <span class="n">ellipse1</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+            <span class="n">ellipse2</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+            <span class="n">arrow</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">counter_t</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_steps</span><span class="p">:</span>
+            <span class="n">p_accept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">counter_total</span> <span class="o">*</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_steps</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">p_sample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p_accept</span><span class="p">)</span>
+            <span class="n">tau</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p_sample</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">a</span> <span class="o">-</span> <span class="n">epil</span> <span class="o">&lt;</span> <span class="n">p_accept</span> <span class="o">&lt;</span> <span class="n">a</span> <span class="o">+</span> <span class="n">epil</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">init_variance</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_variance</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">counter_t</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">counter_total</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># TODO: check if is closer to a</span>
+                <span class="c1"># making sure the  is better than the previous one</span>
+                <span class="k">if</span> <span class="n">tau</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_sample</span><span class="p">[</span><span class="n">tau</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_sample</span><span class="p">[</span><span class="n">tau</span> <span class="o">-</span> <span class="mi">2</span><span class="p">]):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">init_variance</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_variance</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">init_variance</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_variance</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                                                        <span class="bp">self</span><span class="o">.</span><span class="n">step_search_covariance</span><span class="p">)))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">counter_t</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">counter_total</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div>
+
+<div class="viewcode-block" id="SearchMethodsModule.mcmc_hamiltonianMC"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule.mcmc_hamiltonianMC">[documentos]</a>    <span class="k">def</span> <span class="nf">mcmc_hamiltonianMC</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">dx_mesh</span><span class="p">,</span> <span class="n">dy_mesh</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">700</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_search</span>
+        <span class="n">x_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span>
+        <span class="n">y_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span><span class="p">]</span>
+        <span class="c1"># for t in range(self.number_samples):</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="c1"># sample random momentum</span>
+            <span class="n">proposed_momentum_vector</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                                                        <span class="n">cov</span><span class="o">=</span><span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                                                             <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span><span class="p">]])</span>
+            <span class="c1"># proposed_momentum_vector = numpy.random.normal(0, self.step_variance, 2)</span>
+            <span class="c1"># leapfrog</span>
+            <span class="c1"># if the xStar[,] is inside the frame or not</span>
+            <span class="c1"># if self.margins_crop &lt; x &lt; self.xmax - self.margins_crop and</span>
+            <span class="c1"># self.margins_crop &lt; y &lt; self.ymax - self.margins_crop:</span>
+            <span class="c1"># gradient</span>
+            <span class="n">gradient_xy</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dx_mesh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">dy_mesh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)])</span>
+            <span class="c1"># momentum, make a half step for momentum at the beginning</span>
+            <span class="n">momentum_vector</span> <span class="o">=</span> <span class="n">proposed_momentum_vector</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_step</span> <span class="o">*</span> <span class="n">gradient_xy</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="c1"># lepfrog steps</span>
+            <span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+            <span class="c1"># for j in range(self.leapfrog_points - 1):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+                <span class="c1"># postion/sample,full step for position/sample</span>
+                <span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">])</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_step</span> <span class="o">*</span> <span class="n">momentum_vector</span>
+                <span class="c1">#                 #if 0 &lt;= xStar[0] &lt; xmax - 2 and 0 &lt;= xStar[1] &lt; ymax - 2:</span>
+                <span class="c1">#                 # find new gradient</span>
+                <span class="n">gradient_xy</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dx_mesh</span><span class="p">(</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">),</span> <span class="n">dy_mesh</span><span class="p">(</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">)])</span>
+                <span class="c1"># momentum,full step of momentum</span>
+                <span class="n">momentum_vector</span> <span class="o">=</span> <span class="n">momentum_vector</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_step</span> <span class="o">*</span> <span class="n">gradient_xy</span>
+            <span class="c1"># last half step</span>
+            <span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">])</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_step</span> <span class="o">*</span> <span class="n">momentum_vector</span>
+            <span class="c1"># if 0 &lt;= xStar[0] &lt; xmax - 2 and 0 &lt;= xStar[1] &lt; ymax - 2:</span>
+            <span class="n">gradient_xy</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dx_mesh</span><span class="p">(</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">),</span> <span class="n">dy_mesh</span><span class="p">(</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">)])</span>
+            <span class="n">momentum_vector</span> <span class="o">=</span> <span class="n">momentum_vector</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_step</span> <span class="o">*</span> <span class="n">gradient_xy</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+            <span class="c1"># evaluate energy</span>
+            <span class="c1"># if 0 &lt;= xStar[0] &lt; xmax - 2 and 0 &lt;= xStar[1] &lt; ymax - 2:</span>
+            <span class="n">potential_energy</span> <span class="o">=</span> <span class="n">mesh</span><span class="p">(</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">)</span>
+            <span class="n">previous_potential_energy</span> <span class="o">=</span> <span class="n">mesh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+            <span class="c1">#### Kinetic energy function  KE = (p @ p) / 2.0</span>
+            <span class="n">previous_kinetic_e</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">proposed_momentum_vector</span><span class="p">,</span> <span class="n">proposed_momentum_vector</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="n">kinetic_e</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">momentum_vector</span><span class="p">,</span> <span class="n">momentum_vector</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+            <span class="c1"># acceptance</span>
+            <span class="n">accept_prob</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="n">potential_energy</span> <span class="o">+</span> <span class="n">previous_potential_energy</span> <span class="o">-</span>
+                                           <span class="n">kinetic_e</span> <span class="o">+</span> <span class="n">previous_kinetic_e</span><span class="p">))</span>
+            <span class="n">uc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">uc</span> <span class="o">&lt;</span> <span class="n">accept_prob</span> <span class="ow">and</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">margins_crop</span> <span class="o">&lt;</span> <span class="n">x_sample</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">margins_crop</span> <span class="ow">and</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">margins_crop</span> <span class="o">&lt;</span> <span class="n">y_sample</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">margins_crop</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x_sample</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">y_sample</span>
+                <span class="n">x_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">y_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x_list</span><span class="p">,</span> <span class="n">y_list</span></div>
+
+<div class="viewcode-block" id="SearchMethodsModule.mcmc_hamiltonianMC_step"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule.mcmc_hamiltonianMC_step">[documentos]</a>    <span class="k">def</span> <span class="nf">mcmc_hamiltonianMC_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">dx_mesh</span><span class="p">,</span> <span class="n">dy_mesh</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+        <span class="c1"># for t in range(self.number_samples):</span>
+        <span class="c1"># sample random momentum</span>
+        <span class="n">proposed_momentum_vector</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                                                    <span class="n">cov</span><span class="o">=</span><span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                                                         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span><span class="p">]])</span>
+        <span class="c1"># proposed_momentum_vector = numpy.random.normal(0, self.step_variance, 2)</span>
+        <span class="c1"># leapfrog</span>
+        <span class="c1"># if the xStar[,] is inside the frame or not</span>
+        <span class="c1"># if self.margins_crop &lt; x &lt; self.xmax - self.margins_crop and self.margins_crop &lt; y &lt; self.ymax - self.margins_crop:</span>
+        <span class="c1"># gradient</span>
+        <span class="n">gradient_xy</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dx_mesh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">dy_mesh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)])</span>
+        <span class="c1"># momentum, make a half step for momentum at the beginning</span>
+        <span class="n">momentum_vector</span> <span class="o">=</span> <span class="n">proposed_momentum_vector</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_step</span> <span class="o">*</span> <span class="n">gradient_xy</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="c1"># lepfrog steps</span>
+        <span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+        <span class="n">x_temp</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span>
+        <span class="n">y_temp</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span><span class="p">]</span>
+        <span class="c1"># for j in range(self.leapfrog_points - 1):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_points</span><span class="p">):</span>
+            <span class="c1"># postion/sample,full step for position/sample</span>
+            <span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">])</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_step</span> <span class="o">*</span> <span class="n">momentum_vector</span>
+            <span class="c1">#                 #if 0 &lt;= xStar[0] &lt; xmax - 2 and 0 &lt;= xStar[1] &lt; ymax - 2:</span>
+            <span class="c1">#                 # find new gradient</span>
+            <span class="n">gradient_xy</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dx_mesh</span><span class="p">(</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">),</span> <span class="n">dy_mesh</span><span class="p">(</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">)])</span>
+            <span class="c1"># momentum,full step of momentum</span>
+            <span class="n">momentum_vector</span> <span class="o">=</span> <span class="n">momentum_vector</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_step</span> <span class="o">*</span> <span class="n">gradient_xy</span>
+            <span class="n">x_temp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_sample</span><span class="p">)</span>
+            <span class="n">y_temp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_sample</span><span class="p">)</span>
+        <span class="c1"># last half step</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_temp</span><span class="p">,</span> <span class="n">y_temp</span><span class="p">,</span> <span class="s2">&quot;k*-&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trigger</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sleep</span><span class="p">)</span>
+
+        <span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">])</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_step</span> <span class="o">*</span> <span class="n">momentum_vector</span>
+        <span class="c1"># if 0 &lt;= xStar[0] &lt; xmax - 2 and 0 &lt;= xStar[1] &lt; ymax - 2:</span>
+        <span class="n">gradient_xy</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dx_mesh</span><span class="p">(</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">),</span> <span class="n">dy_mesh</span><span class="p">(</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">)])</span>
+        <span class="n">momentum_vector</span> <span class="o">=</span> <span class="n">momentum_vector</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_step</span> <span class="o">*</span> <span class="n">gradient_xy</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+        <span class="c1"># evaluate energy</span>
+        <span class="c1"># if 0 &lt;= xStar[0] &lt; xmax - 2 and 0 &lt;= xStar[1] &lt; ymax - 2:</span>
+        <span class="n">potential_energy</span> <span class="o">=</span> <span class="n">mesh</span><span class="p">(</span><span class="n">x_sample</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">)</span>
+        <span class="n">previous_potential_energy</span> <span class="o">=</span> <span class="n">mesh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># Kinetic energy function  KE = (p @ p) / 2.0</span>
+        <span class="n">previous_kinetic_e</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">proposed_momentum_vector</span><span class="p">,</span> <span class="n">proposed_momentum_vector</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="n">kinetic_e</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">momentum_vector</span><span class="p">,</span> <span class="n">momentum_vector</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+        <span class="c1"># acceptance</span>
+        <span class="n">accept_prob</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="n">potential_energy</span> <span class="o">+</span> <span class="n">previous_potential_energy</span> <span class="o">-</span> <span class="n">kinetic_e</span> <span class="o">+</span> <span class="n">previous_kinetic_e</span><span class="p">))</span>
+        <span class="n">uc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">uc</span> <span class="o">&lt;</span> <span class="n">accept_prob</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">margins_crop</span> <span class="o">&lt;</span> <span class="n">x_sample</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">margins_crop</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">margins_crop</span> <span class="o">&lt;</span> <span class="n">y_sample</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">margins_crop</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x_sample</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">y_sample</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="c1"># step_plot.remove()</span>
+
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div>
+
+<div class="viewcode-block" id="SearchMethodsModule.hist_distribution"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule.hist_distribution">[documentos]</a>    <span class="k">def</span> <span class="nf">hist_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Histogram showing the distribution of the sampled points and the targer</span>
+<span class="sd">        Returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># x = self.frame_norm.sum(axis=0)</span>
+        <span class="c1"># y = self.frame_norm.sum(axis=1)</span>
+
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+        <span class="n">ax_x</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">)</span>
+        <span class="n">ax_x</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">distplot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_list</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax_x</span><span class="p">)</span>
+        <span class="c1"># ax_x = sns.histplot(self.x_list, bins=self.bins, ax=ax_x)</span>
+
+        <span class="c1"># ax_x.hist(self.x_list, bins=self.bins)</span>
+        <span class="c1"># ax_x.plot(range(len(x)), x, &quot;r--&quot;)</span>
+        <span class="n">ax_x</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;x_direction&#39;</span><span class="p">)</span>
+
+        <span class="n">ax_y</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">)</span>
+        <span class="c1"># ax_y.hist((self.y_list), bins=self.bins)</span>
+        <span class="c1"># ax_y = sns.histplot(self.y_list, bins=self.bins, ax=ax_y)</span>
+        <span class="n">ax_y</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">distplot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_list</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax_y</span><span class="p">)</span>
+        <span class="c1"># ax_y.plot(range(len(y)), y, &quot;r--&quot;)</span>
+        <span class="n">ax_y</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;y direction&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">fig</span></div>
+
+    <span class="c1"># Widgets</span>
+
+<div class="viewcode-block" id="SearchMethodsModule.show_widgets"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.search_methods.SearchMethodsModule.show_widgets">[documentos]</a>    <span class="k">def</span> <span class="nf">show_widgets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">widget</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget_activate_gradient_descend</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_optimum</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_speed_gradient_descend</span><span class="p">,</span>
+                           <span class="s2">&quot;&lt;b&gt;Frame controller&lt;/b&gt;&quot;</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_activate_frame_capture</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_refresh_frame</span><span class="p">)</span>
+
+        <span class="n">column</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;#Simulation options&quot;</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_selector</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_search_active</span><span class="p">,</span>
+                           <span class="s2">&quot;&lt;b&gt;Controllers&lt;/b&gt;&quot;</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_sleep</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_margins_crop</span><span class="p">,</span>
+                           <span class="s2">&quot;&lt;b&gt;Visualization options&lt;/b&gt;&quot;</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_points</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_contour</span><span class="p">,</span>
+                           <span class="s2">&quot;&lt;b&gt;Modify constants&lt;/b&gt; &quot;</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_variance</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_number_samples</span><span class="p">,</span>
+                           <span class="s2">&quot;&lt;b&gt;Adaptive options&lt;/b&gt;&quot;</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_memory_steps</span><span class="p">,</span>
+                           <span class="s2">&quot;&lt;b&gt; Hamiltonian options&quot;</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_leapfrog_step</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_widget_leapfrog_points</span>
+                           <span class="p">)</span>
+        <span class="n">histogram</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">WidgetBox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget_histogram_refresh</span><span class="p">,</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">histogram</span><span class="p">)</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Row</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">widget</span><span class="p">)</span>
+
+        <span class="n">tabs</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Tabs</span><span class="p">((</span><span class="s1">&#39;Controllers&#39;</span><span class="p">,</span> <span class="n">row</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s2">&quot;Histogram plot&quot;</span><span class="p">,</span> <span class="n">histogram</span><span class="p">),</span>
+                       <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tabs</span></div>
+
+    <span class="k">def</span> <span class="nf">_create_widgets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_selector</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Select</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Select search method&#39;</span><span class="p">,</span>
+            <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_selector</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_selector</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_search_active</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">RadioButtonGroup</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Start the search&#39;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Start&#39;</span><span class="p">,</span> <span class="s1">&#39;Stop&#39;</span><span class="p">],</span>
+                                                                 <span class="n">value</span><span class="o">=</span><span class="s1">&#39;Stop&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_search_active</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_search_active</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                               <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_points</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Show the points&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plot_xy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_points</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_plot_points</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_contour</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Show the contours of the points&#39;</span><span class="p">,</span>
+                                                        <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plot_contour_xy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_contour</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_plot_contour</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_show_frame</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Show the frame&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">show_frame</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_show_frame</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_show_frame</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_activate_frame_capture</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Update frame realtime&#39;</span><span class="p">,</span>
+                                                                  <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">activate_frame_capture</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_activate_frame_capture</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_activate_frame_capture</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                                        <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_activate_gradient_descend</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Activate gradient descend&#39;</span><span class="p">,</span>
+                                                                     <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">active_gradient_descend</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_activate_gradient_descend</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_active_gradient_descend</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                                           <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_refresh_frame</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Manually refresh mesh&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_refresh_frame</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_refresh_frame</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span>
+                                               <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_sleep</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">FloatSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Step delay (seconds)&#39;</span><span class="p">,</span>
+                                                    <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sleep</span><span class="p">,</span>
+                                                    <span class="n">start</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                                    <span class="n">end</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+                                                    <span class="n">step</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_sleep</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_sleep</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_histogram_refresh</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Manually refresh histogram&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_histogram_refresh</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callbak_histogram_refresh</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span>
+                                                   <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_variance</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Spinner</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Proposed Variance&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_variance</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_variance</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_speed_gradient_descend</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">FloatSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Speed convergence&#39;</span><span class="p">,</span>
+                                                                     <span class="n">start</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                                                     <span class="n">end</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+                                                                     <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">speed_alpha</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_speed_gradient_descend</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_speed_gradient_descend</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                                        <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_number_samples</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Spinner</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Number of samples&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">number_samples</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_number_samples</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_number_samples</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                                <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_memory_steps</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Spinner</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Memory steps&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">memory_steps</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_memory_steps</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_memory_steps</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                              <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_leapfrog_step</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">FloatSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Leapfrog_step&#39;</span><span class="p">,</span>
+                                                            <span class="n">start</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                                            <span class="n">end</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+                                                            <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_step</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_leapfrog_step</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_leapfrog_step</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                               <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_leapfrog_points</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Spinner</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Leapfrog points&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_points</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_leapfrog_points</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_leapfrog_points</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                                 <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_optimum</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Select</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Select convergence to local optimum&#39;</span><span class="p">,</span>
+                                                 <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Maximum&quot;</span><span class="p">,</span> <span class="s2">&quot;Minimum&quot;</span><span class="p">],</span>
+                                                 <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">direction_search</span>
+                                                 <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_optimum</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_optimum</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_margins_crop</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Spinner</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Crop margins to reduce search area&#39;</span><span class="p">,</span>
+                                                       <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">margins_crop</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_margins_crop</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_margins_crop</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                              <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_search_active</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span> <span class="o">==</span> <span class="s1">&#39;Start&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">search_active</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">search_active</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_callback_plot_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_xy</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_plot_contour</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_contour_xy</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_show_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">show_frame</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_activate_frame_capture</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activate_frame_capture</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_active_gradient_descend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_gradient_descend</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_refresh_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_mesh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="p">,</span> <span class="n">margins_crop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">margins_crop</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_sleep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sleep</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callbak_histogram_refresh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">histogram</span><span class="o">.</span><span class="n">object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist_distribution</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_variance</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_speed_gradient_descend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">speed_alpha</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_number_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_samples</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_memory_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">memory_steps</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_leapfrog_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_step</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_leapfrog_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">leapfrog_points</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_optimum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">direction_search</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_margins_crop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">margins_crop</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Código do módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

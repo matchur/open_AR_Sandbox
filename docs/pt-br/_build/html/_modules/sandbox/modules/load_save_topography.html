@@ -1,0 +1,852 @@
+
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sandbox.modules.load_save_topography &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/translations.js"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fonte de sandbox.modules.load_save_topography</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">panel</span> <span class="k">as</span> <span class="nn">pn</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">skimage.transform</span>
+
+<span class="kn">from</span> <span class="nn">.template</span> <span class="kn">import</span> <span class="n">ModuleTemplate</span>
+<span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">_test_data</span>
+<span class="kn">from</span> <span class="nn">matplotlib.figure</span> <span class="kn">import</span> <span class="n">Figure</span>
+<span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">set_logger</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">set_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="LoadSaveTopoModule"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule">[documentos]</a><span class="k">class</span> <span class="nc">LoadSaveTopoModule</span><span class="p">(</span><span class="n">ModuleTemplate</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Module to save the current topography in a subset of the sandbox</span>
+<span class="sd">    and recreate it at a later time</span>
+<span class="sd">    two different representations are saved to the numpy file:</span>
+
+<span class="sd">    absolute Topography:</span>
+<span class="sd">    deviation from the mean height inside the bounding box in millimeter</span>
+
+<span class="sd">    relative Height:</span>
+<span class="sd">    height of each pixel relative to the vmin and vmax of the currently used calibration.</span>
+<span class="sd">    use relative height with the gempy module to get the same geologic map with different calibration settings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extent</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># call parents&#39; class init, use greyscale colormap as standard and extreme color labeling</span>
+        <span class="n">pn</span><span class="o">.</span><span class="n">extension</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">extent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vmin</span> <span class="o">=</span> <span class="n">extent</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vmax</span> <span class="o">=</span> <span class="n">extent</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">extent</span> <span class="o">=</span> <span class="n">extent</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">extent</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># location of bottom left corner of the box in the sandbox. values refer to pixels of the kinect sensor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span> <span class="o">=</span> <span class="p">[</span><span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">box_width</span> <span class="o">=</span> <span class="mi">200</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">box_height</span> <span class="o">=</span> <span class="mi">150</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">absolute_topo</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relative_topo</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_loaded</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Flag to know if a file have been loaded or not</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_show</span> <span class="o">=</span> <span class="s1">&#39;None&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">difference_types</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="s1">&#39;Show topography&#39;</span><span class="p">,</span> <span class="s1">&#39;Show difference&#39;</span><span class="p">,</span> <span class="s1">&#39;Show gradient difference&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmap_difference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmap_difference</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">difference</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loaded</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">transparency_difference</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">npz_filename</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_width</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_height</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_area</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_area_origin</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aruco_release_area_origin</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_filenames</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;None&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">=</span> <span class="n">_test_data</span><span class="p">[</span><span class="s1">&#39;topo&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">figure</span> <span class="o">=</span> <span class="n">Figure</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">add_axes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">snapshot_frame</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">pane</span><span class="o">.</span><span class="n">Matplotlib</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="p">,</span> <span class="n">tight</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span>  <span class="c1"># close figure to prevent inline display</span>
+
+        <span class="c1"># Stores the axes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lod</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># self._dif = None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># contour lines</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deactivate_main_contour</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours_on</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># create the widgets if used from another module</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">widgets_box</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;LoadSaveTopoModule loaded successfully&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.update"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.update">[documentos]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sb_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;frame&#39;</span><span class="p">)</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ax&#39;</span><span class="p">)</span>
+        <span class="n">marker</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;marker&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extent</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;extent&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">marker</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aruco_release_area_origin</span> <span class="o">=</span> <span class="n">marker</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">marker</span><span class="o">.</span><span class="n">is_inside_box</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;box_x&#39;</span><span class="p">,</span> <span class="s1">&#39;box_y&#39;</span><span class="p">)]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_release_area_origin</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+        <span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;active_contours&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">deactivate_main_contour</span>
+
+        <span class="k">return</span> <span class="n">sb_params</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.delete_rectangles_ax"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.delete_rectangles_ax">[documentos]</a>    <span class="k">def</span> <span class="nf">delete_rectangles_ax</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+        <span class="p">[</span><span class="n">rec</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">patches</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rec</span><span class="p">,</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">)]</span></div>
+        <span class="c1"># ax.patches = []</span>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.delete_im_ax"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.delete_im_ax">[documentos]</a>    <span class="k">def</span> <span class="nf">delete_im_ax</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+        <span class="c1"># [quad.remove() for quad in reversed(ax.collections) if isinstance(quad, matplotlib.collections.QuadMesh)]</span>
+        <span class="c1"># if self._dif is not None:</span>
+        <span class="c1">#    self._dif.remove()</span>
+        <span class="c1">#    self._dif = None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lod</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lod</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lod</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.set_show"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.set_show">[documentos]</a>    <span class="k">def</span> <span class="nf">set_show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_show</span> <span class="o">=</span> <span class="n">i</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.plot"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.plot">[documentos]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_rectangles_ax</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_im_ax</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_show</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">difference_types</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delete_im_ax</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_show</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">difference_types</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">showLoadedTopo</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_show</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">difference_types</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">showDifference</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_show</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">difference_types</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">showGradDifference</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+
+        <span class="c1"># Show contour lines of the plot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_contourns</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">contours_on</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">showContourTopo</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">deactivate_main_contour</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">delete_contourns</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">deactivate_main_contour</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">showBox</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_release_area</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">release_area_origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">release_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">release_height</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.moveBox_possible"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.moveBox_possible">[documentos]</a>    <span class="k">def</span> <span class="nf">moveBox_possible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Dinamicaly modify the size of the box when the margins extend more than frame</span>
+<span class="sd">        Args:</span>
+<span class="sd">            x: x coordinte of the box origin</span>
+<span class="sd">            y: y coordinate of the box origin</span>
+<span class="sd">            width: of the box</span>
+<span class="sd">            height: of the box</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">width</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">box_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">box_width</span> <span class="o">=</span> <span class="n">width</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="n">height</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">box_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">y</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">box_height</span> <span class="o">=</span> <span class="n">height</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.add_release_area_origin"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.add_release_area_origin">[documentos]</a>    <span class="k">def</span> <span class="nf">add_release_area_origin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a box origin [x,y] to highlight a zone on the image.</span>
+<span class="sd">        This method also manages the aruco release areas if detected</span>
+<span class="sd">        Args:</span>
+<span class="sd">            x: x coordinte of origin</span>
+<span class="sd">            y: y coordinte of origin</span>
+<span class="sd">        Returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">release_area_origin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">release_area_origin</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;box_x&#39;</span><span class="p">,</span> <span class="s1">&#39;box_y&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_release_area_origin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aruco_release_area_origin</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;box_x&#39;</span><span class="p">,</span> <span class="s1">&#39;box_y&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_area_origin</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">release_area_origin</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">aruco_release_area_origin</span><span class="p">))</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">release_area_origin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">release_area_origin</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;box_x&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s1">&#39;box_y&#39;</span><span class="p">:</span> <span class="n">y</span><span class="p">},</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.plot_release_area"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.plot_release_area">[documentos]</a>    <span class="k">def</span> <span class="nf">plot_release_area</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">origin</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot small boxes in the frame according to the dataframe origin and width, height specifiend.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ax: matplotlib axes to plot</span>
+<span class="sd">            origin: pandas dataframe indicating the x and y coordintes of the boxes to plot</span>
+<span class="sd">            width: width of the box to plot</span>
+<span class="sd">            height: height of the box to plot</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">origin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">x_pos</span> <span class="o">=</span> <span class="n">origin</span><span class="o">.</span><span class="n">box_x</span>
+            <span class="n">y_pos</span> <span class="o">=</span> <span class="n">origin</span><span class="o">.</span><span class="n">box_y</span>
+            <span class="n">x_origin</span> <span class="o">=</span> <span class="n">x_pos</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">width</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">y_origin</span> <span class="o">=</span> <span class="n">y_pos</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">height</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">release_area</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">x_origin</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y_origin</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+                                             <span class="p">[</span><span class="n">x_origin</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y_origin</span> <span class="o">+</span> <span class="n">height</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+                                             <span class="p">[</span><span class="n">x_origin</span> <span class="o">+</span> <span class="n">width</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                              <span class="n">y_origin</span> <span class="o">+</span> <span class="n">height</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+                                             <span class="p">[</span><span class="n">x_origin</span> <span class="o">+</span> <span class="n">width</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y_origin</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">1</span><span class="p">]]])</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_pos</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">showBox</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="p">[</span><span class="n">x_origin</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">y_origin</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.showBox"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.showBox">[documentos]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">showBox</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">origin</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Draws a wide rectangle outline in the live view</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ax: the axes where the patch will be drawed on</span>
+<span class="sd">            origin: relative position from bottom left in sensor pixel space</span>
+<span class="sd">            width: width of box in sensor pixels</span>
+<span class="sd">            height: height of box in sensor pixels</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">box</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">box</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.getBoxFrame"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.getBoxFrame">[documentos]</a>    <span class="k">def</span> <span class="nf">getBoxFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the absolute and relative topography of the current.</span>
+<span class="sd">        Crop frame image to dimensions of box</span>
+<span class="sd">        Args:</span>
+<span class="sd">            frame: frame of the actual topography</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            absolute_topo, the cropped frame minus the mean value and relative_topo,</span>
+<span class="sd">            the absolute topo normalized to the extent of the sandbox</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cropped_frame</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span><span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_height</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_width</span><span class="p">]</span>
+
+        <span class="n">mean_height</span> <span class="o">=</span> <span class="n">cropped_frame</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">absolute_topo</span> <span class="o">=</span> <span class="n">cropped_frame</span> <span class="o">-</span> <span class="n">mean_height</span>
+        <span class="n">relative_topo</span> <span class="o">=</span> <span class="n">absolute_topo</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vmax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">vmin</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">absolute_topo</span><span class="p">,</span> <span class="n">relative_topo</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.extractTopo"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.extractTopo">[documentos]</a>    <span class="k">def</span> <span class="nf">extractTopo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract the topography of the current frame and stores the value internally</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            absolute topography and relative topography</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_loaded</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">absolute_topo</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">relative_topo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getBoxFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">absolute_topo</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">relative_topo</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.saveTopo"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.saveTopo">[documentos]</a>    <span class="k">def</span> <span class="nf">saveTopo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;00_savedTopography.npz&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save the absolute topography and relative topography in a .npz file&quot;&quot;&quot;</span>
+        <span class="n">numpy</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">absolute_topo</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">relative_topo</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Save topo successful&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.save_release_area"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.save_release_area">[documentos]</a>    <span class="k">def</span> <span class="nf">save_release_area</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;00_releaseArea.npy&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save the release areas as a .npy file &quot;&quot;&quot;</span>
+        <span class="n">numpy</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">release_area</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Save area successful&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.loadTopo"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.loadTopo">[documentos]</a>    <span class="k">def</span> <span class="nf">loadTopo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;00_savedTopography.npz&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the absolute topography and relative topography from a .npz file.</span>
+<span class="sd">        If usinng a single .npy is assumed to be an outside DEM &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_loaded</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;npz&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">absolute_topo</span> <span class="o">=</span> <span class="n">files</span><span class="p">[</span><span class="s1">&#39;arr_0&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">relative_topo</span> <span class="o">=</span> <span class="n">files</span><span class="p">[</span><span class="s1">&#39;arr_1&#39;</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Load sandbox topography successfully&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;npy&quot;</span><span class="p">:</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_width</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">absolute_topo</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">relative_topo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_topography</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_id</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.showLoadedTopo"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.showLoadedTopo">[documentos]</a>    <span class="k">def</span> <span class="nf">showLoadedTopo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If a topography is saved internally, display the saved topograhy on the sandbox</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ax: axes to plot the saved topography</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_loaded</span><span class="p">:</span>
+            <span class="n">shape_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getBoxShape</span><span class="p">()</span>
+            <span class="c1"># self.loaded = self.modify_to_box_coordinates(self.absolute_topo[:shape_frame[0],</span>
+            <span class="c1">#                                             :shape_frame[1]])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loaded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">absolute_topo</span><span class="p">[:</span><span class="n">shape_frame</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:</span><span class="n">shape_frame</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="c1"># if self._lod is None:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lod</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loaded</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gist_earth&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span>
+                                  <span class="c1"># TODO: data is inverted, need to fix this for all the landsladides topography data</span>
+                                  <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">to_box_extent</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+            <span class="c1"># else:</span>
+            <span class="c1"># self._lod.set_array(self.loaded[:-1,:-1].ravel())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># if self._lod is not None:</span>
+            <span class="c1"># self._lod.remove()</span>
+            <span class="c1"># self._lod = None</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No Topography loaded, please load a Topography&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.showContourTopo"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.showContourTopo">[documentos]</a>    <span class="k">def</span> <span class="nf">showContourTopo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">         If a topography is saved internally, display the saved topograhy on the sandbox</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ax: axes to plot the saved topography</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_loaded</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deactivate_main_contour</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">shape_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getBoxShape</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">loaded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">absolute_topo</span><span class="p">[:</span><span class="n">shape_frame</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:</span><span class="n">shape_frame</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cont</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loaded</span><span class="p">,</span>
+                                    <span class="n">zorder</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                                    <span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">to_box_extent</span><span class="p">,</span>
+                                    <span class="n">colors</span><span class="o">=</span><span class="s2">&quot;k&quot;</span>
+                                    <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_label</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">clabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cont</span><span class="p">,</span>
+                                    <span class="n">inline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                    <span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+                                    <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%3.0f</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delete_contourns</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deactivate_main_contour</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No Topography loaded, please load a Topography to display contour lines&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.delete_contourns"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.delete_contourns">[documentos]</a>    <span class="k">def</span> <span class="nf">delete_contourns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">deactivate_main_contour</span><span class="p">:</span>
+            <span class="p">[</span><span class="n">coll</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="k">for</span> <span class="n">coll</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">collections</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coll</span><span class="p">,</span>
+                                                                              <span class="n">matplotlib</span><span class="o">.</span><span class="n">collections</span><span class="o">.</span><span class="n">LineCollection</span><span class="p">)]</span>
+            <span class="p">[</span><span class="n">text</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">artists</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">Text</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.normalize_topography"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.normalize_topography">[documentos]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">normalize_topography</span><span class="p">(</span><span class="n">dem</span><span class="p">,</span> <span class="n">target_extent</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Normalize any size of numpy array to fit the sandbox frame.</span>
+<span class="sd">        Useful when passing DEM with resolution bigger than sandbox sensor.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            dem:</span>
+<span class="sd">            target_extent: [minx, maxx, miny, maxy, vmin, vmax] -&gt;</span>
+<span class="sd">            [0, frame_width, 0, frame_height, vmin_sensor, vmax_sensor]</span>
+<span class="sd">        Returns:</span>
+<span class="sd">             normalized frame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Change shape of numpy array to desired shape</span>
+        <span class="n">topo_changed</span> <span class="o">=</span> <span class="n">skimage</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">dem</span><span class="p">,</span>
+                                                <span class="p">(</span><span class="n">target_extent</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">target_extent</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                                                <span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                                                <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;edge&#39;</span><span class="p">,</span>
+                                                <span class="n">anti_aliasing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                <span class="n">preserve_range</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">topo_min</span> <span class="o">=</span> <span class="n">topo_changed</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">topo_max</span> <span class="o">=</span> <span class="n">topo_changed</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="c1"># when the min value is not 0</span>
+        <span class="k">if</span> <span class="n">topo_min</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">displ</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">-</span> <span class="n">topo_min</span>
+            <span class="n">topo_changed</span> <span class="o">=</span> <span class="n">topo_changed</span> <span class="o">-</span> <span class="n">displ</span>
+
+        <span class="n">topo_changed</span> <span class="o">=</span> <span class="n">topo_changed</span> <span class="o">*</span> <span class="p">(</span><span class="n">target_extent</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">target_extent</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">topo_max</span> <span class="o">-</span> <span class="n">topo_min</span><span class="p">)</span>
+        <span class="n">mean_height</span> <span class="o">=</span> <span class="n">topo_changed</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">absolute_topo</span> <span class="o">=</span> <span class="n">topo_changed</span> <span class="o">-</span> <span class="n">mean_height</span>
+        <span class="n">relative_topo</span> <span class="o">=</span> <span class="n">topo_changed</span> <span class="o">/</span> <span class="p">(</span><span class="n">target_extent</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">target_extent</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">absolute_topo</span><span class="p">,</span> <span class="n">relative_topo</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.modify_to_box_coordinates"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.modify_to_box_coordinates">[documentos]</a>    <span class="k">def</span> <span class="nf">modify_to_box_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Since the box is not in the origin of the frame,</span>
+<span class="sd">        this will correctly display the loaded topography inside the box</span>
+<span class="sd">        Args:</span>
+<span class="sd">            frame: the frame that need to be modified to box coordintes</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            The modified frame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">width</span><span class="p">))</span>
+        <span class="n">left</span><span class="p">[</span><span class="n">left</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">nan</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">height</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">bot</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">height</span><span class="p">))</span>
+        <span class="n">bot</span><span class="p">[</span><span class="n">bot</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">nan</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">bot</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># frame = numpy.ma.array(frame, mask=numpy.nan)</span>
+        <span class="k">return</span> <span class="n">frame</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.saveTopoVector"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.saveTopoVector">[documentos]</a>    <span class="k">def</span> <span class="nf">saveTopoVector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># TODO:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        saves a vector graphic of the contour map to disk</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="k">def</span> <span class="nf">_cmap_difference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a custom made color map&quot;&quot;&quot;</span>
+        <span class="n">blues</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">RdBu</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">256</span><span class="p">))</span>
+        <span class="n">reds</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">RdBu</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">))</span>
+        <span class="n">blues_reds</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">blues</span><span class="p">,</span> <span class="n">reds</span><span class="p">))</span>
+        <span class="n">cmap</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span><span class="s1">&#39;difference_map&#39;</span><span class="p">,</span> <span class="n">blues_reds</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cmap</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">norm_difference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a custom made norm&quot;&quot;&quot;</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">TwoSlopeNorm</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">absolute_topo</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
+                                              <span class="n">vcenter</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                              <span class="n">vmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">absolute_topo</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">norm</span>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.getBoxShape"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.getBoxShape">[documentos]</a>    <span class="k">def</span> <span class="nf">getBoxShape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This will return the shape of the current saved topography&quot;&quot;&quot;</span>
+        <span class="n">current_absolute_topo</span><span class="p">,</span> <span class="n">current_relative_topo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getBoxFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="p">)</span>
+        <span class="n">x_dimension</span><span class="p">,</span> <span class="n">y_dimension</span> <span class="o">=</span> <span class="n">current_absolute_topo</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">x_saved</span><span class="p">,</span> <span class="n">y_saved</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">absolute_topo</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">shape_frame</span> <span class="o">=</span> <span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="n">x_dimension</span><span class="p">,</span> <span class="n">x_saved</span><span class="p">)),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="n">y_dimension</span><span class="p">,</span> <span class="n">y_saved</span><span class="p">))]</span>
+        <span class="k">return</span> <span class="n">shape_frame</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.extractDifference"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.extractDifference">[documentos]</a>    <span class="k">def</span> <span class="nf">extractDifference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This will return a numpy array comparing the difference between the current frame and the saved frame &quot;&quot;&quot;</span>
+        <span class="n">current_absolute_topo</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getBoxFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="p">)</span>
+        <span class="n">shape_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getBoxShape</span><span class="p">()</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">absolute_topo</span><span class="p">[:</span><span class="n">shape_frame</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                  <span class="p">:</span><span class="n">shape_frame</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">-</span> <span class="n">current_absolute_topo</span><span class="p">[:</span><span class="n">shape_frame</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:</span><span class="n">shape_frame</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+
+        <span class="c1"># paste diff array at right location according to box coordinates</span>
+        <span class="c1"># difference = self.modify_to_box_coordinates(diff)</span>
+        <span class="k">return</span> <span class="n">diff</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">to_box_extent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;When using imshow to plot data over the image. pass this as extent argumment to display the</span>
+<span class="sd">        image in the correct area of the sandbox box-area&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_width</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_height</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.showDifference"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.showDifference">[documentos]</a>    <span class="k">def</span> <span class="nf">showDifference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Displays the calculated difference of the previous frame with the actual frame</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ax: Axes to plot the difference</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_loaded</span><span class="p">:</span>
+            <span class="n">difference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extractDifference</span><span class="p">()</span>
+            <span class="c1"># plot</span>
+            <span class="c1"># if self._dif is None:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lod</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">difference</span><span class="p">,</span>
+                                  <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cmap_difference</span><span class="p">,</span>
+                                  <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transparency_difference</span><span class="p">,</span>
+                                  <span class="n">norm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">norm_difference</span><span class="p">,</span>
+                                  <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span>
+                                  <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                  <span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">to_box_extent</span><span class="p">,</span>
+                                  <span class="n">aspect</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span>
+                                  <span class="p">)</span>
+            <span class="c1"># else:</span>
+            <span class="c1">#   self._dif.set_array(difference[:-1, :-1].ravel())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># if self._dif is not None:</span>
+            <span class="c1">#    self._dif.remove()</span>
+            <span class="c1">#   self._dif = None</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;No topography to show difference&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.showGradDifference"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.showGradDifference">[documentos]</a>    <span class="k">def</span> <span class="nf">showGradDifference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Displays the calculated gradient difference of the previous frame with the actual frame</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ax: Axes to plot the difference</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_loaded</span><span class="p">:</span>
+            <span class="n">grad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extractGradDifference</span><span class="p">()</span>
+            <span class="c1"># plot</span>
+            <span class="c1"># if self._dif is None:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lod</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span>
+                                  <span class="n">vmin</span><span class="o">=-</span><span class="mi">5</span><span class="p">,</span>
+                                  <span class="n">vmax</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                                  <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cmap_difference</span><span class="p">,</span>
+                                  <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transparency_difference</span><span class="p">,</span>
+                                  <span class="n">norm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">norm_difference</span><span class="p">,</span>
+                                  <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span>
+                                  <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                  <span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">to_box_extent</span><span class="p">,</span>
+                                  <span class="n">aspect</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span>
+                                  <span class="p">)</span>
+            <span class="c1"># else:</span>
+            <span class="c1">#   self._dif.set_array(difference[:-1, :-1].ravel())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># if self._dif is not None:</span>
+            <span class="c1">#    self._dif.remove()</span>
+            <span class="c1">#   self._dif = None</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;No topography to show gradient difference&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.extractGradDifference"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.extractGradDifference">[documentos]</a>    <span class="k">def</span> <span class="nf">extractGradDifference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This will return a numpy array comparing the difference of second degree (gradients)</span>
+<span class="sd">        between the current frame and the saved frame &quot;&quot;&quot;</span>
+        <span class="n">current_absolute_topo</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getBoxFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="p">)</span>
+        <span class="n">dx_current</span><span class="p">,</span> <span class="n">dy_current</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">current_absolute_topo</span><span class="p">)</span>
+        <span class="n">dxdy_current</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dx_current</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">dy_current</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">dxdy_current</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">dxdy_current</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+        <span class="n">dx_lod</span><span class="p">,</span> <span class="n">dy_lod</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">absolute_topo</span><span class="p">)</span>
+        <span class="n">dxdy_lod</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dx_lod</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">dy_lod</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">dxdy_lod</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">dxdy_lod</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+        <span class="n">shape_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getBoxShape</span><span class="p">()</span>
+        <span class="n">gradDiff</span> <span class="o">=</span> <span class="n">dxdy_current</span><span class="p">[:</span><span class="n">shape_frame</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:</span><span class="n">shape_frame</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">-</span> <span class="n">dxdy_lod</span><span class="p">[:</span><span class="n">shape_frame</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:</span><span class="n">shape_frame</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+
+        <span class="c1"># paste diff array at right location according to box coordinates</span>
+        <span class="c1"># difference = self.modify_to_box_coordinates(diff)</span>
+        <span class="k">return</span> <span class="n">gradDiff</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.snapshotFrame"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.snapshotFrame">[documentos]</a>    <span class="k">def</span> <span class="nf">snapshotFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This will display the saved topography and display it in the panel bokeh&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">absolute_topo</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gist_earth&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Loaded Topography&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">snapshot_frame</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">trigger</span><span class="p">(</span><span class="s1">&#39;object&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_search_all_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_filenames</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">filename</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_id</span> <span class="o">=</span> <span class="n">ids</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unknown file id&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.show_widgets"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.show_widgets">[documentos]</a>    <span class="k">def</span> <span class="nf">show_widgets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tabs</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Tabs</span><span class="p">((</span><span class="s1">&#39;Box widgets&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">widgets_box</span><span class="p">()),</span>
+                       <span class="p">(</span><span class="s1">&#39;Release area widgets&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">widgets_release_area</span><span class="p">()),</span>
+                       <span class="p">(</span><span class="s1">&#39;Load Topography&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">widgets_load</span><span class="p">()),</span>
+                       <span class="p">(</span><span class="s1">&#39;Save Topography&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">widgets_save</span><span class="p">())</span>
+                       <span class="p">)</span>
+        <span class="k">return</span> <span class="n">tabs</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.widgets_release_area"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.widgets_release_area">[documentos]</a>    <span class="k">def</span> <span class="nf">widgets_release_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Release area widgets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_release_width</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Release area width&#39;</span><span class="p">,</span>
+                                                          <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">release_width</span><span class="p">,</span>
+                                                          <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                                          <span class="n">end</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_release_width</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_release_width</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_release_height</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Release area height&#39;</span><span class="p">,</span>
+                                                           <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">release_height</span><span class="p">,</span>
+                                                           <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                                           <span class="n">end</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_release_height</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_release_height</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_show_release</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">RadioButtonGroup</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Show or erase the areas&#39;</span><span class="p">,</span>
+                                                                <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Show&#39;</span><span class="p">,</span> <span class="s1">&#39;Erase&#39;</span><span class="p">],</span>
+                                                                <span class="n">value</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Erase&#39;</span><span class="p">],</span>
+                                                                <span class="n">button_type</span><span class="o">=</span><span class="s1">&#39;success&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_show_release</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_show_release</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">widgets</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">WidgetBox</span><span class="p">(</span><span class="s1">&#39;&lt;b&gt;Modify the size and shape of the release area &lt;/b&gt;&#39;</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_widget_release_width</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_widget_release_height</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_widget_show_release</span><span class="p">)</span>
+        <span class="n">panel</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;### Shape release area&quot;</span><span class="p">,</span> <span class="n">widgets</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">panel</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.widgets_box"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.widgets_box">[documentos]</a>    <span class="k">def</span> <span class="nf">widgets_box</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Box widgets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_show_type</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">RadioBoxGroup</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Show in sandbox&#39;</span><span class="p">,</span>
+                                                          <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">difference_types</span><span class="p">,</span>
+                                                          <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">difference_types</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                          <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_show_type</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_show</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_move_box_horizontal</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;x box origin&#39;</span><span class="p">,</span>
+                                                                <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                                <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                                                <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_move_box_horizontal</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_move_box_horizontal</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_move_box_vertical</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;y box origin&#39;</span><span class="p">,</span>
+                                                              <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                                              <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                                              <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_move_box_vertical</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_move_box_vertical</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_box_width</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;box width&#39;</span><span class="p">,</span>
+                                                      <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_width</span><span class="p">,</span>
+                                                      <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                                      <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_box_width</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_box_width</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_box_height</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;box height&#39;</span><span class="p">,</span>
+                                                       <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_height</span><span class="p">,</span>
+                                                       <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                                       <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_box_height</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_box_height</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Snapshots</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_snapshot</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Snapshot&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_snapshot</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_snapshot</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span>
+                                          <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_contours</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Show contours&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_on</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_contours</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_plot_contours</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                               <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">widgets</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s1">&#39;&lt;b&gt;Modify box size &lt;/b&gt;&#39;</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_move_box_horizontal</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_move_box_vertical</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_box_width</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_box_height</span><span class="p">,</span>
+                            <span class="s1">&#39;&lt;b&gt;Take snapshot&lt;/b&gt;&#39;</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_snapshot</span><span class="p">,</span>
+                            <span class="s1">&#39;&lt;b&gt;Show in sandbox&lt;/b&gt;&#39;</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_show_type</span><span class="p">,</span>
+                            <span class="s1">&#39;&lt;b&gt;Show contour lines of target topography&lt;/b&gt;&#39;</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_contours</span>
+                            <span class="p">)</span>
+
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Row</span><span class="p">(</span><span class="n">widgets</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshot_frame</span><span class="p">)</span>
+        <span class="n">panel</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;### Interaction widgets&quot;</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">panel</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.widgets_save"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.widgets_save">[documentos]</a>    <span class="k">def</span> <span class="nf">widgets_save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_npz_filename</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">TextInput</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Choose a filename to save the current topography snapshot:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_npz_filename</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_filename_npz</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_npz_filename</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">_test_data</span><span class="p">[</span><span class="s1">&#39;topo&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;/savedTopography.npz&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_save</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Save&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_save</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_save</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">panel</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;### Save widget&quot;</span><span class="p">,</span>
+                          <span class="s1">&#39;&lt;b&gt;Filename&lt;/b&gt;&#39;</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_widget_npz_filename</span><span class="p">,</span>
+                          <span class="s1">&#39;&lt;b&gt;Safe Topography&lt;/b&gt;&#39;</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_widget_save</span>
+                          <span class="p">)</span>
+        <span class="k">return</span> <span class="n">panel</span></div>
+
+<div class="viewcode-block" id="LoadSaveTopoModule.widgets_load"><a class="viewcode-back" href="../../../sandbox.modules.html#sandbox.modules.load_save_topography.LoadSaveTopoModule.widgets_load">[documentos]</a>    <span class="k">def</span> <span class="nf">widgets_load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_data_path</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">TextInput</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Choose a folder to load the available topography snapshots:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_data_path</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_data_path</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_filename</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_load</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Load Files in folder&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_load</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_load</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_available_topography</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">RadioBoxGroup</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Available Topographies&#39;</span><span class="p">,</span>
+                                                                     <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_filenames</span><span class="p">,</span>
+                                                                     <span class="n">inline</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_available_topography</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_available_topography</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                                      <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># self._widget_other_topography = pn.widgets.FileInput(name=&quot;Load calibration (Note yet working)&quot;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_other_topography</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">FileSelector</span><span class="p">(</span><span class="s1">&#39;~&#39;</span><span class="p">)</span>
+        <span class="c1"># self._widget_other_topography.param.watch(self._callback_other_topography, &#39;value&#39;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_load_other</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Load other&#39;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s1">&#39;success&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_load_other</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_load_other</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">panel</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;### Load widget&quot;</span><span class="p">,</span>
+                          <span class="s1">&#39;&lt;b&gt;Directory path&lt;/b&gt;&#39;</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_widget_data_path</span><span class="p">,</span>
+                          <span class="s1">&#39;&lt;b&gt;Load Topography&lt;/b&gt;&#39;</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_widget_load</span><span class="p">,</span>
+                          <span class="s1">&#39;&lt;b&gt;Load available Topography&lt;/b&gt;&#39;</span><span class="p">,</span>
+                          <span class="n">pn</span><span class="o">.</span><span class="n">WidgetBox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget_available_topography</span><span class="p">),</span>
+                          <span class="s1">&#39;&lt;b&gt;Select another Topography file&lt;/b&gt;&#39;</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_widget_other_topography</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_widget_load_other</span>
+                          <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">panel</span></div>
+
+    <span class="k">def</span> <span class="nf">_callback_plot_contours</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours_on</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_show</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">new</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_show_release</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span> <span class="o">==</span> <span class="s1">&#39;Show&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_release_area_origin</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">release_area_origin</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_callback_release_width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_width</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_release_height</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_height</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_filename_npz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">npz_filename</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">npz_filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saveTopo</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">npz_filename</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># self.loadTopo(filename=self.npz_filename)</span>
+            <span class="c1"># self.snapshotFrame()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_search_all_data</span><span class="p">(</span><span class="n">data_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_available_topography</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_filenames</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_available_topography</span><span class="o">.</span><span class="n">sizing_mode</span> <span class="o">=</span> <span class="s2">&quot;scale_both&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_callback_move_box_horizontal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">moveBox_possible</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">event</span><span class="o">.</span><span class="n">new</span><span class="p">,</span>
+                              <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                              <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_width</span><span class="p">,</span>
+                              <span class="n">height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_height</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_move_box_vertical</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">moveBox_possible</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                              <span class="n">y</span><span class="o">=</span><span class="n">event</span><span class="o">.</span><span class="n">new</span><span class="p">,</span>
+                              <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_width</span><span class="p">,</span>
+                              <span class="n">height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_height</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_box_width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">moveBox_possible</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                              <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                              <span class="n">width</span><span class="o">=</span><span class="n">event</span><span class="o">.</span><span class="n">new</span><span class="p">,</span>
+                              <span class="n">height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_height</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_box_height</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">moveBox_possible</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                              <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_origin</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                              <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">box_width</span><span class="p">,</span>
+                              <span class="n">height</span><span class="o">=</span><span class="n">event</span><span class="o">.</span><span class="n">new</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_snapshot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extractTopo</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">snapshotFrame</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_available_topography</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loadTopo</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">+</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">snapshotFrame</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_load_other</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loadTopo</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget_other_topography</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">snapshotFrame</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Código do módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

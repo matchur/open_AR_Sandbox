@@ -1,0 +1,324 @@
+
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sandbox.markers.markers_plotting &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/translations.js"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fonte de sandbox.markers.markers_plotting</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.aruco</span> <span class="kn">import</span> <span class="n">ArucoMarkers</span>
+<span class="kn">import</span> <span class="nn">panel</span> <span class="k">as</span> <span class="nn">pn</span>
+<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mcolors</span>
+<span class="kn">from</span> <span class="nn">matplotlib.lines</span> <span class="kn">import</span> <span class="n">Line2D</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">weakref</span>
+<span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">set_logger</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">set_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="MarkerDetection"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.markers_plotting.MarkerDetection">[documentos]</a><span class="k">class</span> <span class="nc">MarkerDetection</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sensor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span> <span class="o">=</span> <span class="n">sensor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span> <span class="o">=</span> <span class="n">ArucoMarkers</span><span class="p">(</span><span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df_aruco_position</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scat</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scat</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># weak reference to a scat plot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lin</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># weak reference to a lines plot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">anot</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># aruco setup</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aruco_connect</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aruco_scatter</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aruco_annotate</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aruco_color</span> <span class="o">=</span> <span class="n">mcolors</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+        <span class="c1"># Dummy sensor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dict_position</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_position</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_depth_frame</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Aruco detection ready&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MarkerDetection.update"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.markers_plotting.MarkerDetection.update">[documentos]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span><span class="o">.</span><span class="n">kinect</span> <span class="o">==</span> <span class="s2">&quot;dummy&quot;</span><span class="p">:</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;dict_position&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_dict_position</span><span class="p">,</span>
+                      <span class="s2">&quot;depth_frame&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_depth_frame</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span><span class="o">.</span><span class="n">search_aruco</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span><span class="o">.</span><span class="n">update_marker_dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span><span class="o">.</span><span class="n">transform_to_box_coordinates</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df_aruco_position</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span><span class="o">.</span><span class="n">aruco_markers</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_aruco_position</span></div>
+
+<div class="viewcode-block" id="MarkerDetection.set_aruco_position"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.markers_plotting.MarkerDetection.set_aruco_position">[documentos]</a>    <span class="k">def</span> <span class="nf">set_aruco_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dict_position</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">frame</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function will create the aruco data frame with this values</span>
+<span class="sd">        Args:</span>
+<span class="sd">            dict_position: i.e. {1:[10,20],2:[100,200]} -&gt; keys are the ids and the array the position in x and y</span>
+<span class="sd">            frame: the depth frame, to extract the z value</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dict_position</span> <span class="o">=</span> <span class="n">dict_position</span>
+        <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_depth_frame</span> <span class="o">=</span> <span class="n">frame</span></div>
+
+<div class="viewcode-block" id="MarkerDetection.delete_aruco_position"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.markers_plotting.MarkerDetection.delete_aruco_position">[documentos]</a>    <span class="k">def</span> <span class="nf">delete_aruco_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If None, delete all positions. If ids match with one aruco only delete that one</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ids: aruco id to delete</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ids</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ids</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_position</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dict_position</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;id: &quot;</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="s2">&quot; not found&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dict_position</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+    <span class="k">def</span> <span class="nf">_set_widget_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dict_position</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_position</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget_position</span><span class="p">,</span> <span class="o">**</span><span class="n">dict_position</span><span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_all_dict_position</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_dict_position</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget_position</span><span class="p">}</span>
+
+<div class="viewcode-block" id="MarkerDetection.calibrate_aruco"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.markers_plotting.MarkerDetection.calibrate_aruco">[documentos]</a>    <span class="k">def</span> <span class="nf">calibrate_aruco</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">move_x</span><span class="p">,</span> <span class="n">move_y</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span><span class="o">.</span><span class="n">set_xy_correction</span><span class="p">(</span><span class="n">move_x</span><span class="p">,</span> <span class="n">move_y</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MarkerDetection.plot_aruco"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.markers_plotting.MarkerDetection.plot_aruco">[documentos]</a>    <span class="k">def</span> <span class="nf">plot_aruco</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">df_position</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scat</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">collections</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scat</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lin</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">lines</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">df_position</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df_position</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_position</span><span class="o">.</span><span class="n">is_inside_box</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;box_x&quot;</span><span class="p">,</span> <span class="s2">&quot;box_y&quot;</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_scatter</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scat</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">scat</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">box_x</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                                           <span class="n">df</span><span class="o">.</span><span class="n">box_y</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                                           <span class="n">s</span><span class="o">=</span><span class="mi">350</span><span class="p">,</span> <span class="n">facecolors</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_color</span><span class="p">,</span> <span class="n">linewidths</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                           <span class="n">zorder</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_scat</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scat</span><span class="p">)</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">scat</span><span class="o">.</span><span class="n">set_offsets</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">box_x</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">box_y</span><span class="o">.</span><span class="n">values</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">scat</span><span class="o">.</span><span class="n">set_edgecolor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_color</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_annotate</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">anot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">texts</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">anot</span><span class="p">)</span> <span class="k">for</span> <span class="n">anot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">anot</span> <span class="k">if</span> <span class="n">anot</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">texts</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">anot</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">anot</span> <span class="o">=</span> <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                                             <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">box_x</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">df</span><span class="o">.</span><span class="n">box_y</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                                             <span class="n">c</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_color</span><span class="p">,</span>
+                                             <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                                             <span class="n">textcoords</span><span class="o">=</span><span class="s1">&#39;offset pixels&#39;</span><span class="p">,</span>
+                                             <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>
+                                             <span class="n">zorder</span><span class="o">=</span><span class="mi">5001</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))]</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">anot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">texts</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">anot</span><span class="p">)</span> <span class="k">for</span> <span class="n">anot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">anot</span> <span class="k">if</span> <span class="n">anot</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">texts</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">anot</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">scat</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">scat</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_connect</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df_position</span><span class="p">[</span><span class="n">df_position</span><span class="p">[</span><span class="s1">&#39;is_inside_box&#39;</span><span class="p">]][</span><span class="s1">&#39;box_x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                                          <span class="n">df_position</span><span class="p">[</span><span class="n">df_position</span><span class="p">[</span><span class="s1">&#39;is_inside_box&#39;</span><span class="p">]][</span><span class="s1">&#39;box_y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                                          <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;solid&#39;</span><span class="p">,</span>
+                                          <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_color</span><span class="p">,</span>
+                                          <span class="n">zorder</span><span class="o">=</span><span class="mi">5002</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_lin</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">)</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">df_position</span><span class="p">[</span><span class="n">df_position</span><span class="p">[</span><span class="s1">&#39;is_inside_box&#39;</span><span class="p">]][</span><span class="s1">&#39;box_x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                                        <span class="n">df_position</span><span class="p">[</span><span class="n">df_position</span><span class="p">[</span><span class="s1">&#39;is_inside_box&#39;</span><span class="p">]][</span><span class="s1">&#39;box_y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_color</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scat</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scat</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">anot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">texts</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">anot</span><span class="p">)</span> <span class="k">for</span> <span class="n">anot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">anot</span> <span class="k">if</span> <span class="n">anot</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">texts</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">anot</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">ax</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">legend_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Usefull method to get the labels and handles of the arucos in frame &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_aruco_position</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_aruco_position</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">df_aruco_position</span><span class="o">.</span><span class="n">is_inside_box</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;box_x&quot;</span><span class="p">,</span> <span class="s2">&quot;box_y&quot;</span><span class="p">)]</span>
+
+            <span class="n">legend_elements</span> <span class="o">=</span> <span class="p">[</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_color</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;id </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                              <span class="n">markerfacecolor</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))]</span>
+
+            <span class="k">return</span> <span class="n">legend_elements</span>
+
+    <span class="c1"># Widgets for aruco plotting</span>
+
+<div class="viewcode-block" id="MarkerDetection.widgets_aruco"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.markers_plotting.MarkerDetection.widgets_aruco">[documentos]</a>    <span class="k">def</span> <span class="nf">widgets_aruco</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_aruco_widgets</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span><span class="o">.</span><span class="n">kinect</span> <span class="o">==</span> <span class="s2">&quot;dummy&quot;</span><span class="p">:</span>
+            <span class="n">pane</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_dummy_aruco</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pane</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">widgets</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">WidgetBox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_scatter</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_annotate</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_connect</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_color</span><span class="p">)</span>
+
+        <span class="n">panel</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;&lt;b&gt; Dashboard for aruco Visualization &lt;/b&gt;&quot;</span><span class="p">,</span> <span class="n">pn</span><span class="o">.</span><span class="n">Row</span><span class="p">(</span><span class="n">widgets</span><span class="p">,</span> <span class="n">pane</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">panel</span></div>
+
+    <span class="k">def</span> <span class="nf">_create_aruco_widgets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_scatter</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Show aruco location&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_scatter</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_scatter</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_aruco_scatter</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                               <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_annotate</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Show aruco id&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_annotate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_annotate</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_aruco_annotate</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                                <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_connect</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Show line connecting arucos&#39;</span><span class="p">,</span>
+                                                         <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_connect</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_connect</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_aruco_connect</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                               <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_color</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">ColorPicker</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Color&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_color</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_color</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_aruco_color</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_dummy_aruco</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_id</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Spinner</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">70</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_x</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Spinner</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;x coordinate&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">70</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_y</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Spinner</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;y coordinate&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">70</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_marker</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Add dummy aruco dict&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_marker</span><span class="o">.</span><span class="n">on_click</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_set_aruco</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_clear_marker</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Clear aruco dict&quot;</span><span class="p">,</span> <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;warning&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_clear_marker</span><span class="o">.</span><span class="n">on_click</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_clear_aruco</span><span class="p">)</span>
+
+        <span class="n">pane</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">WidgetBox</span><span class="p">(</span><span class="s2">&quot;&lt;b&gt; Dummy aruco &lt;/b&gt;&quot;</span><span class="p">,</span>
+                            <span class="n">pn</span><span class="o">.</span><span class="n">Row</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_y</span><span class="p">),</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_marker</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_clear_marker</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pane</span>
+
+    <span class="k">def</span> <span class="nf">_callback_aruco_scatter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_scatter</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_aruco_annotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_annotate</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_aruco_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_connect</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_aruco_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_color</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_clear_aruco</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget_position</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">_callback_set_aruco</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_x</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_y</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">arucoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco_id</span><span class="o">.</span><span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_widget_position</span><span class="p">(</span><span class="n">dict_position</span><span class="o">=</span><span class="p">{</span><span class="n">arucoid</span><span class="p">:</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]})</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Código do módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

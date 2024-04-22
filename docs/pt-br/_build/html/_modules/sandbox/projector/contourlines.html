@@ -1,0 +1,351 @@
+
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sandbox.projector.contourlines &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/translations.js"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fonte de sandbox.projector.contourlines</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">panel</span> <span class="k">as</span> <span class="nn">pn</span>
+<span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">set_logger</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">set_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">pn</span><span class="o">.</span><span class="n">extension</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="ContourLinesModule"><a class="viewcode-back" href="../../../sandbox.projector.html#sandbox.projector.contourlines.ContourLinesModule">[documentos]</a><span class="k">class</span> <span class="nc">ContourLinesModule</span><span class="p">:</span>
+    <span class="n">dpi</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># make sure that figures can be displayed pixel-precise</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">contours</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">contours_step</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                 <span class="n">contours_width</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">contours_color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">contours_label</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">contours_label_inline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">contours_label_fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+                 <span class="n">contours_label_format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%3.0f</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">minor_contours</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">contours_step_minor</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">contours_width_minor</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                 <span class="n">extent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">check_change</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">automatic_levels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Module for the display and manipulation of contourlines</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                contours (bool): Flag that enables or disables contours plotting.</span>
+<span class="sd">                    (default is True)</span>
+<span class="sd">                contours_step (int): Size of step between contour lines in model units.</span>
+<span class="sd">                    (default is 100)</span>
+<span class="sd">                contours_width (float): Width of contour lines.</span>
+<span class="sd">                    (default is 1.0)</span>
+<span class="sd">                contours_color (e.g. str): Color of contour lines.</span>
+<span class="sd">                    (default is &#39;k&#39;)</span>
+<span class="sd">                contours_label (bool): Flag that enables labels on contour lines.</span>
+<span class="sd">                    (default is False)</span>
+<span class="sd">                contours_label_inline (bool): Partly replace underlying contour line or not.</span>
+<span class="sd">                    (default is True)</span>
+<span class="sd">                contours_label_fontsize (float or str): Size in points or relative size of contour label.</span>
+<span class="sd">                    (default is 15)</span>
+<span class="sd">                contours_label_format (string or dict): Format string for the contour label.</span>
+<span class="sd">                    (default is %3.0f)</span>
+<span class="sd">                minor_contours (bool): Flag that enables or disables minor contours plotting.</span>
+<span class="sd">                    (default is True)</span>
+<span class="sd">                contours_step_minor (int): Size of step between minor contour lines in model units.</span>
+<span class="sd">                    (default is 50)</span>
+<span class="sd">                contours_width_minor (float): Width of minor contour lines.</span>
+<span class="sd">                    (default is 0.5)</span>
+<span class="sd">                extent (list): extents of the sandbox to indicate the physical dimensions of it</span>
+<span class="sd">                check_change (bool): Update the contour ines only when the frame changes</span>
+<span class="sd">                rtol (float): relative tolerance for checking the change</span>
+<span class="sd">                atol (float): absolute tolerance for checking the change</span>
+<span class="sd">                automatic_levels (bool): When changing modules, the extent and data may change, therefore the levels</span>
+<span class="sd">                    will not remain constant. A quick fix is to set the default levels of matplotlib and let it choose</span>
+<span class="sd">                    automatically.</span>
+<span class="sd">                threshold (int): Maximum amount of contour lines per plot. If more then set levels to automatic.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># For locking the multithreading while using bokeh server</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_contours</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">major</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">minor</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_change</span> <span class="o">=</span> <span class="n">check_change</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rtol</span> <span class="o">=</span> <span class="n">rtol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_atol</span> <span class="o">=</span> <span class="n">atol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extent</span> <span class="o">=</span> <span class="n">extent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vmin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_frame</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># flags</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours</span> <span class="o">=</span> <span class="n">contours</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">minor_contours</span> <span class="o">=</span> <span class="n">minor_contours</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">automatic_contours</span> <span class="o">=</span> <span class="n">automatic_levels</span>
+
+        <span class="c1"># contours setup</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours_step</span> <span class="o">=</span> <span class="n">contours_step</span>  <span class="c1"># levels will be supplied via property function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours_width</span> <span class="o">=</span> <span class="n">contours_width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours_color</span> <span class="o">=</span> <span class="n">contours_color</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours_label</span> <span class="o">=</span> <span class="n">contours_label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours_label_inline</span> <span class="o">=</span> <span class="n">contours_label_inline</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours_label_fontsize</span> <span class="o">=</span> <span class="n">contours_label_fontsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours_label_format</span> <span class="o">=</span> <span class="n">contours_label_format</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours_step_minor</span> <span class="o">=</span> <span class="n">contours_step_minor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours_width_minor</span> <span class="o">=</span> <span class="n">contours_width_minor</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;ContourLinesModule loaded successfully&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ContourLinesModule.update"><a class="viewcode-back" href="../../../sandbox.projector.html#sandbox.projector.contourlines.ContourLinesModule.update">[documentos]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sb_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">active</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;active_contours&#39;</span><span class="p">)</span>
+        <span class="n">active</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">active</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_contours</span><span class="p">)</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ax&#39;</span><span class="p">)</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;frame&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># 3 Then is an image</span>
+            <span class="n">active</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">active</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_active</span> <span class="o">=</span> <span class="n">active</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_frame</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">previous_frame</span> <span class="o">=</span> <span class="n">frame</span>
+
+            <span class="n">same_frame</span> <span class="o">=</span> <span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;same_frame&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">same_frame</span><span class="p">:</span>
+                <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_frame</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">previous_frame</span> <span class="o">=</span> <span class="n">frame</span>
+
+            <span class="n">extent</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;extent&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vmin</span> <span class="o">=</span> <span class="n">extent</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vmax</span> <span class="o">=</span> <span class="n">extent</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">del_contour</span> <span class="o">=</span> <span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;del_contour&#39;</span><span class="p">)</span>  <span class="c1"># making this we can now manage when to delete the contour lines</span>
+            <span class="c1"># At any part of the thread. Used in GempyModule</span>
+            <span class="k">if</span> <span class="n">del_contour</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">delete_contourns</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">contours</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_major_contours</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">extent</span><span class="p">[:</span><span class="mi">4</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">minor_contours</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_minor_contours</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">extent</span><span class="p">[:</span><span class="mi">4</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">contours_label</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">contours</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_label_contours</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">delete_contourns</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_active</span> <span class="o">=</span> <span class="n">active</span>
+
+        <span class="k">return</span> <span class="n">sb_params</span></div>
+
+<div class="viewcode-block" id="ContourLinesModule.delete_contourns"><a class="viewcode-back" href="../../../sandbox.projector.html#sandbox.projector.contourlines.ContourLinesModule.delete_contourns">[documentos]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">delete_contourns</span><span class="p">(</span><span class="n">ax</span><span class="p">):</span>
+        <span class="p">[</span><span class="n">coll</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="k">for</span> <span class="n">coll</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">collections</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coll</span><span class="p">,</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">collections</span><span class="o">.</span><span class="n">PathCollection</span><span class="p">)]</span>
+        <span class="p">[</span><span class="n">text</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">texts</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">Text</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="ContourLinesModule.plot_contour_lines"><a class="viewcode-back" href="../../../sandbox.projector.html#sandbox.projector.contourlines.ContourLinesModule.plot_contour_lines">[documentos]</a>    <span class="k">def</span> <span class="nf">plot_contour_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_major_contours</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_minor_contours</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">ax</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_label_contours</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ContourLinesModule.add_major_contours"><a class="viewcode-back" href="../../../sandbox.projector.html#sandbox.projector.contourlines.ContourLinesModule.add_major_contours">[documentos]</a>    <span class="k">def</span> <span class="nf">add_major_contours</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Renders contours to the current plot object.</span>
+<span class="sd">        Uses the different attributes to style contour lines and contour labels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">major</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
+                                <span class="n">levels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_levels</span>
+                                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_levels</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span>
+                                <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">automatic_contours</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                                <span class="n">linewidths</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_width</span><span class="p">,</span>
+                                <span class="n">colors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_color</span><span class="p">,</span>
+                                <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span>
+                                <span class="n">zorder</span><span class="o">=</span><span class="mi">100</span>
+                                <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ContourLinesModule.add_minor_contours"><a class="viewcode-back" href="../../../sandbox.projector.html#sandbox.projector.contourlines.ContourLinesModule.add_minor_contours">[documentos]</a>    <span class="k">def</span> <span class="nf">add_minor_contours</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_levels_minor</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">automatic_contours</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">minor</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
+                                    <span class="n">levels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_levels_minor</span><span class="p">,</span>
+                                    <span class="n">linewidths</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_width_minor</span><span class="p">,</span>
+                                    <span class="n">colors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_color</span><span class="p">,</span>
+                                    <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span>
+                                    <span class="n">zorder</span><span class="o">=</span><span class="mi">99</span>
+                                    <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ContourLinesModule.add_label_contours"><a class="viewcode-back" href="../../../sandbox.projector.html#sandbox.projector.contourlines.ContourLinesModule.add_label_contours">[documentos]</a>    <span class="k">def</span> <span class="nf">add_label_contours</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">clabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">major</span><span class="p">,</span>
+                               <span class="n">inline</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_label_inline</span><span class="p">,</span>
+                               <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_label_fontsize</span><span class="p">,</span>
+                               <span class="n">fmt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_label_format</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">contours_levels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the current contour levels, being aware of changes in calibration.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">contours_step</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">contours_levels_minor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the current contour levels, being aware of changes in calibration.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">contours_step_minor</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ContourLinesModule.show_widgets"><a class="viewcode-back" href="../../../sandbox.projector.html#sandbox.projector.contourlines.ContourLinesModule.show_widgets">[documentos]</a>    <span class="k">def</span> <span class="nf">show_widgets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_widgets</span><span class="p">()</span>
+        <span class="n">panel</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;###&lt;b&gt;Contour lines &lt;/b&gt;&quot;</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_widget_active_contours</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_widget_automatic_contours</span><span class="p">,</span>
+                          <span class="s2">&quot;&lt;b&gt; Modify contour lines manually &lt;/b&gt;&quot;</span><span class="p">,</span>
+                          <span class="n">pn</span><span class="o">.</span><span class="n">WidgetBox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_contours</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_step_contours</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_minorcontours</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_step_minorcontours</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_contours_label</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_contours_label_fontsize</span>
+                                       <span class="p">)</span>
+                          <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">panel</span></div>
+
+    <span class="k">def</span> <span class="nf">_create_widgets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_active_contours</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Active contours&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">active_contours</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_active_contours</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_active_contours</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_automatic_contours</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Automatic levels for contours&#39;</span><span class="p">,</span>
+                                                              <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">automatic_contours</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_automatic_contours</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_automatic_contours</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_contours</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Show major contours&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contours</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_contours</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_plot_contours</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                               <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_minorcontours</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Show minor contours&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">minor_contours</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_minorcontours</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_plot_minorcontours</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                                    <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_step_contours</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Spinner</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Choose a contour step&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_step</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_step_contours</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_plot_step_contours</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_step_minorcontours</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Spinner</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Choose a minor contour step&#39;</span><span class="p">,</span>
+                                                                  <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_step_minor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_step_minorcontours</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_plot_step_minorcontours</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                                         <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_contours_label</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Show contours label&#39;</span><span class="p">,</span>
+                                                               <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_contours_label</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_plot_contours_label</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                                     <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_contours_label_fontsize</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Spinner</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;set a contour label fontsize&#39;</span><span class="p">,</span>
+                                                                       <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contours_label_fontsize</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_plot_contours_label_fontsize</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_plot_contours_label_fontsize</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                                              <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_automatic_contours</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">automatic_contours</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_active_contours</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_contours</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_plot_contours</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_plot_minorcontours</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">minor_contours</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_plot_step_contours</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours_step</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_plot_step_minorcontours</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours_step_minor</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_plot_contours_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours_label</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_plot_contours_label_fontsize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours_label_fontsize</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Código do módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

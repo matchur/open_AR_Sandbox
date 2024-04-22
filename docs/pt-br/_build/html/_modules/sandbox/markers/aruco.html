@@ -1,0 +1,895 @@
+
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sandbox.markers.aruco &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/translations.js"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fonte de sandbox.markers.aruco</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial.distance</span> <span class="kn">import</span> <span class="n">cdist</span>
+<span class="kn">from</span> <span class="nn">.dummy_aruco</span> <span class="kn">import</span> <span class="n">dummy_markers_in_frame</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">set_logger</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">set_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">mode</span><span class="o">.</span><span class="n">chained_assignment</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="c1"># default=&#39;warn&#39; # TODO: SettingWithCopyWarning appears when using LoadTopoModule with arucos</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">cv2</span>
+    <span class="kn">from</span> <span class="nn">cv2</span> <span class="kn">import</span> <span class="n">aruco</span>
+    <span class="n">CV2_IMPORT</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">CV2_IMPORT</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;opencv is not installed. Object detection will not work&#39;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ArucoMarkers"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers">[documentos]</a><span class="k">class</span> <span class="nc">ArucoMarkers</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>  <span class="c1"># TODO: Include widgets to calibrate arucos</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    class to detect Aruco markers in the kinect data (IR and RGB)</span>
+<span class="sd">    An Area of interest can be specified, markers outside this area will be ignored</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">aruco_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">aruco_dict</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">CV2_IMPORT</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">aruco_dict</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">DICT_4X4_50</span>  <span class="c1"># set the default dictionary here</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">aruco_dict</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aruco_dict</span> <span class="o">=</span> <span class="n">aruco_dict</span>
+        <span class="c1"># self.area = area  # TODO: set a square Area of interest here (Hot-Area). Need it?</span>
+        <span class="k">if</span> <span class="n">sensor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sensor</span><span class="o">.</span><span class="n">Sensor</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">):</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">sensor</span><span class="o">.</span><span class="n">Sensor</span><span class="o">.</span><span class="n">name</span>
+                <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;dummy&quot;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span> <span class="o">=</span> <span class="s2">&quot;dummy&quot;</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Using dummy arucos. &quot;</span>
+                                <span class="s2">&quot;Create your own aruco positions using .set_aruco_position() function&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;kinect_v2&quot;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span> <span class="o">=</span> <span class="n">sensor</span><span class="o">.</span><span class="n">Sensor</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">calib</span> <span class="o">=</span> <span class="n">sensor</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;KinectV2 loaded&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;lidar&quot;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span> <span class="o">=</span> <span class="n">sensor</span><span class="o">.</span><span class="n">Sensor</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">calib</span> <span class="o">=</span> <span class="n">sensor</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;LiDAR loaded&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span> <span class="o">=</span> <span class="s2">&quot;dummy&quot;</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> not recognized as supported sensor for aruco detection. &quot;</span>
+                                <span class="s2">&quot;Using dummy arucos&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">sensor</span> <span class="o">==</span> <span class="s2">&quot;dummy&quot;</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Using dummy arucos. &quot;</span>
+                                <span class="s2">&quot;Create your own aruco positions using .set_aruco_position() function&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No sensor loaded. Detection will only work in color image. Using dummy arucos&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span> <span class="o">=</span> <span class="s2">&quot;dummy&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ir_markers</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># if self.calib is not None:</span>
+        <span class="c1">#    if self.calib.aruco_corners is not None:</span>
+        <span class="c1">#        self.rgb_markers = pd.read_json(self.calib.aruco_corners)</span>
+        <span class="c1">#    else:</span>
+        <span class="c1">#        self.rgb_markers = None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projector_markers</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_markers_current</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># markers that were detected in the last frame</span>
+        <span class="c1"># self.dict_markers_all = all markers ever detected with their last known position and timestamp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_markers_all</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_markers_current</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">middle</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">corner_middle</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">point_markers</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># dataframes and variables used in the update loop:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span> <span class="o">=</span> <span class="mf">10.0</span>
+
+        <span class="c1"># Pose Estimation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mtx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1977.4905366892494</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">547.6845435554575</span><span class="p">],</span>  <span class="c1"># Hardcoded distortion parameters</span>
+                                <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2098.757943278828</span><span class="p">,</span> <span class="mf">962.426967248953</span><span class="p">],</span>
+                                <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dist</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">0.1521704243263453</span><span class="p">],</span>  <span class="c1"># Hard-coded distortion parameters</span>
+                                 <span class="p">[</span><span class="o">-</span><span class="mf">0.5137710352422746</span><span class="p">],</span>
+                                 <span class="p">[</span><span class="o">-</span><span class="mf">0.010673768065933672</span><span class="p">],</span>
+                                 <span class="p">[</span><span class="mf">0.01065954734833698</span><span class="p">],</span>
+                                 <span class="p">[</span><span class="mf">2.2812034123550817</span><span class="p">],</span>
+                                 <span class="p">[</span><span class="mf">0.15820606213404878</span><span class="p">],</span>
+                                 <span class="p">[</span><span class="mf">0.5618247374672848</span><span class="p">],</span>
+                                 <span class="p">[</span><span class="o">-</span><span class="mf">2.195963638734801</span><span class="p">],</span>
+                                 <span class="p">[</span><span class="mf">0.0</span><span class="p">],</span>
+                                 <span class="p">[</span><span class="mf">0.0</span><span class="p">],</span>
+                                 <span class="p">[</span><span class="mf">0.0</span><span class="p">],</span>
+                                 <span class="p">[</span><span class="mf">0.0</span><span class="p">],</span>
+                                 <span class="p">[</span><span class="mf">0.0</span><span class="p">],</span>
+                                 <span class="p">[</span><span class="mf">0.0</span><span class="p">]])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_size_of_marker</span> <span class="o">=</span> <span class="mf">0.02</span>  <span class="c1"># size of aruco markers in meters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_length_of_axis</span> <span class="o">=</span> <span class="mf">0.05</span>  <span class="c1"># length of the axis drawn on the frame in meters</span>
+
+        <span class="c1"># Automatic calibration #TODO: Deprecated?</span>
+        <span class="c1"># self.load_corners_ids()</span>
+        <span class="n">init_correction_x</span> <span class="o">=</span> <span class="mi">20</span>
+        <span class="n">init_correction_y</span> <span class="o">=</span> <span class="o">-</span><span class="mi">80</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_xy_correction</span><span class="p">(</span><span class="n">init_correction_x</span><span class="p">,</span> <span class="n">init_correction_y</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Aruco module loaded&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ArucoMarkers.set_xy_correction"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.set_xy_correction">[documentos]</a>    <span class="k">def</span> <span class="nf">set_xy_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">CoordinateMap</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span> <span class="o">==</span> <span class="s2">&quot;dummy&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">CoordinateMap</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;using dummy aruco module&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;kinect_v2&quot;</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">platform</span>
+            <span class="n">_platform</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">_platform</span> <span class="o">==</span> <span class="s2">&quot;Linux&quot;</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">sandbox.markers.aruco_linux</span> <span class="kn">import</span> <span class="n">start_mapping</span><span class="p">,</span> <span class="n">set_correction</span>
+                <span class="c1"># TODO: correction in x and y direction for the mapping between color space and depth space</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_correction_x</span> <span class="o">=</span> <span class="n">x</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_correction_y</span> <span class="o">=</span> <span class="n">y</span>
+                <span class="n">set_correction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_correction_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_correction_y</span><span class="p">)</span>
+                <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">CoordinateMap</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">CoordinateMap</span> <span class="o">=</span> <span class="n">start_mapping</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">_platform</span> <span class="o">==</span> <span class="s2">&quot;Windows&quot;</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">sandbox.markers.aruco_windows</span> <span class="kn">import</span> <span class="n">start_mapping</span><span class="p">,</span> <span class="n">set_correction</span>
+                <span class="c1"># TODO: correction in x and y direction for the mapping between color space and depth space</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_correction_x</span> <span class="o">=</span> <span class="n">x</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_correction_y</span> <span class="o">=</span> <span class="n">y</span>
+                <span class="n">set_correction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_correction_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_correction_y</span><span class="p">)</span>
+                <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">CoordinateMap</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">CoordinateMap</span> <span class="o">=</span> <span class="n">start_mapping</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> not supported&quot;</span> <span class="o">%</span> <span class="n">_platform</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;lidar&quot;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sandbox.markers.lidar_aruco</span> <span class="kn">import</span> <span class="n">start_mapping</span><span class="p">,</span> <span class="n">set_correction</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_correction_x</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_correction_y</span> <span class="o">=</span> <span class="n">y</span>
+            <span class="n">set_correction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_correction_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_correction_y</span><span class="p">)</span>
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">CoordinateMap</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">CoordinateMap</span> <span class="o">=</span> <span class="n">start_mapping</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> Not supported for aruco detection&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.aruco_detect"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.aruco_detect">[documentos]</a>    <span class="k">def</span> <span class="nf">aruco_detect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Function to detect an aruco marker in a color image</span>
+<span class="sd">        Args:</span>
+<span class="sd">            image: numpy array containing a color image (BGR type)</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            corners: x, y location of a detected aruco marker(detect the 4 corners of the aruco)</span>
+<span class="sd">            ids: id of the detected aruco</span>
+<span class="sd">            rejectedImgPoints: show x, y coordinates of searches for aruco markers but not successful</span>
+<span class="sd">       &quot;&quot;&quot;</span>
+        <span class="n">gray</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
+        <span class="n">aruco_dict</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">Dictionary_get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_dict</span><span class="p">)</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">DetectorParameters_create</span><span class="p">()</span>
+        <span class="n">corners</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">rejectedImgPoints</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">detectMarkers</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span> <span class="n">aruco_dict</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">corners</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">rejectedImgPoints</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.get_location_marker"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.get_location_marker">[documentos]</a>    <span class="k">def</span> <span class="nf">get_location_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corners</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the middle position from the detected corners</span>
+<span class="sd">         Args:</span>
+<span class="sd">             corners: List containing the position x, y of the aruco marker</span>
+<span class="sd">         Returns:</span>
+<span class="sd">             pr1: x location</span>
+<span class="sd">             pr2: y location</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pr1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">corners</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))</span>
+        <span class="n">pr2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">corners</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">pr1</span><span class="p">,</span> <span class="n">pr2</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.search_aruco"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.search_aruco">[documentos]</a>    <span class="k">def</span> <span class="nf">search_aruco</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        searches for aruco markers in the current kinect image and writes detected markers to</span>
+<span class="sd">        self.markers_in_frame. call this first in the update function.</span>
+<span class="sd">        Args</span>
+<span class="sd">            frame: gets the color frame to search the markers on</span>
+<span class="sd">        Returns</span>
+<span class="sd">            markers_in_frame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span> <span class="o">==</span> <span class="s2">&quot;dummy&quot;</span><span class="p">:</span>
+            <span class="n">dict_position</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dict_position&quot;</span><span class="p">)</span>
+            <span class="n">depth_frame</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;depth_frame&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="mf">0.15</span><span class="p">)</span>  <span class="c1"># TODO: To avoid problems with the common issue #3 of NoneType dpi</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span> <span class="o">=</span> <span class="n">dummy_markers_in_frame</span><span class="p">(</span><span class="n">dict_position</span><span class="p">,</span> <span class="n">depth_frame</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span>
+
+        <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">get_color</span><span class="p">()</span>
+        <span class="n">corners</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">rejectedImgPoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_detect</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ids&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;Counter&quot;</span><span class="p">}</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">ids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">ids</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                    <span class="n">x_loc</span><span class="p">,</span> <span class="n">y_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_location_marker</span><span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">df_temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                        <span class="p">{</span><span class="s2">&quot;ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">ids</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">x_loc</span><span class="p">],</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">y_loc</span><span class="p">]})</span>
+                    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df</span><span class="p">,</span> <span class="n">df_temp</span><span class="p">],</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_color_to_depth</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">CoordinateMap</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;counter&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;box_x&#39;</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">NaN</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;box_y&#39;</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">NaN</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;is_inside_box&#39;</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">NaN</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span><span class="p">[</span><span class="s1">&#39;ids&#39;</span><span class="p">],</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;ids&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ids&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;Counter&quot;</span><span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.update_marker_dict"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.update_marker_dict">[documentos]</a>    <span class="k">def</span> <span class="nf">update_marker_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        updates existing marker points in self.aruco_markers. new found markers are automatically added.</span>
+<span class="sd">        A marker that is not detected for more than *self._threshold* frames is removed from the list.</span>
+<span class="sd">        call in update after self.search_aruco():</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            changes in place</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+                <span class="c1"># add new aruco</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Update aruco</span>
+                <span class="n">df_temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_temp</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>  <span class="c1"># increment counter for not found arucos</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">markers_in_frame</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;counter&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">1.0</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;counter&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span></div>
+
+        <span class="c1"># return self.aruco_markers</span>
+
+<div class="viewcode-block" id="ArucoMarkers.transform_to_box_coordinates"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.transform_to_box_coordinates">[documentos]</a>    <span class="k">def</span> <span class="nf">transform_to_box_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        checks if aruco markers are within the dimensions of the sandbox (boolean: is_inside_box)</span>
+<span class="sd">        and converts the location to box coordinates x,y. call after self.update_markers in the update loop</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span> <span class="o">==</span> <span class="s2">&quot;dummy&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="p">[</span><span class="s1">&#39;is_inside_box&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="p">[</span><span class="s1">&#39;is_inside_box&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="p">[</span><span class="s1">&#39;box_x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="p">[</span><span class="s1">&#39;Depth_x&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_left</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="p">[</span><span class="s1">&#39;box_y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_height</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="p">[</span><span class="s1">&#39;Depth_y&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_bottom</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="p">[</span><span class="s1">&#39;is_inside_box&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_frame_width</span> <span class="o">&gt;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="p">[</span><span class="s1">&#39;Depth_x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_left</span><span class="p">)</span> <span class="ow">and</span> \
+                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="p">[</span><span class="s1">&#39;Depth_x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_left</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> \
+                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_frame_height</span> <span class="o">&gt;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_height</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="p">[</span><span class="s1">&#39;Depth_y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span>
+                                                  <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_bottom</span><span class="p">)</span> <span class="ow">and</span> \
+                     <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_height</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_markers</span><span class="p">[</span><span class="s1">&#39;Depth_y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_bottom</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span></div>
+
+    <span class="c1">############### Utilities ########################</span>
+
+<div class="viewcode-block" id="ArucoMarkers.find_markers_ir"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.find_markers_ir">[documentos]</a>    <span class="k">def</span> <span class="nf">find_markers_ir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">IR</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">amount</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Function to search for a determined amount of arucos in the infrared image. It will continue searching in</span>
+<span class="sd">        different frames of the image until it finds all the markers</span>
+<span class="sd">        Args:</span>
+<span class="sd">            IR= search in the infrared frame. If None then captures a new frame</span>
+<span class="sd">            amount: specify the number of arucos to search</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            ir_marker: DataFrame with the id, x, y coordinates for the location of the aruco</span>
+<span class="sd">                        And rotation and translation vectors for the pos estimation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ids&#39;</span><span class="p">,</span> <span class="s1">&#39;Corners_IR_x&#39;</span><span class="p">,</span> <span class="s1">&#39;Corners_IR_y&#39;</span><span class="p">,</span> <span class="s2">&quot;Rotation_vector&quot;</span><span class="p">,</span> <span class="s2">&quot;Translation_vector&quot;</span><span class="p">}</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">amount</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">amount</span><span class="p">:</span>
+
+                <span class="n">minim</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">maxim</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">30000</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">IR</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">IR</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">get_ir_frame_raw</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">maxim</span><span class="p">:</span>
+                    <span class="n">ir_use</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">IR</span><span class="p">,</span> <span class="p">(</span><span class="n">minim</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
+                    <span class="n">ir3</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">ir_use</span><span class="p">,</span> <span class="n">ir_use</span><span class="p">,</span> <span class="n">ir_use</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">corners</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">rejectedImgPoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_detect</span><span class="p">(</span><span class="n">ir3</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">)):</span>
+                            <span class="k">if</span> <span class="n">ids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">ids</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                                <span class="n">rvec</span><span class="p">,</span> <span class="n">tvec</span><span class="p">,</span> <span class="n">trash</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">estimatePoseSingleMarkers</span><span class="p">([</span><span class="n">corners</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span>
+                                                                                    <span class="bp">self</span><span class="o">.</span><span class="n">_size_of_marker</span><span class="p">,</span>
+                                                                                    <span class="bp">self</span><span class="o">.</span><span class="n">mtx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">)</span>
+                                <span class="n">x_loc</span><span class="p">,</span> <span class="n">y_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_location_marker</span><span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+                                <span class="n">df_temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                                    <span class="p">{</span><span class="s1">&#39;ids&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">ids</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="s1">&#39;Corners_IR_x&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">x_loc</span><span class="p">],</span> <span class="s1">&#39;Corners_IR_y&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">y_loc</span><span class="p">],</span>
+                                     <span class="s2">&quot;Rotation_vector&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">rvec</span><span class="p">],</span> <span class="s2">&quot;Translation_vector&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">tvec</span><span class="p">]})</span>
+                                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df</span><span class="p">,</span> <span class="n">df_temp</span><span class="p">],</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ir_markers</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ir_markers</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.find_markers_rgb"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.find_markers_rgb">[documentos]</a>    <span class="k">def</span> <span class="nf">find_markers_rgb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">amount</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Function to search for a determined amount of arucos in the color image. It will continue searching in</span>
+<span class="sd">        different frames of the image until it finds all the markers</span>
+<span class="sd">        Args:</span>
+<span class="sd">            color: search in the color frame. If None then captures a new frame</span>
+<span class="sd">            amount: specify the number of arucos to search</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            rgb_markers: DataFrame with the id, x, y coordinates for the location of the aruco</span>
+<span class="sd">                        and rotation and translation vectors for the pos estimation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ids&quot;</span><span class="p">,</span> <span class="s2">&quot;Corners_RGB_x&quot;</span><span class="p">,</span> <span class="s2">&quot;Corners_RGB_y&quot;</span><span class="p">,</span> <span class="s2">&quot;Rotation_vector&quot;</span><span class="p">,</span> <span class="s2">&quot;Translation_vector&quot;</span><span class="p">}</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">amount</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">amount</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">get_color</span><span class="p">()</span>
+                <span class="n">corners</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">rejectedImgPoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_detect</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">)):</span>
+                        <span class="k">if</span> <span class="n">ids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">ids</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                            <span class="n">rvec</span><span class="p">,</span> <span class="n">tvec</span><span class="p">,</span> <span class="n">trash</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">estimatePoseSingleMarkers</span><span class="p">([</span><span class="n">corners</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size_of_marker</span><span class="p">,</span>
+                                                                                <span class="bp">self</span><span class="o">.</span><span class="n">mtx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">)</span>
+                            <span class="n">x_loc</span><span class="p">,</span> <span class="n">y_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_location_marker</span><span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+                            <span class="n">df_temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                                <span class="p">{</span><span class="s2">&quot;ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">ids</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="s2">&quot;Corners_RGB_x&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">x_loc</span><span class="p">],</span> <span class="s2">&quot;Corners_RGB_y&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">y_loc</span><span class="p">],</span>
+                                 <span class="s2">&quot;Rotation_vector&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">rvec</span><span class="p">],</span> <span class="s2">&quot;Translation_vector&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">tvec</span><span class="p">]})</span>
+                            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df</span><span class="p">,</span> <span class="n">df_temp</span><span class="p">],</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rgb_markers</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rgb_markers</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.find_markers_projector"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.find_markers_projector">[documentos]</a>    <span class="k">def</span> <span class="nf">find_markers_projector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">amount</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Function to search for a determined amount of arucos in the projected image. It will continue searching in</span>
+<span class="sd">        different frames of the image until it finds all the markers</span>
+<span class="sd">        Args:</span>
+<span class="sd">            color: search in the color frame. If None then captures a new frame</span>
+<span class="sd">            amount: specify the number of arucos to search</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            projector_markers: DataFrame with the id, x, y coordinates for the location of the aruco</span>
+<span class="sd">                                and rotation and translation vectors for the pos estimation</span>
+<span class="sd">            corner_middle: list that include the location of the central corner aruco with id=20</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ids&quot;</span><span class="p">,</span> <span class="s2">&quot;Corners_projector_x&quot;</span><span class="p">,</span> <span class="s2">&quot;Corners_projector_y&quot;</span><span class="p">,</span> <span class="s2">&quot;Rotation_vector&quot;</span><span class="p">,</span> <span class="s2">&quot;Translation_vector&quot;</span><span class="p">}</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">amount</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">amount</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">get_color</span><span class="p">()</span>
+                <span class="n">corners</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">rejectedImgPoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_detect</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">)):</span>
+                        <span class="k">if</span> <span class="n">ids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="mi">20</span><span class="p">:</span>
+                            <span class="c1"># predefined id value to coincide with the projected aruco for the automatic calibration</span>
+                            <span class="c1"># method used to calculate the scaling factor</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">corner_middle</span> <span class="o">=</span> <span class="n">corners</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">ids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">ids</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                            <span class="n">rvec</span><span class="p">,</span> <span class="n">tvec</span><span class="p">,</span> <span class="n">trash</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">estimatePoseSingleMarkers</span><span class="p">([</span><span class="n">corners</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size_of_marker</span><span class="p">,</span>
+                                                                                <span class="bp">self</span><span class="o">.</span><span class="n">mtx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">)</span>
+                            <span class="n">x_loc</span><span class="p">,</span> <span class="n">y_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_location_marker</span><span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+                            <span class="n">df_temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                                <span class="p">{</span><span class="s2">&quot;ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">ids</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="s2">&quot;Corners_projector_x&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">x_loc</span><span class="p">],</span> <span class="s2">&quot;Corners_projector_y&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">y_loc</span><span class="p">],</span>
+                                 <span class="s2">&quot;Rotation_vector&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">rvec</span><span class="p">],</span> <span class="s2">&quot;Translation_vector&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">tvec</span><span class="p">]})</span>
+                            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df</span><span class="p">,</span> <span class="n">df_temp</span><span class="p">],</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">projector_markers</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">projector_markers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corner_middle</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.create_aruco_marker"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.create_aruco_marker">[documentos]</a>    <span class="k">def</span> <span class="nf">create_aruco_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                            <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;./&#39;</span><span class="p">,</span>
+                            <span class="n">fig_filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Function that creates a single aruco marker providing its id and resolution</span>
+<span class="sd">        Args:</span>
+<span class="sd">            id: int indicating the id of the aruco to create</span>
+<span class="sd">            resolution: int</span>
+<span class="sd">            show: boolean. Display the created aruco marker</span>
+<span class="sd">            save: boolean. save the created aruco marker as an image &quot;Aruco_Markers.jpg&quot;</span>
+<span class="sd">            path: path to where the aruco will be saved. If none specified will be saved in the same direcory of execution the code</span>
+<span class="sd">            :param fig_filename: filename of arcuo file</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            ArucoImage: numpy array with the aruco information</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ArucoImage</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">aruco_dictionary</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">Dictionary_get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_dict</span><span class="p">)</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">drawMarker</span><span class="p">(</span><span class="n">aruco_dictionary</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">resolution</span><span class="p">)</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">gray</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">show</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">save</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fig_filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;Aruco_Markers.png&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">fig_filename</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ArucoImage</span> <span class="o">=</span> <span class="n">img</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ArucoImage</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.create_arucos_pdf"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.create_arucos_pdf">[documentos]</a>    <span class="k">def</span> <span class="nf">create_arucos_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">ny</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;./&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function to create a pdf file with nx X ny number of arucos and save them in specified path</span>
+<span class="sd">        Args:</span>
+<span class="sd">            nx: number of rows</span>
+<span class="sd">            ny: number of columns</span>
+<span class="sd">            resolution: resolution of the image (arucos)</span>
+<span class="sd">            path: path to where the aruco will be saved. If none specified will be saved in the same direcory of execution the code</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            image of the arucos and the saved pdf</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">aruco_dictionary</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">Dictionary_get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_dict</span><span class="p">)</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nx</span> <span class="o">*</span> <span class="n">ny</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">ny</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">drawMarker</span><span class="p">(</span><span class="n">aruco_dictionary</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">resolution</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;markers.pdf&quot;</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">fig</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.plot_aruco_location"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.plot_aruco_location">[documentos]</a>    <span class="k">def</span> <span class="nf">plot_aruco_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string_kind</span><span class="o">=</span><span class="s1">&#39;RGB&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Function to visualize the location of the detected aruco markers in the image.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            string_kind: IR -&gt; Infrared detection of aruco and visualization in infrared image</span>
+<span class="sd">                         RGB -&gt; Detection of aruco in color space and visualization as color image</span>
+<span class="sd">                         Projector -&gt; Detection of projected arucos inside sandbox and visualization in color image</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            image plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">string_kind</span> <span class="o">==</span> <span class="s1">&#39;IR&#39;</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">get_ir_frame</span><span class="p">(),</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ir_markers</span><span class="p">[</span><span class="s2">&quot;Corners_IR_x&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">ir_markers</span><span class="p">[</span><span class="s2">&quot;Corners_IR_y&quot;</span><span class="p">],</span> <span class="s2">&quot;or&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">string_kind</span> <span class="o">==</span> <span class="s1">&#39;Projector&#39;</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">get_color</span><span class="p">(),</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">projector_markers</span><span class="p">[</span><span class="s2">&quot;Corners_projector_x&quot;</span><span class="p">],</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">projector_markers</span><span class="p">[</span><span class="s2">&quot;Corners_projector_y&quot;</span><span class="p">],</span> <span class="s2">&quot;or&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">string_kind</span> <span class="o">==</span> <span class="s1">&#39;RGB&#39;</span><span class="p">:</span>
+            <span class="c1"># color = self.kinect.get_color()</span>
+            <span class="c1"># color = color[self.kinect.calib.s_bottom:-self.kinect.calib.s_top,</span>
+            <span class="c1">#       self.kinect.calib.s_left:-self.kinect.calib.s_right]</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">get_color</span><span class="p">())</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rgb_markers</span><span class="p">[</span><span class="s2">&quot;Corners_RGB_x&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">rgb_markers</span><span class="p">[</span><span class="s2">&quot;Corners_RGB_y&quot;</span><span class="p">],</span> <span class="s2">&quot;or&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Select Type of projection -&gt; IR, RGB or Projector&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.convert_color_to_depth"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.convert_color_to_depth">[documentos]</a>    <span class="k">def</span> <span class="nf">convert_color_to_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="nb">map</span><span class="p">,</span> <span class="n">strg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Function to search in the previously created CoordinateMap - &quot;create_CoordinateMap()&quot; - the position of any</span>
+<span class="sd">        detected aruco marker from the color space to the depth space.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            strg: &quot;Proj&quot; or &quot;Real&quot;. Select which type of aruco want to be converted</span>
+<span class="sd">            ids: int. indicate the id of the aruco that want to be converted</span>
+<span class="sd">            map: DataFrame. From the create_CoordinateMap() function</span>
+<span class="sd">            data:</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            value: Return the line from the CoordinateMap DataFrame showing the equivalence of its position in the color</span>
+<span class="sd">            space to the depth space</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">color_data</span> <span class="o">=</span> <span class="nb">map</span><span class="p">[[</span><span class="s1">&#39;Color_x&#39;</span><span class="p">,</span> <span class="s1">&#39;Color_y&#39;</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">strg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">strg</span> <span class="o">==</span> <span class="s1">&#39;Proj&#39;</span><span class="p">:</span>
+                <span class="n">rgb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projector_markers</span>
+                <span class="n">rgb2</span> <span class="o">=</span> <span class="n">rgb</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rgb</span><span class="p">[</span><span class="s1">&#39;ids&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">ids</span><span class="p">]</span>
+                <span class="n">x_rgb</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rgb2</span><span class="o">.</span><span class="n">Corners_projector_x</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+                <span class="n">y_rgb</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rgb2</span><span class="o">.</span><span class="n">Corners_projector_y</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">strg</span> <span class="o">==</span> <span class="s1">&#39;Real&#39;</span><span class="p">:</span>
+                <span class="n">rgb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rgb_markers</span>
+                <span class="n">rgb2</span> <span class="o">=</span> <span class="n">rgb</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rgb</span><span class="p">[</span><span class="s1">&#39;ids&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">ids</span><span class="p">]</span>
+                <span class="n">x_rgb</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rgb2</span><span class="o">.</span><span class="n">Corners_RGB_x</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+                <span class="n">y_rgb</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rgb2</span><span class="o">.</span><span class="n">Corners_RGB_y</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">cdist</span><span class="p">([[</span><span class="n">x_rgb</span><span class="p">,</span> <span class="n">y_rgb</span><span class="p">]],</span> <span class="n">color_data</span><span class="p">)</span>
+            <span class="n">sorted_val</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">distance</span><span class="p">)[:][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">map</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">sorted_val</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+                    <span class="n">x_loc</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">x</span>
+                    <span class="n">y_loc</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">y</span>
+
+                    <span class="n">distance</span> <span class="o">=</span> <span class="n">cdist</span><span class="p">([[</span><span class="n">x_loc</span><span class="p">,</span> <span class="n">y_loc</span><span class="p">]],</span> <span class="n">color_data</span><span class="p">)</span>
+                    <span class="n">sorted_val</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">distance</span><span class="p">)[:][</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">value_i</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">map</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">sorted_val</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span>
+                    <span class="n">value_i</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;ids&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span><span class="p">)</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">value</span><span class="p">,</span> <span class="n">value_i</span><span class="p">],</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">value</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.location_points"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.location_points">[documentos]</a>    <span class="k">def</span> <span class="nf">location_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">amount</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Function to search for a determined amount of arucos to introduce as a data point to the depth space</span>
+<span class="sd">        Args:</span>
+<span class="sd">            amount: specify the number of arucos to search</span>
+<span class="sd">            plot: boolean to show the plot on color space and depth space if the mapped values are right</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            point_markers: DataFrame with the id, x, y coordinates for the location of the aruco</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ids&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">}</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">amount</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">amount</span><span class="p">:</span>
+                <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">get_color</span><span class="p">()</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="n">frame</span>  <span class="c1"># [self.rgb_markers.Corners_RGB_y.min():self.rgb_markers.Corners_RGB_y.max(),</span>
+                <span class="c1"># self.rgb_markers.Corners_RGB_x.min():self.rgb_markers.Corners_RGB_x.max()]</span>
+                <span class="n">corners</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">rejectedImgPoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_detect</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">)):</span>
+                        <span class="k">if</span> <span class="n">ids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">ids</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                            <span class="n">x_loc</span><span class="p">,</span> <span class="n">y_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_location_marker</span><span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+                            <span class="n">df_temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">ids</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">x_loc</span><span class="p">],</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">y_loc</span><span class="p">]})</span>
+                            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df</span><span class="p">,</span> <span class="n">df_temp</span><span class="p">],</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">point_markers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_color_to_depth</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">CoordinateMap</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">point_markers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_markers</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">point_markers</span><span class="p">))))</span>
+
+        <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
+            <span class="n">color_crop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">get_color</span><span class="p">()</span>
+            <span class="n">depth_crop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">get_ir_frame</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">color_crop</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">point_markers</span><span class="o">.</span><span class="n">Color_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_markers</span><span class="o">.</span><span class="n">Color_y</span><span class="p">,</span> <span class="s2">&quot;or&quot;</span><span class="p">)</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">depth_crop</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">point_markers</span><span class="o">.</span><span class="n">Depth_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_markers</span><span class="o">.</span><span class="n">Depth_y</span><span class="p">,</span> <span class="s2">&quot;or&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_left</span><span class="p">,</span> <span class="n">depth_crop</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_right</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="n">depth_crop</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_bottom</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_top</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_markers</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.calibrate_camera_charucoBoard"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.calibrate_camera_charucoBoard">[documentos]</a>    <span class="k">def</span> <span class="nf">calibrate_camera_charucoBoard</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to obtain the camera intrinsic parameters to perform the aruco pose estimation</span>
+<span class="sd">        Args:</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            mtx: cameraMatrix Output 3x3 floating-point camera matrix</span>
+<span class="sd">            dist: Output vector of distortion coefficient</span>
+<span class="sd">            rvecs: Output vector of rotation vectors (see Rodrigues ) estimated for each board view</span>
+<span class="sd">            tvecs: Output vector of translation vectors estimated for each pattern view.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">aruco_dict</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">Dictionary_get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_dict</span><span class="p">)</span>
+        <span class="n">board</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">CharucoBoard_create</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">.8</span><span class="p">,</span> <span class="n">aruco_dict</span><span class="p">)</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Start moving randomly the aruco board&#39;</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">400</span>  <span class="c1"># number of frames</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">get_color</span><span class="p">()</span>
+            <span class="n">images</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Stop moving the board&quot;</span><span class="p">)</span>
+        <span class="n">img_frame</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">images</span><span class="p">)[</span><span class="mi">0</span><span class="p">::</span><span class="mi">5</span><span class="p">]</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating Aruco location of </span><span class="si">%s</span><span class="s2"> images&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">img_frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">allCorners</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">allIds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">decimator</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">img_frame</span><span class="p">:</span>
+            <span class="c1"># print(&quot;=&gt; Processing image {0}&quot;.format(im))</span>
+            <span class="c1"># frame = cv2.imread(im)</span>
+            <span class="n">gray</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">aruco</span><span class="o">.</span><span class="n">detectMarkers</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span> <span class="n">aruco_dict</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">res2</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">aruco</span><span class="o">.</span><span class="n">interpolateCornersCharuco</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">gray</span><span class="p">,</span> <span class="n">board</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">res2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">res2</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">res2</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">decimator</span> <span class="o">%</span> <span class="mi">1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">allCorners</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res2</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">allIds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res2</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+            <span class="n">decimator</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">imsize</span> <span class="o">=</span> <span class="n">gray</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Finish&quot;</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating camera parameters&quot;</span><span class="p">)</span>
+        <span class="n">cameraMatrixInit</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">2000.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">imsize</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">],</span>
+                                        <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">2000.</span><span class="p">,</span> <span class="n">imsize</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">],</span>
+                                        <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
+
+        <span class="n">distCoeffsInit</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CALIB_USE_INTRINSIC_GUESS</span> <span class="o">+</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CALIB_RATIONAL_MODEL</span><span class="p">)</span>
+        <span class="n">ret</span><span class="p">,</span> <span class="n">mtx</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">rvecs</span><span class="p">,</span> <span class="n">tvecs</span><span class="p">,</span> <span class="n">stdDeviationsIntrinsics</span><span class="p">,</span> <span class="n">stdDeviationsExtrinsics</span><span class="p">,</span> <span class="n">perViewErrors</span> <span class="o">=</span> \
+            <span class="n">cv2</span><span class="o">.</span><span class="n">aruco</span><span class="o">.</span><span class="n">calibrateCameraCharucoExtended</span><span class="p">(</span>
+                <span class="n">charucoCorners</span><span class="o">=</span><span class="n">allCorners</span><span class="p">,</span>
+                <span class="n">charucoIds</span><span class="o">=</span><span class="n">allIds</span><span class="p">,</span>
+                <span class="n">board</span><span class="o">=</span><span class="n">board</span><span class="p">,</span>
+                <span class="n">imageSize</span><span class="o">=</span><span class="n">imsize</span><span class="p">,</span>
+                <span class="n">cameraMatrix</span><span class="o">=</span><span class="n">cameraMatrixInit</span><span class="p">,</span>
+                <span class="n">distCoeffs</span><span class="o">=</span><span class="n">distCoeffsInit</span><span class="p">,</span>
+                <span class="n">flags</span><span class="o">=</span><span class="n">flags</span><span class="p">,</span>
+                <span class="n">criteria</span><span class="o">=</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">TERM_CRITERIA_EPS</span> <span class="o">&amp;</span> <span class="n">cv2</span><span class="o">.</span><span class="n">TERM_CRITERIA_COUNT</span><span class="p">,</span> <span class="mi">10000</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Finish&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">camera_mtx</span> <span class="o">=</span> <span class="n">mtx</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">camera_dist</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">mtx</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">rvecs</span><span class="p">,</span> <span class="n">tvecs</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.real_time_poseEstimation"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.real_time_poseEstimation">[documentos]</a>    <span class="k">def</span> <span class="nf">real_time_poseEstimation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method that display real time detection of the aruco markers with the pose estimation and id of each</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">namedWindow</span><span class="p">(</span><span class="s2">&quot;Aruco&quot;</span><span class="p">)</span>
+        <span class="c1"># frame = self.kinect.get_color()</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">get_color</span><span class="p">()</span>  <span class="c1"># [270:900,640:1400]</span>
+        <span class="n">rval</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">while</span> <span class="n">rval</span><span class="p">:</span>
+            <span class="n">gray</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_RGB2GRAY</span><span class="p">)</span>
+            <span class="n">parameters</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">DetectorParameters_create</span><span class="p">()</span>
+            <span class="n">aruco_dict</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">Dictionary_get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_dict</span><span class="p">)</span>
+            <span class="n">corners</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">rejectedImgPoints</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">detectMarkers</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span> <span class="n">aruco_dict</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">frame</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">drawDetectedMarkers</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">corners</span><span class="p">,</span> <span class="n">ids</span><span class="p">)</span>
+                <span class="c1"># side lenght of the marker in meter</span>
+                <span class="n">rvecs</span><span class="p">,</span> <span class="n">tvecs</span><span class="p">,</span> <span class="n">trash</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">estimatePoseSingleMarkers</span><span class="p">(</span><span class="n">corners</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size_of_marker</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtx</span><span class="p">,</span>
+                                                                      <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tvecs</span><span class="p">)):</span>
+                    <span class="n">frame</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">drawAxis</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mtx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span> <span class="n">rvecs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">tvecs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_length_of_axis</span><span class="p">)</span>
+
+            <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s2">&quot;Aruco&quot;</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_RGB2BGR</span><span class="p">))</span>
+            <span class="c1"># frame = self.kinect.get_color()</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinect</span><span class="o">.</span><span class="n">get_color</span><span class="p">()</span>  <span class="c1"># [270:900,640:1400]</span>
+
+            <span class="n">key</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="mi">27</span><span class="p">:</span>  <span class="c1"># exit on ESC</span>
+                <span class="k">break</span>
+
+        <span class="n">cv2</span><span class="o">.</span><span class="n">destroyWindow</span><span class="p">(</span><span class="s2">&quot;Aruco&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.drawPoseEstimation"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.drawPoseEstimation">[documentos]</a>    <span class="k">def</span> <span class="nf">drawPoseEstimation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method that draws over the frame the coordinate system of each aruco marker in relation to the camera space</span>
+<span class="sd">        Args:</span>
+<span class="sd">            df: data frame containing the information of the tranlation and rotation vectors previously detected</span>
+<span class="sd">            frame: frame to draw the coordinate sytems</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            frame: with the resulting coordinate system</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)):</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">aruco</span><span class="o">.</span><span class="n">drawAxis</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">mtx</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span>
+                                   <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">Rotation_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                   <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">Translation_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">_length_of_axis</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">frame</span><span class="o">.</span><span class="n">get</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.p_arucoMarker"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.p_arucoMarker">[documentos]</a>    <span class="k">def</span> <span class="nf">p_arucoMarker</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Method to create an empty frame including 2 aruco markers.</span>
+<span class="sd">        one in the upper left corner</span>
+<span class="sd">        second one in the central part of the image.</span>
+<span class="sd">        The id of the left-upper aruco is determined by the aruco position in the corner with resolution of 50</span>
+<span class="sd">        The id in the center of the image is set to be 20 and resolution of 100</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Frame as numpy array with the information of the aruco markers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">p_frame_width</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">p_frame_height</span>
+
+        <span class="c1"># Creation of the aruco images as numpy array with size of resolution</span>
+        <span class="n">img_LU</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_aruco_marker</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">corner_id_LU</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+        <span class="n">img_c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_aruco_marker</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">center_id</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+        <span class="c1"># creation of empty numpy array with the size of the frame projected</span>
+        <span class="n">god</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">))</span>
+        <span class="n">god</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span>
+
+        <span class="c1"># Placement of aruco markers in the image.</span>
+        <span class="c1"># The Left upper aruco will be placed with a constant offset distance in x and y from the corner</span>
+        <span class="n">god</span><span class="p">[</span><span class="n">height</span> <span class="o">-</span> <span class="n">img_LU</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="p">:</span><span class="n">height</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="p">:</span><span class="n">img_LU</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">numpy</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="n">img_LU</span><span class="p">)</span>
+        <span class="c1"># The central aruco will be placed exactly in the middle of the image</span>
+        <span class="n">god</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">img_c</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">img_c</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">img_c</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">img_c</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="n">img_c</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">god</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.move_image"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.move_image">[documentos]</a>    <span class="k">def</span> <span class="nf">move_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Method to determine the distances between the aruco position in the corner of the sandbox in relation</span>
+<span class="sd">        with the projected frame and the projected aruco marker.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            p_frame_left: new value to update the calib.p_frame_left</span>
+<span class="sd">            p_frame_top: new value to update the calib.p_frame_top</span>
+<span class="sd">            p_frame_width: new value to update the calib.p_frame_width</span>
+<span class="sd">            p_frame_height: new value to update the calib.p_frame_height</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Find the 2 corners of the projection</span>
+        <span class="n">df_p</span><span class="p">,</span> <span class="n">corner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_markers_projector</span><span class="p">(</span><span class="n">amount</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># save the location of the aruco from the calibration file</span>
+        <span class="n">df_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_corners</span>
+
+        <span class="c1"># extract the position x and y of the projected aruco</span>
+        <span class="n">x_p</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df_p</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_p</span><span class="o">.</span><span class="n">ids</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">corner_id_LU</span><span class="p">]</span><span class="o">.</span><span class="n">Corners_projector_x</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">y_p</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df_p</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_p</span><span class="o">.</span><span class="n">ids</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">corner_id_LU</span><span class="p">]</span><span class="o">.</span><span class="n">Corners_projector_y</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+        <span class="c1"># extract the position x and y of the corner sandbox where the projected aruco should be</span>
+        <span class="n">x_r</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df_r</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_r</span><span class="o">.</span><span class="n">ids</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">corner_id_LU</span><span class="p">]</span><span class="o">.</span><span class="n">Color_x</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">y_r</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df_r</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_r</span><span class="o">.</span><span class="n">ids</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">corner_id_LU</span><span class="p">]</span><span class="o">.</span><span class="n">Color_y</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+        <span class="c1"># scale factor using the resolution of the central aruco -&gt; 100 pixels represented in reality</span>
+        <span class="n">cor</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">corner</span><span class="p">)</span>
+        <span class="n">scale_factor_x</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">/</span> <span class="p">(</span><span class="n">cor</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">cor</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+        <span class="n">scale_factor_y</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">/</span> <span class="p">(</span><span class="n">cor</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">cor</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+
+        <span class="c1"># move x and y direction the whole frame to make coincide the projected aruco with the corner</span>
+        <span class="n">x_move</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(((</span><span class="n">x_p</span> <span class="o">-</span> <span class="n">x_r</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale_factor_x</span><span class="p">))</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_displacement</span>
+        <span class="n">y_move</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(((</span><span class="n">y_p</span> <span class="o">-</span> <span class="n">y_r</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale_factor_y</span><span class="p">))</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_displacement</span>
+
+        <span class="c1"># provide with the location of the</span>
+        <span class="n">p_frame_left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">p_frame_left</span> <span class="o">-</span> <span class="n">x_move</span>
+        <span class="n">p_frame_top</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">p_frame_top</span> <span class="o">-</span> <span class="n">y_move</span>
+
+        <span class="c1"># Now same procedure with the center aruco by changing the width and height of the frame to make</span>
+        <span class="c1"># coincide the center projected aruco with the center of the sandbox.</span>
+        <span class="n">x_c</span> <span class="o">=</span> <span class="n">df_r</span><span class="o">.</span><span class="n">Color_x</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">y_c</span> <span class="o">=</span> <span class="n">df_r</span><span class="o">.</span><span class="n">Color_y</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+        <span class="n">x_pc</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df_p</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_p</span><span class="o">.</span><span class="n">ids</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">center_id</span><span class="p">]</span><span class="o">.</span><span class="n">Corners_projector_x</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">y_pc</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">df_p</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_p</span><span class="o">.</span><span class="n">ids</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">center_id</span><span class="p">]</span><span class="o">.</span><span class="n">Corners_projector_y</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+        <span class="n">width_move</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">x_c</span> <span class="o">-</span> <span class="n">x_pc</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale_factor_x</span><span class="p">)</span> <span class="o">+</span> <span class="n">x_move</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_displacement</span>
+        <span class="n">height_move</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">y_c</span> <span class="o">-</span> <span class="n">y_pc</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale_factor_y</span><span class="p">)</span> <span class="o">+</span> <span class="n">y_move</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_displacement</span>
+
+        <span class="n">p_frame_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">p_frame_width</span> <span class="o">+</span> <span class="n">width_move</span>
+        <span class="n">p_frame_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">p_frame_height</span> <span class="o">+</span> <span class="n">height_move</span>
+
+        <span class="k">return</span> <span class="n">p_frame_left</span><span class="p">,</span> <span class="n">p_frame_top</span><span class="p">,</span> <span class="n">p_frame_width</span><span class="p">,</span> <span class="n">p_frame_height</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.crop_image_aruco"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.crop_image_aruco">[documentos]</a>    <span class="k">def</span> <span class="nf">crop_image_aruco</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Method that takes the location of the 4 real corners and crop the sensor extensions to this frame</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            s_top: new value to update the calib.s_top</span>
+<span class="sd">            s_left: new value to update the calib.s_left</span>
+<span class="sd">            s_bottom: new value to update the calib.s_bottom</span>
+<span class="sd">            s_right: new value to update the calib.s_right</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">id_LU</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_corners</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_corners</span><span class="o">.</span><span class="n">ids</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">corner_id_LU</span><span class="p">]</span>
+        <span class="n">id_DR</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_corners</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_corners</span><span class="o">.</span><span class="n">ids</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">corner_id_DR</span><span class="p">]</span>
+
+        <span class="n">s_top</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">id_LU</span><span class="o">.</span><span class="n">Depth_y</span><span class="p">)</span>
+        <span class="n">s_left</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">id_LU</span><span class="o">.</span><span class="n">Depth_x</span><span class="p">)</span>
+        <span class="n">s_bottom</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_height</span> <span class="o">-</span> <span class="n">id_DR</span><span class="o">.</span><span class="n">Depth_y</span><span class="p">)</span>
+        <span class="n">s_right</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">s_width</span> <span class="o">-</span> <span class="n">id_DR</span><span class="o">.</span><span class="n">Depth_x</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">s_top</span><span class="p">,</span> <span class="n">s_left</span><span class="p">,</span> <span class="n">s_bottom</span><span class="p">,</span> <span class="n">s_right</span></div>
+
+<div class="viewcode-block" id="ArucoMarkers.load_corners_ids"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco.ArucoMarkers.load_corners_ids">[documentos]</a>    <span class="k">def</span> <span class="nf">load_corners_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;DEPRECATED&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">aruco_corners</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aruco_corners</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calib</span><span class="o">.</span><span class="n">aruco_corners</span><span class="p">)</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_corners</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_corners</span><span class="o">.</span><span class="n">Color_x</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">corner_id_LU</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">temp</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">temp</span><span class="o">.</span><span class="n">Color_y</span> <span class="o">==</span> <span class="n">temp</span><span class="o">.</span><span class="n">Color_y</span><span class="o">.</span><span class="n">min</span><span class="p">()]</span><span class="o">.</span><span class="n">ids</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+            <span class="n">temp1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_corners</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aruco_corners</span><span class="o">.</span><span class="n">Color_x</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">corner_id_DR</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">temp1</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">temp1</span><span class="o">.</span><span class="n">Color_y</span> <span class="o">==</span> <span class="n">temp1</span><span class="o">.</span><span class="n">Color_y</span><span class="o">.</span><span class="n">max</span><span class="p">()]</span><span class="o">.</span><span class="n">ids</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">center_id</span> <span class="o">=</span> <span class="mi">20</span>
+
+        <span class="c1"># TODO: pixel distance from the frame corner so the aruco is always projected inside the sandbox</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="c1"># TODO: move the image this amount of pixels so when moving the image is at this distance from the detected aruco</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixel_displacement</span> <span class="o">=</span> <span class="mi">10</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Código do módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,389 @@
+
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sandbox.utils.download_sample_datasets &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/translations.js"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fonte de sandbox.utils.download_sample_datasets</h1><div class="highlight"><pre>
+<span></span><span class="c1"># %%</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">pooch</span>
+<span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">_test_data</span><span class="p">,</span> <span class="n">set_logger</span>
+<span class="kn">from</span> <span class="nn">pooch</span> <span class="kn">import</span> <span class="n">HTTPDownloader</span>
+<span class="n">download</span> <span class="o">=</span> <span class="n">HTTPDownloader</span><span class="p">(</span><span class="n">progressbar</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">set_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1">#</span>
+<span class="c1"># %%</span>
+<span class="n">parent_url</span> <span class="o">=</span> <span class="s2">&quot;https://rwth-aachen.sciebo.de/s/oKxBxb1oGW2ZsoC?path=</span><span class="si">%2F</span><span class="s2">&quot;</span>
+<span class="n">tests_url</span> <span class="o">=</span> <span class="s2">&quot;https://rwth-aachen.sciebo.de/s/oKxBxb1oGW2ZsoC/download?path=</span><span class="si">%2F</span><span class="s2">Tests&amp;files=&quot;</span>
+<span class="n">tests</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;arucos.pkl&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;frame1.npz&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;frame2.npz&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;frame3.npz&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;frame4.npz&quot;</span><span class="p">]</span>
+
+<span class="n">topomodule_url</span> <span class="o">=</span> <span class="s2">&quot;https://rwth-aachen.sciebo.de/s/oKxBxb1oGW2ZsoC/download?path=</span><span class="si">%2F</span><span class="s2">TopoModule</span><span class="si">%2F</span><span class="s2">saved_DEMs&amp;files=&quot;</span>
+<span class="n">topomodule_files</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;1.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;2.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;3.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;4.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;DEM1.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;DEM10.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;DEM11.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;DEM2.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;DEM3.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;DEM4.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;DEM5.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;DEM6.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;DEM7.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;DEM8.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;DEM9.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Landslide_test_1.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;bennisson_raster_DEM_04.npy&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;savedTopography.npz&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;test.npz&quot;</span><span class="p">]</span>
+
+<span class="n">landslides_dems_url</span> <span class="o">=</span> <span class="s2">&quot;https://rwth-aachen.sciebo.de/s/oKxBxb1oGW2ZsoC/&quot;</span> \
+                      <span class="s2">&quot;download?path=</span><span class="si">%2F</span><span class="s2">LanslideSimulation</span><span class="si">%2F</span><span class="s2">saved_DEMs&amp;files=&quot;</span>
+<span class="n">landslides_dems</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Topography_0.npz&quot;</span><span class="p">,</span>
+                   <span class="s2">&quot;Topography_1.npz&quot;</span><span class="p">,</span>
+                   <span class="s2">&quot;Topography_2.npz&quot;</span><span class="p">,</span>
+                   <span class="s2">&quot;Topography_3.npz&quot;</span><span class="p">,</span>
+                   <span class="s2">&quot;Topography_4.npz&quot;</span><span class="p">]</span>
+<span class="n">landslides_areas_url</span> <span class="o">=</span> <span class="s2">&quot;https://rwth-aachen.sciebo.de/s/oKxBxb1oGW2ZsoC/&quot;</span> \
+                       <span class="s2">&quot;download?path=</span><span class="si">%2F</span><span class="s2">LanslideSimulation</span><span class="si">%2F</span><span class="s2">saved_ReleaseAreas&amp;files=&quot;</span>
+<span class="n">landslides_areas</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ReleaseArea_0_1.npy&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;ReleaseArea_1_1.npy&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;ReleaseArea_1_2.npy&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;ReleaseArea_1_3.npy&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;ReleaseArea_2_1.npy&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;ReleaseArea_2_2.npy&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;ReleaseArea_2_3.npy&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;ReleaseArea_3_1.npy&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;ReleaseArea_3_2.npy&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;ReleaseArea_3_3.npy&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;ReleaseArea_4_1.npy&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;ReleaseArea_4_2.npy&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;ReleaseArea_4_3.npy&quot;</span><span class="p">,</span>
+                    <span class="p">]</span>
+<span class="n">landslides_results_url</span> <span class="o">=</span> <span class="s2">&quot;https://rwth-aachen.sciebo.de/s/oKxBxb1oGW2ZsoC/&quot;</span> \
+                         <span class="s2">&quot;download?path=</span><span class="si">%2F</span><span class="s2">LanslideSimulation</span><span class="si">%2F</span><span class="s2">simulation_data&amp;files=&quot;</span>
+<span class="n">landslides_results</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Sim_Topo0_Rel01_results4sandbox.npz&quot;</span><span class="p">,</span>
+                      <span class="s2">&quot;Sim_Topo1_Rel11_results4sandbox.npz&quot;</span><span class="p">,</span>
+                      <span class="s2">&quot;Sim_Topo1_Rel12_results4sandbox.npz&quot;</span><span class="p">,</span>
+                      <span class="s2">&quot;Sim_Topo1_Rel13_results4sandbox.npz&quot;</span><span class="p">,</span>
+                      <span class="s2">&quot;Sim_Topo2_Rel21_results4sandbox.npz&quot;</span><span class="p">,</span>
+                      <span class="s2">&quot;Sim_Topo2_Rel22_results4sandbox.npz&quot;</span><span class="p">,</span>
+                      <span class="s2">&quot;Sim_Topo2_Rel23_results4sandbox.npz&quot;</span><span class="p">,</span>
+                      <span class="s2">&quot;Sim_Topo3_Rel31_results4sandbox.npz&quot;</span><span class="p">,</span>
+                      <span class="s2">&quot;Sim_Topo3_Rel32_results4sandbox.npz&quot;</span><span class="p">,</span>
+                      <span class="s2">&quot;Sim_Topo3_Rel33_results4sandbox.npz&quot;</span><span class="p">,</span>
+                      <span class="s2">&quot;Sim_Topo4_Rel41_results4sandbox.npz&quot;</span><span class="p">,</span>
+                      <span class="s2">&quot;Sim_Topo4_Rel42_results4sandbox.npz&quot;</span><span class="p">,</span>
+                      <span class="s2">&quot;Sim_Topo4_Rel43_results4sandbox.npz&quot;</span><span class="p">,</span>
+                      <span class="p">]</span>
+
+<span class="n">landscape_models</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Aletsch_1k&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Aletsch_5k&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;AletschWin_3k&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;AletschWin_10k&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Allgaeu_5k&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;AllgaeuSum_10k&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;AlpsSum1_1k&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;AlpsSum1_5k&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;AlpsSum1_10k&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;AlpsSum_3k&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;BernSum_5k&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;BernSum_10k&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;BernWin_5k&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;BernWin_10k&quot;</span><span class="p">]</span>
+<span class="n">landscape_urls</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;https://rwth-aachen.sciebo.de/s/oKxBxb1oGW2ZsoC/download?path=</span><span class="si">%2F</span><span class="s2">LandscapeGeneration&quot;</span>
+                  <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%2F</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="s2">&quot;&amp;files=&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">landscape_models</span><span class="p">]</span>
+
+<span class="n">landscape_data</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;latest_net_D.pth&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;latest_net_G.pth&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;loss_log.txt&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;test_opt.txt&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;train_opt.txt&quot;</span><span class="p">]</span>
+
+<span class="c1"># Benisson model</span>
+<span class="n">gempy_benisson_url</span> <span class="o">=</span> <span class="s2">&quot;https://rwth-aachen.sciebo.de/s/oKxBxb1oGW2ZsoC/download?path=</span><span class="si">%2F</span><span class="s2">Gempy</span><span class="si">%2F</span><span class="s2">Benisson_model&amp;files=&quot;</span>
+<span class="n">gempy_benisson</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Benisson_04_elev_contours.dbf&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;Benisson_04_elev_contours.prj&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;Benisson_04_elev_contours.shp&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;Benisson_04_elev_contours.shx&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;Benisson_Map_04.png&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;extent.dbf&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;extent.prj&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;extent.shp&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;extent.shx&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;interfaces_point.dbf&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;interfaces_point.prj&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;interfaces_point.shp&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;interfaces_point.shx&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;orientation.dbf&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;orientation.prj&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;orientation.shp&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;orientation.shx&quot;</span>
+                  <span class="p">]</span>
+
+<span class="n">gempy_example_models_url</span> <span class="o">=</span> <span class="s2">&quot;https://raw.githubusercontent.com/cgre-aachen/gempy_data/master/data/input_data/jan_models/&quot;</span>
+<span class="n">gempy_example_models</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;model1_orientations.csv&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;model1_surface_points.csv&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;model2_orientations.csv&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;model2_surface_points.csv&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;model3_orientations.csv&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;model3_surface_points.csv&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;model4_orientations.csv&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;model4_surface_points.csv&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;model5_orientations.csv&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;model5_surface_points.csv&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;model6_orientations.csv&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;model6_surface_points.csv&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;model7_orientations.csv&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;model7_surface_points.csv&quot;</span>
+                        <span class="p">]</span>
+<span class="n">gempy_example_models_url2</span> <span class="o">=</span> <span class="s2">&quot;https://raw.githubusercontent.com/cgre-aachen/gempy_data/master/data/input_data/lisa_models/&quot;</span>
+<span class="n">gempy_example_models2</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;foliations7.csv&quot;</span><span class="p">,</span>
+                         <span class="s2">&quot;interfaces7.csv&quot;</span><span class="p">,</span>
+                         <span class="p">]</span>
+
+
+<div class="viewcode-block" id="create_pooch"><a class="viewcode-back" href="../../../sandbox.utils.html#sandbox.utils.download_sample_datasets.create_pooch">[documentos]</a><span class="k">def</span> <span class="nf">create_pooch</span><span class="p">(</span><span class="n">base_url</span><span class="p">,</span> <span class="n">files</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create POOCH class to fetch files from a website</span>
+<span class="sd">    Args:</span>
+<span class="sd">        base_url: Base URL for the remote data source.</span>
+<span class="sd">        files: A record of the files that are managed by this Pooch.</span>
+<span class="sd">        target: The path to the local data storage folder</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        POOCH class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pc</span> <span class="o">=</span> <span class="n">pooch</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span><span class="p">,</span>
+                      <span class="n">path</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+                      <span class="n">registry</span><span class="o">=</span><span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">files</span><span class="p">})</span>  <span class="c1"># None because the Hash is always changing.. Sciebo problem?</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Pooch created for url: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">base_url</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pc</span></div>
+
+
+<div class="viewcode-block" id="download_test_data"><a class="viewcode-back" href="../../../sandbox.utils.html#sandbox.utils.download_sample_datasets.download_test_data">[documentos]</a><span class="k">def</span> <span class="nf">download_test_data</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Download all data for testing</span>
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pooch_data</span> <span class="o">=</span> <span class="n">create_pooch</span><span class="p">(</span><span class="n">tests_url</span><span class="p">,</span> <span class="n">tests</span><span class="p">,</span> <span class="n">_test_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">tests</span><span class="p">:</span>
+            <span class="n">pooch_data</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">downloader</span><span class="o">=</span><span class="n">download</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Data for testing downloaded&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="download_topography_data"><a class="viewcode-back" href="../../../sandbox.utils.html#sandbox.utils.download_sample_datasets.download_topography_data">[documentos]</a><span class="k">def</span> <span class="nf">download_topography_data</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Download all available DEMs to SaveTopoModule</span>
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pooch_topo</span> <span class="o">=</span> <span class="n">create_pooch</span><span class="p">(</span><span class="n">topomodule_url</span><span class="p">,</span> <span class="n">topomodule_files</span><span class="p">,</span> <span class="n">_test_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;topo&quot;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">topomodule_files</span><span class="p">:</span>
+            <span class="n">pooch_topo</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">downloader</span><span class="o">=</span><span class="n">download</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Data for topography downloaded&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="download_landslides_data"><a class="viewcode-back" href="../../../sandbox.utils.html#sandbox.utils.download_sample_datasets.download_landslides_data">[documentos]</a><span class="k">def</span> <span class="nf">download_landslides_data</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Download all available to display the landslide simulations &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pooch_landslides_dem</span> <span class="o">=</span> <span class="n">create_pooch</span><span class="p">(</span><span class="n">landslides_dems_url</span><span class="p">,</span> <span class="n">landslides_dems</span><span class="p">,</span> <span class="n">_test_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;landslide_topo&quot;</span><span class="p">))</span>
+        <span class="n">pooch_landslides_area</span> <span class="o">=</span> <span class="n">create_pooch</span><span class="p">(</span><span class="n">landslides_areas_url</span><span class="p">,</span> <span class="n">landslides_areas</span><span class="p">,</span> <span class="n">_test_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;landslide_release&quot;</span><span class="p">))</span>
+        <span class="n">pooch_landslides_sim</span> <span class="o">=</span> <span class="n">create_pooch</span><span class="p">(</span><span class="n">landslides_results_url</span><span class="p">,</span> <span class="n">landslides_results</span><span class="p">,</span>
+                                            <span class="n">_test_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;landslide_simulation&quot;</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">landslides_dems</span><span class="p">:</span>
+            <span class="n">pooch_landslides_dem</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">downloader</span><span class="o">=</span><span class="n">download</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">landslides_areas</span><span class="p">:</span>
+            <span class="n">pooch_landslides_area</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">downloader</span><span class="o">=</span><span class="n">download</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">landslides_results</span><span class="p">:</span>
+            <span class="n">pooch_landslides_sim</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">downloader</span><span class="o">=</span><span class="n">download</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Data for landslides downloaded&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="download_benisson_model"><a class="viewcode-back" href="../../../sandbox.utils.html#sandbox.utils.download_sample_datasets.download_benisson_model">[documentos]</a><span class="k">def</span> <span class="nf">download_benisson_model</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dowload data for construction of Benisson model with gempy&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pooch_gempy</span> <span class="o">=</span> <span class="n">create_pooch</span><span class="p">(</span><span class="n">gempy_benisson_url</span><span class="p">,</span> <span class="n">gempy_benisson</span><span class="p">,</span> <span class="n">_test_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gempy_data&quot;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">gempy_benisson</span><span class="p">:</span>
+            <span class="n">pooch_gempy</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">downloader</span><span class="o">=</span><span class="n">download</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Data for benisson model downloaded&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="download_example_gempy_model"><a class="viewcode-back" href="../../../sandbox.utils.html#sandbox.utils.download_sample_datasets.download_example_gempy_model">[documentos]</a><span class="k">def</span> <span class="nf">download_example_gempy_model</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dowload data for construction of example models with gempy&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pooch_gempy_example</span> <span class="o">=</span> <span class="n">create_pooch</span><span class="p">(</span><span class="n">gempy_example_models_url</span><span class="p">,</span> <span class="n">gempy_example_models</span><span class="p">,</span> <span class="n">_test_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gempy_example_data&quot;</span><span class="p">))</span>
+        <span class="n">pooch_gempy_example2</span> <span class="o">=</span> <span class="n">create_pooch</span><span class="p">(</span><span class="n">gempy_example_models_url2</span><span class="p">,</span> <span class="n">gempy_example_models2</span><span class="p">,</span> <span class="n">_test_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gempy_example_data&quot;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">gempy_example_models</span><span class="p">:</span>
+            <span class="n">pooch_gempy_example</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">downloader</span><span class="o">=</span><span class="n">download</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">gempy_example_models2</span><span class="p">:</span>
+            <span class="n">pooch_gempy_example2</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">downloader</span><span class="o">=</span><span class="n">download</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Data for gempy example models downloaded&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="download_landscape_name"><a class="viewcode-back" href="../../../sandbox.utils.html#sandbox.utils.download_sample_datasets.download_landscape_name">[documentos]</a><span class="k">def</span> <span class="nf">download_landscape_name</span><span class="p">(</span><span class="n">name_model</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Download an specific trained model&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name_model</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">landscape_models</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Model with name &#39;</span><span class="si">%s</span><span class="s2">&#39; not available for download. &quot;</span>
+                            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Available models are </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name_model</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">landscape_models</span><span class="p">)))</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">loc_dir</span> <span class="o">=</span> <span class="n">_test_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;landscape_generation&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;checkpoints&quot;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">name_model</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">loc_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">loc_dir</span><span class="p">)</span>
+
+        <span class="n">pos</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">landscape_models</span><span class="p">))</span> <span class="k">if</span> <span class="n">name_model</span> <span class="o">==</span> <span class="n">landscape_models</span><span class="p">[</span><span class="n">i</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pooch_landscape</span> <span class="o">=</span> <span class="n">create_pooch</span><span class="p">(</span><span class="n">landscape_urls</span><span class="p">[</span><span class="n">pos</span><span class="p">],</span> <span class="n">landscape_data</span><span class="p">,</span> <span class="n">loc_dir</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">landscape_data</span><span class="p">:</span>
+            <span class="n">pooch_landscape</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">downloader</span><span class="o">=</span><span class="n">download</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Model </span><span class="si">%s</span><span class="s2"> downloaded for landscape generation&quot;</span> <span class="o">%</span> <span class="n">name_model</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="download_landscape_all"><a class="viewcode-back" href="../../../sandbox.utils.html#sandbox.utils.download_sample_datasets.download_landscape_all">[documentos]</a><span class="k">def</span> <span class="nf">download_landscape_all</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Download all trained models available&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">name_model</span> <span class="ow">in</span> <span class="n">landscape_models</span><span class="p">:</span>
+        <span class="n">download_landscape_name</span><span class="p">(</span><span class="n">name_model</span><span class="p">)</span></div>
+
+
+<span class="c1">#%%</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Do you want to download the genpy data for the example models? (12 kB) [y/n]&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
+        <span class="n">download_example_gempy_model</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Do you want to download the Test data? (25.4 MB) [y/n]&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
+        <span class="n">download_test_data</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Do you want to download some DEMs to the SaveLoadModule? (24 MB) [y/n]&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
+        <span class="n">download_topography_data</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Do you want to download the Landslide data to the LandslideModule? (114 MB) [y/n]&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
+        <span class="n">download_landslides_data</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Do you want to download the Gempy data for the Benisson Model? (1.2 MB) [y/n]&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
+        <span class="n">download_benisson_model</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Do you want to download all the Trained models for the LandscapeGeneration module? (3 GB) [y/n]&quot;</span><span class="p">)</span> <span class="o">==</span> \
+            <span class="s2">&quot;y&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Are you sure? All of them? It is 3 GB of data [y/n]&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
+            <span class="n">download_landscape_all</span><span class="p">()</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Do you want to download an specific Trained model? [y/n]&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Available models: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">landscape_models</span><span class="p">)</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Name of model to download:&quot;</span><span class="p">)</span>
+            <span class="n">download_landscape_name</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">break</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Código do módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
