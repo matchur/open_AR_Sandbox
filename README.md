@@ -3,9 +3,13 @@
 * Check the complete and up-to-date documentation on [read the docs](https://open-ar-sandbox.readthedocs.io/en/latest/)
 
 
-Bem vindo ao Open AR-Sandbox Repositório. Esse repositório é um fork do projeto original [Open AR-Sandbox](https://github.com/cgre-aachen/open_AR_Sandbox/) contendo algumas modificações, dentre elas a documentação e a tradução para a linguagem portuguesa brasileira.
+ Esse repositório é um fork do projeto original [Open AR-Sandbox](https://github.com/cgre-aachen/open_AR_Sandbox/) contendo algumas modificações, dentre elas a documentação e a tradução para a linguagem portuguesa brasileira.
+
+
 
 Seja bem vindo ao repositório do Open AR-Sandbpx. Se você ainda não conhece sobre o projeto fique a vontade de uma olhada nesses videos:
+
+
 [![A Sandbox CGRE em ação](https://img.youtube.com/vi/oE3Atw-YvSA/0.jpg)](https://www.youtube.com/watch?v=oE3Atw-YvSA)
 
 [![O que é uma caixa de areia de RA?](https://img.youtube.com/vi/RIvYO1lx6vs/0.jpg)](https://www.youtube.com/watch?v=RIvYO1lx6vs)
