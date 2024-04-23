@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sandbox.main_thread &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=e63ae33f"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/translations.js?v=3b002d5c"></script>
+    <link rel="index" title="Índice" href="../../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fonte de sandbox.main_thread</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">panel</span> <span class="k">as</span> <span class="nn">pn</span>
+<span class="n">pn</span><span class="o">.</span><span class="n">extension</span><span class="p">()</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">skimage.transform</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+<span class="n">_platform</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span>
+
+<span class="n">dateTimeObj</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+<span class="kn">from</span> <span class="nn">sandbox.projector</span> <span class="kn">import</span> <span class="n">Projector</span><span class="p">,</span> <span class="n">ContourLinesModule</span><span class="p">,</span> <span class="n">CmapModule</span>
+<span class="kn">from</span> <span class="nn">sandbox.sensor</span> <span class="kn">import</span> <span class="n">Sensor</span>
+<span class="kn">from</span> <span class="nn">sandbox.markers</span> <span class="kn">import</span> <span class="n">MarkerDetection</span>
+<span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">set_logger</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">set_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="MainThread"><a class="viewcode-back" href="../../sandbox.html#sandbox.main_thread.MainThread">[documentos]</a><span class="k">class</span> <span class="nc">MainThread</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Module with threading methods</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sensor</span><span class="p">:</span> <span class="n">Sensor</span><span class="p">,</span> <span class="n">projector</span><span class="p">:</span> <span class="n">Projector</span><span class="p">,</span> <span class="n">aruco</span><span class="p">:</span> <span class="n">MarkerDetection</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">check_change</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">kwargs_contourlines</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">kwargs_cmap</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            sensor:</span>
+<span class="sd">            projector:</span>
+<span class="sd">            aruco:</span>
+<span class="sd">            modules:</span>
+<span class="sd">            crop:</span>
+<span class="sd">            clip:</span>
+<span class="sd">            check_change:</span>
+<span class="sd">            **kwargs:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_message</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="c1"># TODO: in all the modules be carefull with zorder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span> <span class="o">=</span> <span class="n">sensor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projector</span> <span class="o">=</span> <span class="n">projector</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">clear_axes</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours</span> <span class="o">=</span> <span class="n">ContourLinesModule</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_contourlines</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmap_frame</span> <span class="o">=</span> <span class="n">CmapModule</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_cmap</span><span class="p">)</span>
+
+        <span class="c1"># start the modules</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modules</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">({</span><span class="s1">&#39;CmapModule&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmap_frame</span><span class="p">,</span> <span class="s1">&#39;ContourLinesModule&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">contours</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">({</span><span class="s1">&#39;CmapModule&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmap_frame</span><span class="p">,</span> <span class="s1">&#39;ContourLinesModule&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">contours</span><span class="p">})</span>
+
+        <span class="c1"># threading</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thread</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thread_status</span> <span class="o">=</span> <span class="s1">&#39;stopped&#39;</span>  <span class="c1"># status: &#39;stopped&#39;, &#39;running&#39;, &#39;paused&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main_task</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># connect to ArucoMarker class</span>
+        <span class="c1"># if CV2_IMPORT is True:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span> <span class="o">=</span> <span class="n">aruco</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ARUCO_ACTIVE</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span><span class="p">,</span> <span class="n">MarkerDetection</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ARUCO_ACTIVE</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;frame&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(),</span>
+                          <span class="s1">&#39;ax&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">ax</span><span class="p">,</span>
+                          <span class="s1">&#39;set_colorbar&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">set_colorbar</span><span class="p">,</span>
+                          <span class="s1">&#39;set_legend&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">set_legend</span><span class="p">,</span>
+                          <span class="s1">&#39;extent&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">,</span>
+                          <span class="s1">&#39;box_dimensions&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">physical_dimensions</span><span class="p">,</span>
+                          <span class="s1">&#39;marker&#39;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(),</span>
+                          <span class="s1">&#39;cmap&#39;</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;gist_earth&#39;</span><span class="p">),</span>
+                          <span class="s1">&#39;norm&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                          <span class="s1">&#39;active_cmap&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                          <span class="s1">&#39;active_shading&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                          <span class="s1">&#39;active_contours&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                          <span class="s1">&#39;same_frame&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                          <span class="s1">&#39;lock_thread&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">,</span>
+                          <span class="s1">&#39;trigger&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">trigger</span><span class="p">,</span>
+                          <span class="c1"># TODO: Carefull with this use because it can make to paint the figure incompletely</span>
+                          <span class="s1">&#39;del_contour&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="p">}</span>
+        <span class="c1"># &#39;freeze_frame&#39;: False}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;frame&#39;</span><span class="p">]</span>
+
+        <span class="c1"># To reduce the noise of the data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_change</span> <span class="o">=</span> <span class="n">check_change</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rtol</span> <span class="o">=</span> <span class="mf">0.07</span>  <span class="c1"># Widgets for this</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_atol</span> <span class="o">=</span> <span class="mf">0.001</span>
+        <span class="c1"># render the frame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmap_frame</span><span class="o">.</span><span class="n">render_frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;frame&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;ax&#39;</span><span class="p">])</span>
+        <span class="c1"># plot the contour lines</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contours</span><span class="o">.</span><span class="n">plot_contour_lines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;frame&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;ax&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">trigger</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_widgets</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_frame</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_message</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_error_markdown</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">pane</span><span class="o">.</span><span class="n">Markdown</span><span class="p">(</span><span class="s2">&quot;&lt;p&gt;Open_AR_Sandbox&lt;/p&gt;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># @property @TODO: test if this works</span>
+    <span class="c1"># def sb_params(self):</span>
+    <span class="c1">#    return {&#39;frame&#39;: self.sensor.get_frame(),</span>
+    <span class="c1">#              &#39;ax&#39;: self.projector.ax,</span>
+    <span class="c1">#              &#39;extent&#39;: self.sensor.extent,</span>
+    <span class="c1">#              &#39;marker&#39;: pd.DataFrame(),</span>
+    <span class="c1">#              &#39;cmap&#39;: plt.cm.get_cmap(&#39;gist_earth&#39;),</span>
+    <span class="c1">#              &#39;norm&#39;: None,</span>
+    <span class="c1">#              &#39;active_cmap&#39;: True,</span>
+    <span class="c1">#              &#39;active_contours&#39;: True,</span>
+    <span class="c1">#              &#39;same_frame&#39;: False,</span>
+    <span class="c1">#              &#39;freeze_frame&#39;: False}</span>
+
+<div class="viewcode-block" id="MainThread.update"><a class="viewcode-back" href="../../sandbox.html#sandbox.main_thread.MainThread.update">[documentos]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            **kwargs:</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;ax&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">ax</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_frame</span><span class="p">:</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_frame</span>  <span class="c1"># if loaded DEM the previous frame will have this information</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">frame</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">frame</span><span class="o">.</span><span class="n">max</span><span class="p">()]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span>
+                <span class="s1">&#39;same_frame&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># TODO: need to organize the usage of same_frame because is contradictory</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span>
+            <span class="c1"># This is to avoid noise in the data</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_change</span><span class="p">:</span>
+                <span class="n">cl</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_frame</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_atol</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_rtol</span><span class="p">,</span> <span class="n">equal_nan</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">previous_frame</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">cl</span><span class="p">)]</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">cl</span><span class="p">)]</span>
+                <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_frame</span>
+                <span class="c1"># self.sb_params[&#39;same_frame&#39;] = True #TODO: Check for usage of this part</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">previous_frame</span> <span class="o">=</span> <span class="n">frame</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;same_frame&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;frame&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">frame</span>
+
+        <span class="c1"># filter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ARUCO_ACTIVE</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;marker&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_message</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;ax&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">texts</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_error_message</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_widget_error_markdown</span><span class="o">.</span><span class="n">object</span> <span class="o">=</span> <span class="s2">&quot;Running&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+            <span class="n">_cmap</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CmapModule&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;CmapModule&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">else</span> <span class="p">[]</span>
+            <span class="n">_contours</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ContourLinesModule&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;ContourLinesModule&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">else</span> <span class="p">[]</span>
+            <span class="n">_always</span> <span class="o">=</span> <span class="n">_cmap</span> <span class="o">+</span> <span class="n">_contours</span>
+            <span class="n">_actual</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_always</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span>
+                    <span class="n">_actual</span> <span class="o">+</span> <span class="n">_always</span><span class="p">):</span>  <span class="c1"># TODO: maybe use OrderedDict to put this modules always at the end of the iteration</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_error_message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dateTimeObj</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">))</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_error_markdown</span><span class="o">.</span><span class="n">object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_message</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thread_status</span> <span class="o">=</span> <span class="s1">&#39;stopped&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">&quot;Ups... Something went wrong. The Thread is paused...&quot;</span>
+                                      <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Check &#39;self._error_message&#39; to see what happened&quot;</span>
+                                      <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> or open the &#39;sandbox.log&#39; file for a detailed description&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;ax&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xmin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;extent&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;extent&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;ax&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">ymin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;extent&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ymax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;extent&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span><span class="p">,</span> <span class="n">MarkerDetection</span><span class="p">):</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span><span class="o">.</span><span class="n">plot_aruco</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;ax&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;marker&#39;</span><span class="p">])</span>
+            <span class="c1"># Update of legend</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sb_params</span><span class="p">[</span><span class="s1">&#39;set_legend&#39;</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span><span class="o">.</span><span class="n">legend_elements</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">trigger</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MainThread.load_frame"><a class="viewcode-back" href="../../sandbox.html#sandbox.main_thread.MainThread.load_frame">[documentos]</a>    <span class="k">def</span> <span class="nf">load_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">from_file</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        During the sandbox thread, if you want to fix a frame but not interrupt the thread,</span>
+<span class="sd">        load the desired numpy array here.</span>
+<span class="sd">        This will change the flag self._loaded_frame = False to True in the update function and</span>
+<span class="sd">        stop the sensor frame acquisition.</span>
+<span class="sd">        # TODO: Make this compatible with DEM of differ shapes (e.g. bennisson DEM)</span>
+<span class="sd">        To stop this, pass: frame = None or change the flag self._loaded_frame to False.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            frame: numpy.ndarray: must be a matrix of desired resolution</span>
+<span class="sd">            from_file: Path to DEM. Can be either .npz or .npy (internally normalized)</span>
+<span class="sd">        Returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">from_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_frame</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No frame to load, resuming sandbox frame acquisition&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">from_file</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">file</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">from_file</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> as path not valid&quot;</span> <span class="o">%</span> <span class="n">from_file</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">from_file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;npy&quot;</span><span class="p">:</span>
+                <span class="n">frame_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_topography</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_frame</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">previous_frame</span> <span class="o">=</span> <span class="n">frame_new</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;loaded .npy file&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="n">from_file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;npz&quot;</span><span class="p">:</span>
+                <span class="n">frame_new</span> <span class="o">=</span> <span class="n">file</span><span class="p">[</span><span class="s2">&quot;arr_0&quot;</span><span class="p">]</span>
+                <span class="n">frame_new</span> <span class="o">=</span> <span class="n">frame_new</span> <span class="o">-</span> <span class="n">frame_new</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_frame</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">previous_frame</span> <span class="o">=</span> <span class="n">frame_new</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;loaded .npz file&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> format not recognized. Please pass a .npy or .npz file&quot;</span> <span class="o">%</span> <span class="n">from_file</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_frame</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">previous_frame</span> <span class="o">=</span> <span class="n">frame</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;loaded&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Frame and path not valid: Frame -&gt; </span><span class="si">%s</span><span class="s2">, Path -&gt; </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">from_file</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="MainThread.normalize_topography"><a class="viewcode-back" href="../../sandbox.html#sandbox.main_thread.MainThread.normalize_topography">[documentos]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">normalize_topography</span><span class="p">(</span><span class="n">dem</span><span class="p">,</span> <span class="n">target_extent</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        # TODO: Multiple implementations. TopoModule and LoadSaveModule</span>
+<span class="sd">        Normalize any size of numpy array to fit the sandbox frame.</span>
+<span class="sd">        Useful when passing DEM with resolution bigger than sandbox sensor.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            dem:</span>
+<span class="sd">            target_extent: [minx, maxx, miny, maxy, vmin, vmax] -&gt;</span>
+<span class="sd">            [0, frame_width, 0, frame_height, vmin_sensor, vmax_sensor]</span>
+<span class="sd">        Returns:</span>
+<span class="sd">             normalized frame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Change shape of numpy array to desired shape</span>
+        <span class="n">topo_changed</span> <span class="o">=</span> <span class="n">skimage</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">dem</span><span class="p">,</span>
+                                                <span class="p">(</span><span class="n">target_extent</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">target_extent</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                                                <span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                                                <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;edge&#39;</span><span class="p">,</span>
+                                                <span class="n">anti_aliasing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                <span class="n">preserve_range</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">topo_min</span> <span class="o">=</span> <span class="n">topo_changed</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">topo_max</span> <span class="o">=</span> <span class="n">topo_changed</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="c1"># when the min value is not 0</span>
+        <span class="n">topo_changed</span> <span class="o">=</span> <span class="n">topo_changed</span> <span class="o">-</span> <span class="n">topo_min</span>
+        <span class="n">topo_changed</span> <span class="o">=</span> <span class="n">topo_changed</span> <span class="o">*</span> <span class="p">(</span><span class="n">target_extent</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">target_extent</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">topo_max</span> <span class="o">-</span> <span class="n">topo_min</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">topo_changed</span></div>
+
+<div class="viewcode-block" id="MainThread.add_module"><a class="viewcode-back" href="../../sandbox.html#sandbox.main_thread.MainThread.add_module">[documentos]</a>    <span class="k">def</span> <span class="nf">add_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an specific module to run the update in the main thread&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">module</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">module</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="c1"># self.modules.move_to_end(name, last=True)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;module &#39;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; added to modules&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainThread.remove_module"><a class="viewcode-back" href="../../sandbox.html#sandbox.main_thread.MainThread.remove_module">[documentos]</a>    <span class="k">def</span> <span class="nf">remove_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove a current module from the main thread&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;module &#39;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; removed&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;No module with name &#39;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; was found&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainThread.module_manager"><a class="viewcode-back" href="../../sandbox.html#sandbox.main_thread.MainThread.module_manager">[documentos]</a>    <span class="k">def</span> <span class="nf">module_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">active_modules</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]):</span>
+        <span class="c1"># add a module</span>
+        <span class="k">for</span> <span class="n">name_module</span> <span class="ow">in</span> <span class="n">active_modules</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name_module</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_module</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name_module</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">[</span><span class="n">name_module</span><span class="p">])</span>
+        <span class="c1"># delete the module</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">active_modules</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_module</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">active_modules</span><span class="p">]</span></div>
+        <span class="c1"># self._update_widget_module_selector()</span>
+        <span class="c1"># if self._widget_module_selector is not None:</span>
+        <span class="c1">#    self._widget_module_selector.value = list(self.modules.keys())</span>
+        <span class="c1">#    self._widget_module_selector.options = list(self._modules.keys())</span>
+
+    <span class="k">def</span> <span class="nf">_update_widget_module_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget_module_selector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_module_selector</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_widget_module_selector</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="MainThread.thread_loop"><a class="viewcode-back" href="../../sandbox.html#sandbox.main_thread.MainThread.thread_loop">[documentos]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">thread_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">thread_status</span> <span class="o">==</span> <span class="s1">&#39;running&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span> <span class="c1">#give other threads a chance to run</span></div>
+
+<div class="viewcode-block" id="MainThread.run"><a class="viewcode-back" href="../../sandbox.html#sandbox.main_thread.MainThread.run">[documentos]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">thread_status</span> <span class="o">!=</span> <span class="s1">&#39;running&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">_platform</span> <span class="o">==</span> <span class="s2">&quot;Linux&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_name</span> <span class="o">==</span> <span class="s2">&quot;kinect_v2&quot;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_name</span> <span class="o">==</span> <span class="s2">&quot;lidar&quot;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">Sensor</span><span class="o">.</span><span class="n">_run</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thread_status</span> <span class="o">=</span> <span class="s1">&#39;running&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">main_task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thread_loop</span><span class="p">())</span>
+            <span class="c1">#self.thread = threading.Thread(target=self.thread_loop, daemon=True, )</span>
+            <span class="c1">#self.thread.start()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Thread started or resumed...&#39;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Thread already running.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainThread.stop"><a class="viewcode-back" href="../../sandbox.html#sandbox.main_thread.MainThread.stop">[documentos]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">thread_status</span> <span class="ow">is</span> <span class="ow">not</span> <span class="s1">&#39;stopped&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">_platform</span> <span class="o">==</span> <span class="s2">&quot;Linux&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_name</span> <span class="o">==</span> <span class="s2">&quot;kinect_v2&quot;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_name</span> <span class="o">==</span> <span class="s2">&quot;lidar&quot;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">Sensor</span><span class="o">.</span><span class="n">_stop</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thread_status</span> <span class="o">=</span> <span class="s1">&#39;stopped&#39;</span>  <span class="c1"># set flag to end thread loop</span>
+            <span class="c1">#self.thread.join()  # wait for the thread to finish</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">main_task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Thread stopped.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;thread was not running.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainThread.pause"><a class="viewcode-back" href="../../sandbox.html#sandbox.main_thread.MainThread.pause">[documentos]</a>    <span class="k">def</span> <span class="nf">pause</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">thread_status</span> <span class="o">==</span> <span class="s1">&#39;running&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thread_status</span> <span class="o">=</span> <span class="s1">&#39;paused&#39;</span>  <span class="c1"># set flag to end thread loop</span>
+            <span class="c1">#self.thread.join()  # wait for the thread to finish</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">main_task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Thread paused.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;There is no thread running.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainThread.resume"><a class="viewcode-back" href="../../sandbox.html#sandbox.main_thread.MainThread.resume">[documentos]</a>    <span class="k">def</span> <span class="nf">resume</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">thread_status</span> <span class="o">!=</span> <span class="s1">&#39;stopped&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Thread already stopped.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MainThread.widget_plot_module"><a class="viewcode-back" href="../../sandbox.html#sandbox.main_thread.MainThread.widget_plot_module">[documentos]</a>    <span class="k">def</span> <span class="nf">widget_plot_module</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span><span class="p">,</span> <span class="n">MarkerDetection</span><span class="p">):</span>
+            <span class="n">marker</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">widgets_aruco_visualization</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">widget_thread_controller</span><span class="p">())</span>
+            <span class="n">widgets</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmap_frame</span><span class="o">.</span><span class="n">show_widgets</span><span class="p">(),</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">contours</span><span class="o">.</span><span class="n">show_widgets</span><span class="p">())</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Row</span><span class="p">(</span><span class="n">widgets</span><span class="p">,</span> <span class="n">marker</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">widgets</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmap_frame</span><span class="o">.</span><span class="n">show_widgets</span><span class="p">(),</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">contours</span><span class="o">.</span><span class="n">show_widgets</span><span class="p">())</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Row</span><span class="p">(</span><span class="n">widgets</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">widget_thread_controller</span><span class="p">())</span>
+
+        <span class="n">panel1</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;## Plotting interaction widgets&quot;</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_widget_module_selector</span><span class="p">()</span>
+
+        <span class="n">panel2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">show_widgets_sidepanels</span><span class="p">()</span>
+
+        <span class="n">panel</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Tabs</span><span class="p">((</span><span class="s2">&quot;Main frame controller&quot;</span><span class="p">,</span> <span class="n">panel1</span><span class="p">),</span>
+                        <span class="p">(</span><span class="s2">&quot;Side panel controller&quot;</span><span class="p">,</span> <span class="n">panel2</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">panel</span></div>
+
+<div class="viewcode-block" id="MainThread.widget_thread_controller"><a class="viewcode-back" href="../../sandbox.html#sandbox.main_thread.MainThread.widget_thread_controller">[documentos]</a>    <span class="k">def</span> <span class="nf">widget_thread_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">panel</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;##&lt;b&gt;Thread Controller&lt;/b&gt;&quot;</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_widget_thread_selector</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_widget_check_difference</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_widget_module_selector</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_widget_clear_axes</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_widget_error_markdown</span>
+                          <span class="c1"># self._widget_freeze_frame)</span>
+                          <span class="p">)</span>
+        <span class="k">return</span> <span class="n">panel</span></div>
+
+    <span class="k">def</span> <span class="nf">_create_widgets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_thread_selector</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">RadioButtonGroup</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Thread controller&#39;</span><span class="p">,</span>
+                                                                   <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Start&quot;</span><span class="p">,</span> <span class="s2">&quot;Stop&quot;</span><span class="p">],</span>
+                                                                   <span class="n">value</span><span class="o">=</span><span class="s2">&quot;Start&quot;</span><span class="p">,</span>
+                                                                   <span class="n">button_type</span><span class="o">=</span><span class="s1">&#39;success&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_thread_selector</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_thread_selector</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_check_difference</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Check changes in fame&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">check_change</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_check_difference</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_check_difference</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                                  <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_clear_axes</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Clear axes from projector / refresh list&quot;</span><span class="p">,</span>
+                                                    <span class="n">button_type</span><span class="o">=</span><span class="s2">&quot;warning&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_clear_axes</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_clear_axes</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span>
+                                            <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_module_selector</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">CrossSelector</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Module manager&quot;</span><span class="p">,</span>
+                                                                <span class="n">value</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+                                                                <span class="n">options</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+                                                                <span class="n">definition_order</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_module_selector</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_module_selector</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                                 <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_clear_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">clear_axes</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_widget_module_selector</span><span class="p">()</span>
+        <span class="c1"># if self._widget_module_selector is not None:</span>
+        <span class="c1">#    self._widget_module_selector.value = list(self.modules.keys())</span>
+        <span class="c1">#    self._widget_module_selector.options = list(self._modules.keys())</span>
+
+    <span class="k">def</span> <span class="nf">_callback_check_difference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_change</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_module_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_manager</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">new</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_thread_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span> <span class="o">==</span> <span class="s2">&quot;Start&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span> <span class="o">==</span> <span class="s2">&quot;Stop&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+
+<div class="viewcode-block" id="MainThread.widgets_aruco_visualization"><a class="viewcode-back" href="../../sandbox.html#sandbox.main_thread.MainThread.widgets_aruco_visualization">[documentos]</a>    <span class="k">def</span> <span class="nf">widgets_aruco_visualization</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Checkbox</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Aruco Detection&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ARUCO_ACTIVE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_aruco</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
+                                       <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">panel</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;## Activate aruco detection&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget_aruco</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Aruco</span><span class="o">.</span><span class="n">widgets_aruco</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">panel</span></div>
+
+    <span class="k">def</span> <span class="nf">_callback_aruco</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ARUCO_ACTIVE</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Código do módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

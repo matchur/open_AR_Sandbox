@@ -1,20 +1,23 @@
-.. Open AR-Sandbox Documentation documentation master file, created by
-   sphinx-quickstart on Sun Apr 21 16:07:08 2024.
+.. open_AR_Sandbox documentation master file, created by
+   sphinx-quickstart on Tue Apr 23 06:50:43 2024.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Open AR-Sandbox Documentação
-=========================================================
+Open AR-Sandbox Documentação.
+===========================================
+
+Seja bem vindo a documentação em portugues do Open AR-Sandbox
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Contents:
 
+   sandbox
+   sandbox_server
+   setup
+   tests
 
-
-
-
-Índices
+Indices e Tabelas
 ==================
 
 * :ref:`genindex`

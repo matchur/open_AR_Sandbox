@@ -1,36 +1,73 @@
 
+
 <!DOCTYPE html>
 
 <html lang="pt">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>sandbox.markers package &#8212; Documentação Open AR-Sandbox 1.0.0</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/translations.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/cloud.css?v=f9ae72be" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noticia+Text:400,i,b,bi|Open+Sans:400,i,b,bi|Roboto+Mono:400,i,b,bi&amp;display=swap" type="text/css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=e63ae33f"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/translations.js?v=3b002d5c"></script>
+
+    
+    
+     
+        <script src="_static/jquery.cookie.js"></script>
+    
+
+    
+     
+        <script src="_static/cloud.base.js"></script>
+    
+
+    
+     
+        <script src="_static/cloud.js"></script>
+    
+
     <link rel="index" title="Índice" href="genindex.html" />
     <link rel="search" title="Pesquisar" href="search.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
+    <link rel="next" title="sandbox.modules package" href="sandbox.modules.html" />
+    <link rel="prev" title="sandbox package" href="sandbox.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
   </head><body>
+    <div class="relbar-top">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navegação</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="Índice Geral"
+             accesskey="I">índice</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Índice de Módulos do Python"
+             >módulos</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="sandbox.modules.html" title="sandbox.modules package"
+             accesskey="N">próximo</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="sandbox.html" title="sandbox package"
+             accesskey="P">anterior</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">Documentação Open AR-Sandbox 1.0.0</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="sandbox.html" accesskey="U">sandbox package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">sandbox.markers package</a></li> 
+      </ul>
+    </div>
+    </div>
   
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <section id="sandbox-markers-package">
@@ -38,54 +75,630 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
 </section>
-<section id="sandbox-markers-aruco-module">
-<h2>sandbox.markers.aruco module<a class="headerlink" href="#sandbox-markers-aruco-module" title="Permalink to this heading">¶</a></h2>
+<section id="module-sandbox.markers.aruco">
+<span id="sandbox-markers-aruco-module"></span><h2>sandbox.markers.aruco module<a class="headerlink" href="#module-sandbox.markers.aruco" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.markers.aruco.</span></span><span class="sig-name descname"><span class="pre">ArucoMarkers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sensor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aruco_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>class to detect Aruco markers in the kinect data (IR and RGB)
+An Area of interest can be specified, markers outside this area will be ignored</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.aruco_detect">
+<span class="sig-name descname"><span class="pre">aruco_detect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.aruco_detect"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.aruco_detect" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Function to detect an aruco marker in a color image
+Args:</p>
+<blockquote>
+<div><p>image: numpy array containing a color image (BGR type)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>corners: x, y location of a detected aruco marker(detect the 4 corners of the aruco)
+ids: id of the detected aruco
+rejectedImgPoints: show x, y coordinates of searches for aruco markers but not successful</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.calibrate_camera_charucoBoard">
+<span class="sig-name descname"><span class="pre">calibrate_camera_charucoBoard</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.calibrate_camera_charucoBoard"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.calibrate_camera_charucoBoard" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Method to obtain the camera intrinsic parameters to perform the aruco pose estimation
+Args:
+Returns:</p>
+<blockquote>
+<div><p>mtx: cameraMatrix Output 3x3 floating-point camera matrix
+dist: Output vector of distortion coefficient
+rvecs: Output vector of rotation vectors (see Rodrigues ) estimated for each board view
+tvecs: Output vector of translation vectors estimated for each pattern view.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.convert_color_to_depth">
+<span class="sig-name descname"><span class="pre">convert_color_to_depth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.convert_color_to_depth"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.convert_color_to_depth" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Function to search in the previously created CoordinateMap - «create_CoordinateMap()» - the position of any
+detected aruco marker from the color space to the depth space.
+Args:</p>
+<blockquote>
+<div><p>strg: «Proj» or «Real». Select which type of aruco want to be converted
+ids: int. indicate the id of the aruco that want to be converted
+map: DataFrame. From the create_CoordinateMap() function
+data:</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>value: Return the line from the CoordinateMap DataFrame showing the equivalence of its position in the color
+space to the depth space</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.create_aruco_marker">
+<span class="sig-name descname"><span class="pre">create_aruco_marker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.create_aruco_marker"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.create_aruco_marker" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Function that creates a single aruco marker providing its id and resolution
+Args:</p>
+<blockquote>
+<div><p>id: int indicating the id of the aruco to create
+resolution: int
+show: boolean. Display the created aruco marker
+save: boolean. save the created aruco marker as an image «Aruco_Markers.jpg»
+path: path to where the aruco will be saved. If none specified will be saved in the same direcory of execution the code
+:param fig_filename: filename of arcuo file</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>ArucoImage: numpy array with the aruco information</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.create_arucos_pdf">
+<span class="sig-name descname"><span class="pre">create_arucos_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ny</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.create_arucos_pdf"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.create_arucos_pdf" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Function to create a pdf file with nx X ny number of arucos and save them in specified path
+Args:</p>
+<blockquote>
+<div><p>nx: number of rows
+ny: number of columns
+resolution: resolution of the image (arucos)
+path: path to where the aruco will be saved. If none specified will be saved in the same direcory of execution the code</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>image of the arucos and the saved pdf</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.crop_image_aruco">
+<span class="sig-name descname"><span class="pre">crop_image_aruco</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.crop_image_aruco"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.crop_image_aruco" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Method that takes the location of the 4 real corners and crop the sensor extensions to this frame
+Returns:</p>
+<blockquote>
+<div><p>s_top: new value to update the calib.s_top
+s_left: new value to update the calib.s_left
+s_bottom: new value to update the calib.s_bottom
+s_right: new value to update the calib.s_right</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.drawPoseEstimation">
+<span class="sig-name descname"><span class="pre">drawPoseEstimation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.drawPoseEstimation"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.drawPoseEstimation" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Method that draws over the frame the coordinate system of each aruco marker in relation to the camera space
+Args:</p>
+<blockquote>
+<div><p>df: data frame containing the information of the tranlation and rotation vectors previously detected
+frame: frame to draw the coordinate sytems</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>frame: with the resulting coordinate system</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.find_markers_ir">
+<span class="sig-name descname"><span class="pre">find_markers_ir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">IR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.find_markers_ir"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.find_markers_ir" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Function to search for a determined amount of arucos in the infrared image. It will continue searching in
+different frames of the image until it finds all the markers
+Args:</p>
+<blockquote>
+<div><p>IR= search in the infrared frame. If None then captures a new frame
+amount: specify the number of arucos to search</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>ir_marker: DataFrame with the id, x, y coordinates for the location of the aruco</dt><dd><p>And rotation and translation vectors for the pos estimation</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.find_markers_projector">
+<span class="sig-name descname"><span class="pre">find_markers_projector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.find_markers_projector"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.find_markers_projector" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Function to search for a determined amount of arucos in the projected image. It will continue searching in
+different frames of the image until it finds all the markers
+Args:</p>
+<blockquote>
+<div><p>color: search in the color frame. If None then captures a new frame
+amount: specify the number of arucos to search</p>
+</div></blockquote>
+<dl>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>projector_markers: DataFrame with the id, x, y coordinates for the location of the aruco</dt><dd><p>and rotation and translation vectors for the pos estimation</p>
+</dd>
+</dl>
+<p>corner_middle: list that include the location of the central corner aruco with id=20</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.find_markers_rgb">
+<span class="sig-name descname"><span class="pre">find_markers_rgb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.find_markers_rgb"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.find_markers_rgb" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Function to search for a determined amount of arucos in the color image. It will continue searching in
+different frames of the image until it finds all the markers
+Args:</p>
+<blockquote>
+<div><p>color: search in the color frame. If None then captures a new frame
+amount: specify the number of arucos to search</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>rgb_markers: DataFrame with the id, x, y coordinates for the location of the aruco</dt><dd><p>and rotation and translation vectors for the pos estimation</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.get_location_marker">
+<span class="sig-name descname"><span class="pre">get_location_marker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corners</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.get_location_marker"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.get_location_marker" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Get the middle position from the detected corners
+Args:</p>
+<blockquote>
+<div><p>corners: List containing the position x, y of the aruco marker</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>pr1: x location
+pr2: y location</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.load_corners_ids">
+<span class="sig-name descname"><span class="pre">load_corners_ids</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.load_corners_ids"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.load_corners_ids" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>DEPRECATED</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.location_points">
+<span class="sig-name descname"><span class="pre">location_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.location_points"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.location_points" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Function to search for a determined amount of arucos to introduce as a data point to the depth space
+Args:</p>
+<blockquote>
+<div><p>amount: specify the number of arucos to search
+plot: boolean to show the plot on color space and depth space if the mapped values are right</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>point_markers: DataFrame with the id, x, y coordinates for the location of the aruco</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.move_image">
+<span class="sig-name descname"><span class="pre">move_image</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.move_image"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.move_image" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Method to determine the distances between the aruco position in the corner of the sandbox in relation
+with the projected frame and the projected aruco marker.
+Returns:</p>
+<blockquote>
+<div><p>p_frame_left: new value to update the calib.p_frame_left
+p_frame_top: new value to update the calib.p_frame_top
+p_frame_width: new value to update the calib.p_frame_width
+p_frame_height: new value to update the calib.p_frame_height</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.p_arucoMarker">
+<span class="sig-name descname"><span class="pre">p_arucoMarker</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.p_arucoMarker"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.p_arucoMarker" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Method to create an empty frame including 2 aruco markers.
+one in the upper left corner
+second one in the central part of the image.
+The id of the left-upper aruco is determined by the aruco position in the corner with resolution of 50
+The id in the center of the image is set to be 20 and resolution of 100
+Returns:</p>
+<blockquote>
+<div><p>Frame as numpy array with the information of the aruco markers</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.plot_aruco_location">
+<span class="sig-name descname"><span class="pre">plot_aruco_location</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string_kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RGB'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.plot_aruco_location"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.plot_aruco_location" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Function to visualize the location of the detected aruco markers in the image.
+Args:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>string_kind: IR -&gt; Infrared detection of aruco and visualization in infrared image</dt><dd><p>RGB -&gt; Detection of aruco in color space and visualization as color image
+Projector -&gt; Detection of projected arucos inside sandbox and visualization in color image</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>image plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.real_time_poseEstimation">
+<span class="sig-name descname"><span class="pre">real_time_poseEstimation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.real_time_poseEstimation"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.real_time_poseEstimation" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Method that display real time detection of the aruco markers with the pose estimation and id of each
+Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.search_aruco">
+<span class="sig-name descname"><span class="pre">search_aruco</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.search_aruco"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.search_aruco" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>searches for aruco markers in the current kinect image and writes detected markers to
+self.markers_in_frame. call this first in the update function.
+Args</p>
+<blockquote>
+<div><p>frame: gets the color frame to search the markers on</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns</dt><dd><p>markers_in_frame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.set_xy_correction">
+<span class="sig-name descname"><span class="pre">set_xy_correction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.set_xy_correction"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.set_xy_correction" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.transform_to_box_coordinates">
+<span class="sig-name descname"><span class="pre">transform_to_box_coordinates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.transform_to_box_coordinates"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.transform_to_box_coordinates" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>checks if aruco markers are within the dimensions of the sandbox (boolean: is_inside_box)
+and converts the location to box coordinates x,y. call after self.update_markers in the update loop
+Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.aruco.ArucoMarkers.update_marker_dict">
+<span class="sig-name descname"><span class="pre">update_marker_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco.html#ArucoMarkers.update_marker_dict"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco.ArucoMarkers.update_marker_dict" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>updates existing marker points in self.aruco_markers. new found markers are automatically added.
+A marker that is not detected for more than <em>self._threshold</em> frames is removed from the list.
+call in update after self.search_aruco():
+Returns:</p>
+<blockquote>
+<div><p>changes in place</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="sandbox-markers-aruco-linux-module">
-<h2>sandbox.markers.aruco_linux module<a class="headerlink" href="#sandbox-markers-aruco-linux-module" title="Permalink to this heading">¶</a></h2>
+<section id="module-sandbox.markers.aruco_linux">
+<span id="sandbox-markers-aruco-linux-module"></span><h2>sandbox.markers.aruco_linux module<a class="headerlink" href="#module-sandbox.markers.aruco_linux" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.markers.aruco_linux.create_CoordinateMap">
+<span class="sig-prename descclassname"><span class="pre">sandbox.markers.aruco_linux.</span></span><span class="sig-name descname"><span class="pre">create_CoordinateMap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco_linux.html#create_CoordinateMap"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco_linux.create_CoordinateMap" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Function to create a point to point map of the spatial/pixel equivalences between the depth space, color space and
+camera space. This method requires the depth frame to assign a depth value to the color point.
+Returns:</p>
+<blockquote>
+<div><p>CoordinateMap: DataFrame with the x,y,z values of the depth frame; x,y equivalence between the depth space to camera space and
+real world values of x,y and z in meters</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.markers.aruco_linux.depth_to_camera">
+<span class="sig-prename descclassname"><span class="pre">sandbox.markers.aruco_linux.</span></span><span class="sig-name descname"><span class="pre">depth_to_camera</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco_linux.html#depth_to_camera"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco_linux.depth_to_camera" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Gets the real space coordinates in [m], from the focal point of the camera
+Args:</p>
+<blockquote>
+<div><p>depth: undistorted_depth</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.markers.aruco_linux.depth_to_color">
+<span class="sig-prename descclassname"><span class="pre">sandbox.markers.aruco_linux.</span></span><span class="sig-name descname"><span class="pre">depth_to_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">my</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco_linux.html#depth_to_color"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco_linux.depth_to_color" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Takes the indexes mx, my from the depth space -and the value of depth at those indexes, to get the
+index position in the color space
+Args:</p>
+<blockquote>
+<div><p>mx: index in x position
+my: index in y position
+z: z[my][mx]</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>rx, ry</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.markers.aruco_linux.distort">
+<span class="sig-prename descclassname"><span class="pre">sandbox.markers.aruco_linux.</span></span><span class="sig-name descname"><span class="pre">distort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">my</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco_linux.html#distort"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco_linux.distort" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>see <a class="reference external" href="http://en.wikipedia.org/wiki/Distortion_(optics">http://en.wikipedia.org/wiki/Distortion_(optics</a>) for description</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.markers.aruco_linux.plot_all">
+<span class="sig-prename descclassname"><span class="pre">sandbox.markers.aruco_linux.</span></span><span class="sig-name descname"><span class="pre">plot_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco_linux.html#plot_all"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco_linux.plot_all" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>plot all the frames from the script</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.markers.aruco_linux.registration">
+<span class="sig-prename descclassname"><span class="pre">sandbox.markers.aruco_linux.</span></span><span class="sig-name descname"><span class="pre">registration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco_linux.html#registration"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco_linux.registration" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Takes an original frame from the freenect library to be able to create the undistorted depth frame
+Returns:</p>
+<blockquote>
+<div><p>undistorted_depth, registered_RGB, big_depth</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.markers.aruco_linux.set_correction">
+<span class="sig-prename descclassname"><span class="pre">sandbox.markers.aruco_linux.</span></span><span class="sig-name descname"><span class="pre">set_correction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco_linux.html#set_correction"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco_linux.set_correction" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.markers.aruco_linux.set_device">
+<span class="sig-prename descclassname"><span class="pre">sandbox.markers.aruco_linux.</span></span><span class="sig-name descname"><span class="pre">set_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kinect</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco_linux.html#set_device"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco_linux.set_device" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.markers.aruco_linux.set_device_params">
+<span class="sig-prename descclassname"><span class="pre">sandbox.markers.aruco_linux.</span></span><span class="sig-name descname"><span class="pre">set_device_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kinect</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco_linux.html#set_device_params"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco_linux.set_device_params" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.markers.aruco_linux.start_mapping">
+<span class="sig-prename descclassname"><span class="pre">sandbox.markers.aruco_linux.</span></span><span class="sig-name descname"><span class="pre">start_mapping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kinect</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sandbox.sensor.html#sandbox.sensor.kinectV2.KinectV2" title="sandbox.sensor.kinectV2.KinectV2"><span class="pre">KinectV2</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco_linux.html#start_mapping"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco_linux.start_mapping" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Takes the kinect sensor and create the map to convert color space to depth space
+Args:</p>
+<blockquote>
+<div><p>kinect: Sensor</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>pd.Dataframe</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="sandbox-markers-aruco-windows-module">
-<h2>sandbox.markers.aruco_windows module<a class="headerlink" href="#sandbox-markers-aruco-windows-module" title="Permalink to this heading">¶</a></h2>
+<section id="module-sandbox.markers.aruco_windows">
+<span id="sandbox-markers-aruco-windows-module"></span><h2>sandbox.markers.aruco_windows module<a class="headerlink" href="#module-sandbox.markers.aruco_windows" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.markers.aruco_windows.create_CoordinateMap">
+<span class="sig-prename descclassname"><span class="pre">sandbox.markers.aruco_windows.</span></span><span class="sig-name descname"><span class="pre">create_CoordinateMap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco_windows.html#create_CoordinateMap"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco_windows.create_CoordinateMap" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Function to create a point to point map of the spatial/pixel equivalences between the depth space,
+color space and camera space. This method requires the depth frame to assign a depth value to the color point.
+Returns:</p>
+<blockquote>
+<div><p>CoordinateMap: DataFrame with the x,y,z values of the depth frame; x,y equivalence between the depth space
+to camera space and real world values of x,y and z in meters</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.markers.aruco_windows.set_correction">
+<span class="sig-prename descclassname"><span class="pre">sandbox.markers.aruco_windows.</span></span><span class="sig-name descname"><span class="pre">set_correction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco_windows.html#set_correction"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco_windows.set_correction" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.markers.aruco_windows.set_device">
+<span class="sig-prename descclassname"><span class="pre">sandbox.markers.aruco_windows.</span></span><span class="sig-name descname"><span class="pre">set_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kinect</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco_windows.html#set_device"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco_windows.set_device" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.markers.aruco_windows.start_mapping">
+<span class="sig-prename descclassname"><span class="pre">sandbox.markers.aruco_windows.</span></span><span class="sig-name descname"><span class="pre">start_mapping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kinect</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sandbox.sensor.html#sandbox.sensor.kinectV2.KinectV2" title="sandbox.sensor.kinectV2.KinectV2"><span class="pre">KinectV2</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/aruco_windows.html#start_mapping"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.aruco_windows.start_mapping" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Takes the kinect sensor and create the map to convert color space to depth space
+Args:</p>
+<blockquote>
+<div><p>kinect: Sensor</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>pd.Dataframe</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="sandbox-markers-dummy-aruco-module">
-<h2>sandbox.markers.dummy_aruco module<a class="headerlink" href="#sandbox-markers-dummy-aruco-module" title="Permalink to this heading">¶</a></h2>
+<section id="module-sandbox.markers.dummy_aruco">
+<span id="sandbox-markers-dummy-aruco-module"></span><h2>sandbox.markers.dummy_aruco module<a class="headerlink" href="#module-sandbox.markers.dummy_aruco" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="sandbox.markers.dummy_aruco.dummy_markers_in_frame">
+<span class="sig-prename descclassname"><span class="pre">sandbox.markers.dummy_aruco.</span></span><span class="sig-name descname"><span class="pre">dummy_markers_in_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_position</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/dummy_aruco.html#dummy_markers_in_frame"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.dummy_aruco.dummy_markers_in_frame" title="Link permanente para esta definição">¶</a></dt>
+<dd><dl class="simple">
+<dt>Function to create a point to point map of the spatial/pixel equivalences between the depth space,</dt><dd><p>color space and camera space.
+This method requires the depth frame to assign a depth value to the color point.</p>
+</dd>
+<dt>Returns:</dt><dd><p>CoordinateMap: DataFrame with the x,y,z values of the depth frame; x,y equivalence
+between the depth space to camera space and real world values of x,y and z in meters</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="sandbox-markers-lidar-aruco-module">
 <h2>sandbox.markers.lidar_aruco module<a class="headerlink" href="#sandbox-markers-lidar-aruco-module" title="Permalink to this heading">¶</a></h2>
 </section>
-<section id="sandbox-markers-markers-plotting-module">
-<h2>sandbox.markers.markers_plotting module<a class="headerlink" href="#sandbox-markers-markers-plotting-module" title="Permalink to this heading">¶</a></h2>
+<section id="module-sandbox.markers.markers_plotting">
+<span id="sandbox-markers-markers-plotting-module"></span><h2>sandbox.markers.markers_plotting module<a class="headerlink" href="#module-sandbox.markers.markers_plotting" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.markers.markers_plotting.MarkerDetection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.markers.markers_plotting.</span></span><span class="sig-name descname"><span class="pre">MarkerDetection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sensor</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/markers_plotting.html#MarkerDetection"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.markers_plotting.MarkerDetection" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.markers_plotting.MarkerDetection.calibrate_aruco">
+<span class="sig-name descname"><span class="pre">calibrate_aruco</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">move_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">move_y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/markers_plotting.html#MarkerDetection.calibrate_aruco"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.markers_plotting.MarkerDetection.calibrate_aruco" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.markers_plotting.MarkerDetection.delete_aruco_position">
+<span class="sig-name descname"><span class="pre">delete_aruco_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/markers_plotting.html#MarkerDetection.delete_aruco_position"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.markers_plotting.MarkerDetection.delete_aruco_position" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>If None, delete all positions. If ids match with one aruco only delete that one
+Args:</p>
+<blockquote>
+<div><p>ids: aruco id to delete</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="sandbox.markers.markers_plotting.MarkerDetection.legend_elements">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">legend_elements</span></span><a class="headerlink" href="#sandbox.markers.markers_plotting.MarkerDetection.legend_elements" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Usefull method to get the labels and handles of the arucos in frame</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.markers_plotting.MarkerDetection.plot_aruco">
+<span class="sig-name descname"><span class="pre">plot_aruco</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df_position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/markers_plotting.html#MarkerDetection.plot_aruco"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.markers_plotting.MarkerDetection.plot_aruco" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.markers_plotting.MarkerDetection.set_aruco_position">
+<span class="sig-name descname"><span class="pre">set_aruco_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_position</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/markers_plotting.html#MarkerDetection.set_aruco_position"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.markers_plotting.MarkerDetection.set_aruco_position" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>This function will create the aruco data frame with this values
+Args:</p>
+<blockquote>
+<div><p>dict_position: i.e. {1:[10,20],2:[100,200]} -&gt; keys are the ids and the array the position in x and y
+frame: the depth frame, to extract the z value</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.markers_plotting.MarkerDetection.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/markers_plotting.html#MarkerDetection.update"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.markers_plotting.MarkerDetection.update" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.markers.markers_plotting.MarkerDetection.widgets_aruco">
+<span class="sig-name descname"><span class="pre">widgets_aruco</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/markers/markers_plotting.html#MarkerDetection.widgets_aruco"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.markers.markers_plotting.MarkerDetection.widgets_aruco" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this heading">¶</a></h2>
+<section id="module-sandbox.markers">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-sandbox.markers" title="Permalink to this heading">¶</a></h2>
 </section>
 </section>
 
 
+            <div class="clearer"></div>
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">Open AR-Sandbox</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navegação</h3>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  </ul></li>
+        <div class="sphinxsidebarwrapper"><div class="sphinx-toc sphinxlocaltoc">
+    <h3><a href="index.html">Page contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">sandbox.markers package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-sandbox.markers.aruco">sandbox.markers.aruco module</a><ul>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers</span></code></a><ul>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.aruco_detect"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.aruco_detect()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.calibrate_camera_charucoBoard"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.calibrate_camera_charucoBoard()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.convert_color_to_depth"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.convert_color_to_depth()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.create_aruco_marker"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.create_aruco_marker()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.create_arucos_pdf"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.create_arucos_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.crop_image_aruco"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.crop_image_aruco()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.drawPoseEstimation"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.drawPoseEstimation()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.find_markers_ir"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.find_markers_ir()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.find_markers_projector"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.find_markers_projector()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.find_markers_rgb"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.find_markers_rgb()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.get_location_marker"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.get_location_marker()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.load_corners_ids"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.load_corners_ids()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.location_points"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.location_points()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.move_image"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.move_image()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.p_arucoMarker"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.p_arucoMarker()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.plot_aruco_location"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.plot_aruco_location()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.real_time_poseEstimation"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.real_time_poseEstimation()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.search_aruco"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.search_aruco()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.set_xy_correction"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.set_xy_correction()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.transform_to_box_coordinates"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.transform_to_box_coordinates()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco.ArucoMarkers.update_marker_dict"><code class="docutils literal notranslate"><span class="pre">ArucoMarkers.update_marker_dict()</span></code></a></li>
 </ul>
-</div>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-sandbox.markers.aruco_linux">sandbox.markers.aruco_linux module</a><ul>
+<li><a class="reference internal" href="#sandbox.markers.aruco_linux.create_CoordinateMap"><code class="docutils literal notranslate"><span class="pre">create_CoordinateMap()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco_linux.depth_to_camera"><code class="docutils literal notranslate"><span class="pre">depth_to_camera()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco_linux.depth_to_color"><code class="docutils literal notranslate"><span class="pre">depth_to_color()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco_linux.distort"><code class="docutils literal notranslate"><span class="pre">distort()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco_linux.plot_all"><code class="docutils literal notranslate"><span class="pre">plot_all()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco_linux.registration"><code class="docutils literal notranslate"><span class="pre">registration()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco_linux.set_correction"><code class="docutils literal notranslate"><span class="pre">set_correction()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco_linux.set_device"><code class="docutils literal notranslate"><span class="pre">set_device()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco_linux.set_device_params"><code class="docutils literal notranslate"><span class="pre">set_device_params()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco_linux.start_mapping"><code class="docutils literal notranslate"><span class="pre">start_mapping()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-sandbox.markers.aruco_windows">sandbox.markers.aruco_windows module</a><ul>
+<li><a class="reference internal" href="#sandbox.markers.aruco_windows.create_CoordinateMap"><code class="docutils literal notranslate"><span class="pre">create_CoordinateMap()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco_windows.set_correction"><code class="docutils literal notranslate"><span class="pre">set_correction()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco_windows.set_device"><code class="docutils literal notranslate"><span class="pre">set_device()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.aruco_windows.start_mapping"><code class="docutils literal notranslate"><span class="pre">start_mapping()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-sandbox.markers.dummy_aruco">sandbox.markers.dummy_aruco module</a><ul>
+<li><a class="reference internal" href="#sandbox.markers.dummy_aruco.dummy_markers_in_frame"><code class="docutils literal notranslate"><span class="pre">dummy_markers_in_frame()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sandbox-markers-lidar-aruco-module">sandbox.markers.lidar_aruco module</a></li>
+<li><a class="reference internal" href="#module-sandbox.markers.markers_plotting">sandbox.markers.markers_plotting module</a><ul>
+<li><a class="reference internal" href="#sandbox.markers.markers_plotting.MarkerDetection"><code class="docutils literal notranslate"><span class="pre">MarkerDetection</span></code></a><ul>
+<li><a class="reference internal" href="#sandbox.markers.markers_plotting.MarkerDetection.calibrate_aruco"><code class="docutils literal notranslate"><span class="pre">MarkerDetection.calibrate_aruco()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.markers_plotting.MarkerDetection.delete_aruco_position"><code class="docutils literal notranslate"><span class="pre">MarkerDetection.delete_aruco_position()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.markers_plotting.MarkerDetection.legend_elements"><code class="docutils literal notranslate"><span class="pre">MarkerDetection.legend_elements</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.markers_plotting.MarkerDetection.plot_aruco"><code class="docutils literal notranslate"><span class="pre">MarkerDetection.plot_aruco()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.markers_plotting.MarkerDetection.set_aruco_position"><code class="docutils literal notranslate"><span class="pre">MarkerDetection.set_aruco_position()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.markers_plotting.MarkerDetection.update"><code class="docutils literal notranslate"><span class="pre">MarkerDetection.update()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.markers.markers_plotting.MarkerDetection.widgets_aruco"><code class="docutils literal notranslate"><span class="pre">MarkerDetection.widgets_aruco()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-sandbox.markers">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div class="sphinxprev">
+    <h4>Previous page</h4>
+    <p class="topless"><a href="sandbox.html"
+                          title="Previous page">&larr; sandbox package</a></p>
+  </div>
+  <div class="sphinxnext">
+    <h4>Next page</h4>
+    <p class="topless"><a href="sandbox.modules.html"
+                          title="Next page">&rarr; sandbox.modules package</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>Esta Página</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/sandbox.markers.rst.txt"
+            rel="nofollow">Exibir Fonte</a></li>
+    </ul>
+   </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Pesquisa rápida</h3>
     <div class="searchformwrapper">
@@ -96,32 +709,56 @@
     </div>
 </div>
 <script>document.getElementById('searchbox').style.display = "block"</script>
-
-
-
-
-
-
-
-
         </div>
       </div>
+    
+    
+        <div class="sidebar-toggle-group no-js">
+            
+            <button class="sidebar-toggle" id="sidebar-hide" title="Hide the sidebar menu">
+                 «
+                <span class="show-for-small">hide menu</span>
+                
+            </button>
+            <button class="sidebar-toggle" id="sidebar-show" title="Show the sidebar menu">
+                
+                <span class="show-for-small">menu</span>
+                <span class="hide-for-small">sidebar</span>
+                 »
+            </button>
+        </div>
+    
       <div class="clearer"></div>
     </div>
-    <div class="footer">
-      &copy;2024, Matheus Vinicius da Costa.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
-      |
-      <a href="_sources/sandbox.markers.rst.txt"
-          rel="nofollow">Page source</a>
+    <div class="relbar-bottom">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navegação</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="Índice Geral"
+             >índice</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Índice de Módulos do Python"
+             >módulos</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="sandbox.modules.html" title="sandbox.modules package"
+             >próximo</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="sandbox.html" title="sandbox package"
+             >anterior</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">Documentação Open AR-Sandbox 1.0.0</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="sandbox.html" >sandbox package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">sandbox.markers package</a></li> 
+      </ul>
+    </div>
     </div>
 
-    
-
-    
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Matheus Vinicius da Costa.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
   </body>
 </html>

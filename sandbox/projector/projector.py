@@ -47,16 +47,16 @@ class Projector(object):
                  show_legend: bool = False, show_hot: bool = False,
                  show_profile: bool = False, ):
         """
-        Args:
-            calibprojector:
-            use_panel: Automatically display
-            p_width: x native resolution of the projector
-            p_height: y native resolution of the projector
-            show_colorbar:
-            position_colorbar: "vertical" or "horizontal"
-            show_legend:
-            show_hot:
-            show_profile
+        [Resumo]
+
+        :param [calibprojector]: [DescriçãoDoParam], padrão é [ValorPadrãoDoParam]
+        :type [NomeDoParam]: [TipoDoParam](, opcional)
+        ...
+        :raises [TipoDeErro]: [DescriçãoDoErro]
+        ...
+        :return: [DescriçãoDoRetorno]
+        :rtype: [TipoDoRetorno]
+
         """
         self.version = '2.2.p'
         self.ax = None

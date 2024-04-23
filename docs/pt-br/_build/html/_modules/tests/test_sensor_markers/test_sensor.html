@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tests.test_sensor_markers.test_sensor &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=e63ae33f"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/translations.js?v=3b002d5c"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fonte de tests.test_sensor_markers.test_sensor</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">_test_data</span>
+<span class="n">calib_dir</span> <span class="o">=</span> <span class="n">_test_data</span><span class="p">[</span><span class="s1">&#39;test&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;temp/&#39;</span>
+<span class="kn">from</span> <span class="nn">sandbox.sensor</span> <span class="kn">import</span> <span class="n">Sensor</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+<span class="n">_platform</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span>
+
+<div class="viewcode-block" id="test_init_kinect_v1"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_init_kinect_v1">[documentos]</a><span class="k">def</span> <span class="nf">test_init_kinect_v1</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Test if detects the kinect 1&quot;&quot;&quot;</span>
+
+    <span class="n">sensor</span> <span class="o">=</span> <span class="n">Sensor</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;kinect_v1&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sensor</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(),</span> <span class="n">sensor</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">sensor</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">240</span><span class="p">,</span> <span class="mi">320</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="test_init_kinect_v2"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_init_kinect_v2">[documentos]</a><span class="k">def</span> <span class="nf">test_init_kinect_v2</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test if detects the kinect 2&quot;&quot;&quot;</span>
+    <span class="n">sensor</span> <span class="o">=</span> <span class="n">Sensor</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;kinect_v2&#39;</span><span class="p">,</span> <span class="n">crop_values</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="c1"># print(sensor.get_frame(), sensor.get_frame().shape)</span>
+    <span class="k">assert</span> <span class="n">sensor</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">424</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="test_init_dummy"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_init_dummy">[documentos]</a><span class="k">def</span> <span class="nf">test_init_dummy</span><span class="p">():</span>
+    <span class="n">sensor</span> <span class="o">=</span> <span class="n">Sensor</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;dummy&#39;</span><span class="p">,</span> <span class="n">random_seed</span><span class="o">=</span><span class="mi">1234</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sensor</span><span class="o">.</span><span class="n">depth</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+          <span class="n">sensor</span><span class="o">.</span><span class="n">depth</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+          <span class="n">sensor</span><span class="o">.</span><span class="n">depth</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span></div>
+    <span class="c1">#assert np.allclose(sensor.depth[0, 0], 1314.7485240531175)</span>
+
+<div class="viewcode-block" id="test_save_load_calibration_projector"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_save_load_calibration_projector">[documentos]</a><span class="k">def</span> <span class="nf">test_save_load_calibration_projector</span><span class="p">():</span>
+    <span class="n">sensor</span> <span class="o">=</span> <span class="n">Sensor</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;dummy&#39;</span><span class="p">)</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">calib_dir</span> <span class="o">+</span> <span class="s1">&#39;test_sensor_calibration.json&#39;</span>
+    <span class="n">sensor</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
+    <span class="c1"># now to test if it loads correctly the saved one</span>
+    <span class="n">sensor2</span> <span class="o">=</span> <span class="n">Sensor</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;dummy&#39;</span><span class="p">,</span> <span class="n">calibsensor</span><span class="o">=</span><span class="n">file</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="test_get_frame_croped_clipped"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_get_frame_croped_clipped">[documentos]</a><span class="k">def</span> <span class="nf">test_get_frame_croped_clipped</span><span class="p">():</span>
+    <span class="n">sensor</span> <span class="o">=</span> <span class="n">Sensor</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;dummy&#39;</span><span class="p">,</span> <span class="n">crop_values</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">clip_values</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">sensor</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>  <span class="n">frame</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="mi">492</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="test_extent_property"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_extent_property">[documentos]</a><span class="k">def</span> <span class="nf">test_extent_property</span><span class="p">():</span>
+    <span class="n">sensor</span> <span class="o">=</span> <span class="n">Sensor</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;dummy&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">492</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">404</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">800</span><span class="p">]),</span> <span class="n">sensor</span><span class="o">.</span><span class="n">extent</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="test_get_frame"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_get_frame">[documentos]</a><span class="k">def</span> <span class="nf">test_get_frame</span><span class="p">():</span>
+    <span class="n">sensor</span> <span class="o">=</span> <span class="n">Sensor</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;kinect_v2&#39;</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sensor</span><span class="o">.</span><span class="n">get_frame</span><span class="p">())</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">sensor</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="test_init_kinectv2_linux"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_init_kinectv2_linux">[documentos]</a><span class="k">def</span> <span class="nf">test_init_kinectv2_linux</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">sandbox.sensor.kinectV2</span> <span class="kn">import</span> <span class="n">KinectV2</span>
+    <span class="n">kinect</span> <span class="o">=</span> <span class="n">KinectV2</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="test_kinectv2_linux_frame"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_kinectv2_linux_frame">[documentos]</a><span class="k">def</span> <span class="nf">test_kinectv2_linux_frame</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">sandbox.sensor.kinectV2</span> <span class="kn">import</span> <span class="n">KinectV2</span>
+    <span class="n">kinect</span> <span class="o">=</span> <span class="n">KinectV2</span><span class="p">()</span>
+    <span class="n">kinect</span><span class="o">.</span><span class="n">get_linux_frame</span><span class="p">(</span><span class="n">typ</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="test_get_depth_frame_lx"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_get_depth_frame_lx">[documentos]</a><span class="k">def</span> <span class="nf">test_get_depth_frame_lx</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">sandbox.sensor.kinectV2</span> <span class="kn">import</span> <span class="n">KinectV2</span>
+    <span class="n">kinect</span> <span class="o">=</span> <span class="n">KinectV2</span><span class="p">()</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">kinect</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;jet&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">kinect</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;jet&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="test_get_color_frame_lx"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_get_color_frame_lx">[documentos]</a><span class="k">def</span> <span class="nf">test_get_color_frame_lx</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">sandbox.sensor.kinectV2</span> <span class="kn">import</span> <span class="n">KinectV2</span>
+    <span class="n">kinect</span> <span class="o">=</span> <span class="n">KinectV2</span><span class="p">()</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="n">kinect</span><span class="o">.</span><span class="n">get_color</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">color</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">color</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="n">kinect</span><span class="o">.</span><span class="n">get_color</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="test_get_IR_frame_lx"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_get_IR_frame_lx">[documentos]</a><span class="k">def</span> <span class="nf">test_get_IR_frame_lx</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">sandbox.sensor.kinectV2</span> <span class="kn">import</span> <span class="n">KinectV2</span>
+    <span class="n">kinect</span> <span class="o">=</span> <span class="n">KinectV2</span><span class="p">()</span>
+    <span class="n">IR</span> <span class="o">=</span> <span class="n">kinect</span><span class="o">.</span><span class="n">get_ir_frame</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span> <span class="o">=</span><span class="mi">6000</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">IR</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">IR</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">IR</span> <span class="o">=</span> <span class="n">kinect</span><span class="o">.</span><span class="n">get_ir_frame</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">6000</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">IR</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">IR</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="test_linux_2"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_linux_2">[documentos]</a><span class="k">def</span> <span class="nf">test_linux_2</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">_platform</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="kn">from</span> <span class="nn">freenect2</span> <span class="kn">import</span> <span class="n">Device</span><span class="p">,</span> <span class="n">FrameType</span>
+
+    <span class="c1"># We use numpy to process the raw IR frame</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="c1"># We use the Pillow library for saving the captured image</span>
+    <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+
+    <span class="c1"># Open default device</span>
+    <span class="n">device</span> <span class="o">=</span> <span class="n">Device</span><span class="p">()</span>
+
+    <span class="c1"># Start the device</span>
+    <span class="k">with</span> <span class="n">device</span><span class="o">.</span><span class="n">running</span><span class="p">():</span>
+        <span class="c1"># For each received frame...</span>
+        <span class="k">for</span> <span class="n">type_</span><span class="p">,</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">device</span><span class="p">:</span>
+            <span class="c1"># ...stop only when we get an IR frame</span>
+            <span class="k">if</span> <span class="n">type_</span> <span class="ow">is</span> <span class="n">FrameType</span><span class="o">.</span><span class="n">Ir</span><span class="p">:</span>
+                <span class="k">break</span>
+
+    <span class="c1"># Outside of the &#39;with&#39; block, the device has been stopped again</span>
+
+    <span class="c1"># The received IR frame is in the range 0 -&gt; 65535. Normalise the</span>
+    <span class="c1"># range to 0 -&gt; 1 and take square root as a simple form of gamma</span>
+    <span class="c1"># correction.</span>
+    <span class="n">ir_image</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">to_array</span><span class="p">()</span>
+    <span class="n">ir_image</span> <span class="o">/=</span> <span class="n">ir_image</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">ir_image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">ir_image</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="test_linux_2_1"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_linux_2_1">[documentos]</a><span class="k">def</span> <span class="nf">test_linux_2_1</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">_platform</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="kn">from</span> <span class="nn">freenect2</span> <span class="kn">import</span> <span class="n">Device</span><span class="p">,</span> <span class="n">FrameType</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="c1"># Open the default device and capture a color and depth frame.</span>
+    <span class="n">device</span> <span class="o">=</span> <span class="n">Device</span><span class="p">()</span>
+    <span class="n">frames</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="n">device</span><span class="o">.</span><span class="n">running</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">type_</span><span class="p">,</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">device</span><span class="p">:</span>
+            <span class="n">frames</span><span class="p">[</span><span class="n">type_</span><span class="p">]</span> <span class="o">=</span> <span class="n">frame</span>
+            <span class="k">if</span> <span class="n">FrameType</span><span class="o">.</span><span class="n">Color</span> <span class="ow">in</span> <span class="n">frames</span> <span class="ow">and</span> <span class="n">FrameType</span><span class="o">.</span><span class="n">Depth</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">:</span>
+                <span class="k">break</span>
+
+    <span class="c1"># Use the factory calibration to undistort the depth frame and register the RGB</span>
+    <span class="c1"># frame onto it.</span>
+    <span class="n">rgb</span><span class="p">,</span> <span class="n">depth</span> <span class="o">=</span> <span class="n">frames</span><span class="p">[</span><span class="n">FrameType</span><span class="o">.</span><span class="n">Color</span><span class="p">],</span> <span class="n">frames</span><span class="p">[</span><span class="n">FrameType</span><span class="o">.</span><span class="n">Depth</span><span class="p">]</span>
+    <span class="n">undistorted</span><span class="p">,</span> <span class="n">registered</span><span class="p">,</span> <span class="n">big_depth</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">registration</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="n">rgb</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">with_big_depth</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<span class="k">def</span> <span class="nf">test_thread_linux</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">sandbox.sensor.kinectV2</span> <span class="kn">import</span> <span class="n">KinectV2</span>
+    <span class="n">kinect</span> <span class="o">=</span> <span class="n">KinectV2</span><span class="p">()</span>
+
+    <span class="n">kinect</span><span class="o">.</span><span class="n">_run</span><span class="p">()</span>
+    <span class="kn">import</span> <span class="nn">time</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">kinect</span><span class="o">.</span><span class="n">_depth</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">kinect</span><span class="o">.</span><span class="n">_ir</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">kinect</span><span class="o">.</span><span class="n">_color</span><span class="p">)</span>
+
+    <span class="n">kinect</span><span class="o">.</span><span class="n">_stop</span><span class="p">()</span>
+
+    <span class="n">kinect</span><span class="o">.</span><span class="n">_run</span><span class="p">()</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">kinect</span><span class="o">.</span><span class="n">_depth</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">kinect</span><span class="o">.</span><span class="n">_ir</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">kinect</span><span class="o">.</span><span class="n">_color</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;working&quot;</span><span class="p">,</span> <span class="n">kinect</span><span class="o">.</span><span class="n">get_color</span><span class="p">())</span>
+
+<div class="viewcode-block" id="test_thread"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_thread">[documentos]</a><span class="k">def</span> <span class="nf">test_thread</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">sandbox.sensor.kinectV2</span> <span class="kn">import</span> <span class="n">KinectV2</span>
+    <span class="n">kinect</span> <span class="o">=</span> <span class="n">KinectV2</span><span class="p">()</span>
+    <span class="n">kinect</span><span class="o">.</span><span class="n">_run</span><span class="p">()</span>
+    <span class="n">rval</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="kn">import</span> <span class="nn">cv2</span>
+    <span class="k">while</span> <span class="n">rval</span><span class="p">:</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">,</span> <span class="n">kinect</span><span class="o">.</span><span class="n">get_color</span><span class="p">())</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s2">&quot;depth&quot;</span><span class="p">,</span> <span class="n">kinect</span><span class="o">.</span><span class="n">get_frame</span><span class="p">())</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s2">&quot;ir&quot;</span><span class="p">,</span> <span class="n">kinect</span><span class="o">.</span><span class="n">get_ir_frame</span><span class="p">())</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="mi">27</span><span class="p">:</span>  <span class="c1"># exit on ESC</span>
+            <span class="k">break</span>
+    <span class="n">kinect</span><span class="o">.</span><span class="n">_stop</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="test_thread_linux"><a class="viewcode-back" href="../../../tests.test_sensor_markers.html#tests.test_sensor_markers.test_sensor.test_thread_linux">[documentos]</a><span class="k">def</span> <span class="nf">test_thread_linux</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">sandbox.sensor.kinectV2</span> <span class="kn">import</span> <span class="n">KinectV2</span>
+    <span class="n">kinect</span> <span class="o">=</span> <span class="n">KinectV2</span><span class="p">()</span>
+    <span class="n">kinect</span><span class="o">.</span><span class="n">_run</span><span class="p">()</span>
+    <span class="n">kinect</span><span class="o">.</span><span class="n">_stop</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Código do módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

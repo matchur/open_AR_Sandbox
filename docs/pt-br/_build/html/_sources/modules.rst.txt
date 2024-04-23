@@ -1,5 +1,5 @@
-open_AR_Sandbox-main
-====================
+open_AR_Sandbox
+===============
 
 .. toctree::
    :maxdepth: 4

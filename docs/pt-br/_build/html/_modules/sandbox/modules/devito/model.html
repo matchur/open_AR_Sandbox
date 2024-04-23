@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sandbox.modules.devito.model &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=e63ae33f"></script>
+    <script src="../../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/translations.js?v=3b002d5c"></script>
+    <link rel="index" title="Índice" href="../../../../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fonte de sandbox.modules.devito.model</h1><div class="highlight"><pre>
+<span></span><span class="c1">#######################################</span>
+<span class="c1">#Script taken  from https://github.com/devitocodes/devito/tree/master/examples/seismic</span>
+<span class="c1">#######################################</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sin</span><span class="p">,</span> <span class="n">Abs</span><span class="p">,</span> <span class="n">finite_diff_weights</span> <span class="k">as</span> <span class="n">fd_w</span>
+
+<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Grid</span><span class="p">,</span> <span class="n">SubDomain</span><span class="p">,</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Constant</span><span class="p">,</span> <span class="n">warning</span><span class="p">,</span>
+                    <span class="n">SubDimension</span><span class="p">,</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">Inc</span><span class="p">,</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">div</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">devito.builtins</span> <span class="kn">import</span> <span class="n">initialize_function</span><span class="p">,</span> <span class="n">gaussian_smooth</span><span class="p">,</span> <span class="n">mmax</span><span class="p">,</span> <span class="n">mmin</span>
+<span class="kn">from</span> <span class="nn">devito.tools</span> <span class="kn">import</span> <span class="n">as_tuple</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SeismicModel&#39;</span><span class="p">,</span> <span class="s1">&#39;Model&#39;</span><span class="p">,</span> <span class="s1">&#39;ModelElastic&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;ModelViscoelastic&#39;</span><span class="p">,</span> <span class="s1">&#39;ModelViscoacoustic&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">initialize_damp</span><span class="p">(</span><span class="n">damp</span><span class="p">,</span> <span class="n">padsizes</span><span class="p">,</span> <span class="n">spacing</span><span class="p">,</span> <span class="n">abc_type</span><span class="o">=</span><span class="s2">&quot;damp&quot;</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initialize damping field with an absorbing boundary layer.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    damp : Function</span>
+<span class="sd">        The damping field for absorbing boundary condition.</span>
+<span class="sd">    nbl : int</span>
+<span class="sd">        Number of points in the damping layer.</span>
+<span class="sd">    spacing :</span>
+<span class="sd">        Grid spacing coefficient.</span>
+<span class="sd">    mask : bool, optional</span>
+<span class="sd">        whether the dampening is a mask or layer.</span>
+<span class="sd">        mask =&gt; 1 inside the domain and decreases in the layer</span>
+<span class="sd">        not mask =&gt; 0 inside the domain and increase in the layer</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">eqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Eq</span><span class="p">(</span><span class="n">damp</span><span class="p">,</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">abc_type</span> <span class="o">==</span> <span class="s2">&quot;mask&quot;</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">nbl</span><span class="p">,</span> <span class="n">nbr</span><span class="p">),</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">padsizes</span><span class="p">,</span> <span class="n">damp</span><span class="o">.</span><span class="n">dimensions</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">fs</span> <span class="ow">or</span> <span class="n">d</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">damp</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">dampcoeff</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">0.001</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">nbl</span><span class="p">)</span>
+            <span class="c1"># left</span>
+            <span class="n">dim_l</span> <span class="o">=</span> <span class="n">SubDimension</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;abc_</span><span class="si">%s</span><span class="s1">_l&#39;</span> <span class="o">%</span> <span class="n">d</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">d</span><span class="p">,</span>
+                                      <span class="n">thickness</span><span class="o">=</span><span class="n">nbl</span><span class="p">)</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">Abs</span><span class="p">((</span><span class="n">nbl</span> <span class="o">-</span> <span class="p">(</span><span class="n">dim_l</span> <span class="o">-</span> <span class="n">d</span><span class="o">.</span><span class="n">symbolic_min</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">nbl</span><span class="p">))</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">dampcoeff</span> <span class="o">*</span> <span class="p">(</span><span class="n">pos</span> <span class="o">-</span> <span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">pos</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="o">-</span><span class="n">val</span> <span class="k">if</span> <span class="n">abc_type</span> <span class="o">==</span> <span class="s2">&quot;mask&quot;</span> <span class="k">else</span> <span class="n">val</span>
+            <span class="n">eqs</span> <span class="o">+=</span> <span class="p">[</span><span class="n">Inc</span><span class="p">(</span><span class="n">damp</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">d</span><span class="p">:</span> <span class="n">dim_l</span><span class="p">}),</span> <span class="n">val</span><span class="o">/</span><span class="n">d</span><span class="o">.</span><span class="n">spacing</span><span class="p">)]</span>
+        <span class="c1"># right</span>
+        <span class="n">dampcoeff</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">0.001</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">nbr</span><span class="p">)</span>
+        <span class="n">dim_r</span> <span class="o">=</span> <span class="n">SubDimension</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;abc_</span><span class="si">%s</span><span class="s1">_r&#39;</span> <span class="o">%</span> <span class="n">d</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">d</span><span class="p">,</span>
+                                   <span class="n">thickness</span><span class="o">=</span><span class="n">nbr</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">Abs</span><span class="p">((</span><span class="n">nbr</span> <span class="o">-</span> <span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">symbolic_max</span> <span class="o">-</span> <span class="n">dim_r</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">nbr</span><span class="p">))</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">dampcoeff</span> <span class="o">*</span> <span class="p">(</span><span class="n">pos</span> <span class="o">-</span> <span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">pos</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="o">-</span><span class="n">val</span> <span class="k">if</span> <span class="n">abc_type</span> <span class="o">==</span> <span class="s2">&quot;mask&quot;</span> <span class="k">else</span> <span class="n">val</span>
+        <span class="n">eqs</span> <span class="o">+=</span> <span class="p">[</span><span class="n">Inc</span><span class="p">(</span><span class="n">damp</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">d</span><span class="p">:</span> <span class="n">dim_r</span><span class="p">}),</span> <span class="n">val</span><span class="o">/</span><span class="n">d</span><span class="o">.</span><span class="n">spacing</span><span class="p">)]</span>
+
+    <span class="n">Operator</span><span class="p">(</span><span class="n">eqs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;initdamp&#39;</span><span class="p">)()</span>
+
+
+<span class="k">class</span> <span class="nc">PhysicalDomain</span><span class="p">(</span><span class="n">SubDomain</span><span class="p">):</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;physdomain&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">so</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PhysicalDomain</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">so</span> <span class="o">=</span> <span class="n">so</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fs</span> <span class="o">=</span> <span class="n">fs</span>
+
+    <span class="k">def</span> <span class="nf">define</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">):</span>
+        <span class="n">map_d</span> <span class="o">=</span> <span class="p">{</span><span class="n">d</span><span class="p">:</span> <span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dimensions</span><span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="p">:</span>
+            <span class="n">map_d</span><span class="p">[</span><span class="n">dimensions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;middle&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">so</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">map_d</span>
+
+
+<span class="k">class</span> <span class="nc">FSDomain</span><span class="p">(</span><span class="n">SubDomain</span><span class="p">):</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;fsdomain&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">so</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FSDomain</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">so</span>
+
+    <span class="k">def</span> <span class="nf">define</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Definition of the upper section of the domain for wrapped indices FS.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="n">d</span><span class="p">:</span> <span class="p">(</span><span class="n">d</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">d</span> <span class="o">==</span> <span class="n">dimensions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="p">(</span><span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dimensions</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">GenericModel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    General model class with common properties</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">spacing</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">space_order</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                 <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">subdomains</span><span class="o">=</span><span class="p">(),</span> <span class="n">bcs</span><span class="o">=</span><span class="s2">&quot;damp&quot;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">fs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">space_order</span> <span class="o">=</span> <span class="n">space_order</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nbl</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nbl</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">dtype</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">origin</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fs</span> <span class="o">=</span> <span class="n">fs</span>
+        <span class="c1"># Default setup</span>
+        <span class="n">origin_pml</span> <span class="o">=</span> <span class="p">[</span><span class="n">dtype</span><span class="p">(</span><span class="n">o</span> <span class="o">-</span> <span class="n">s</span><span class="o">*</span><span class="n">nbl</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">spacing</span><span class="p">)]</span>
+        <span class="n">shape_pml</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbl</span>
+
+        <span class="c1"># Model size depending on freesurface</span>
+        <span class="n">physdomain</span> <span class="o">=</span> <span class="n">PhysicalDomain</span><span class="p">(</span><span class="n">space_order</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span>
+        <span class="n">subdomains</span> <span class="o">=</span> <span class="n">subdomains</span> <span class="o">+</span> <span class="p">(</span><span class="n">physdomain</span><span class="p">,)</span>
+        <span class="k">if</span> <span class="n">fs</span><span class="p">:</span>
+            <span class="n">fsdomain</span> <span class="o">=</span> <span class="n">FSDomain</span><span class="p">(</span><span class="n">space_order</span><span class="p">)</span>
+            <span class="n">subdomains</span> <span class="o">=</span> <span class="n">subdomains</span> <span class="o">+</span> <span class="p">(</span><span class="n">fsdomain</span><span class="p">,)</span>
+            <span class="n">origin_pml</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">origin</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">shape_pml</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbl</span>
+
+        <span class="c1"># Origin of the computational domain with boundary to inject/interpolate</span>
+        <span class="c1"># at the correct index</span>
+        <span class="k">if</span> <span class="n">grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Physical extent is calculated per cell, so shape - 1</span>
+            <span class="n">extent</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">spacing</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">shape_pml</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="n">Grid</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape_pml</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="n">origin_pml</span><span class="p">,</span>
+                             <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">subdomains</span><span class="o">=</span><span class="n">subdomains</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="n">grid</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_physical_parameters</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">damp</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_bcs</span><span class="p">(</span><span class="n">bcs</span><span class="o">=</span><span class="n">bcs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_initialize_bcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bcs</span><span class="o">=</span><span class="s2">&quot;damp&quot;</span><span class="p">):</span>
+        <span class="c1"># Create dampening field as symbol `damp`</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbl</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">damp</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">bcs</span> <span class="o">==</span> <span class="s2">&quot;mask&quot;</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="k">return</span>
+
+        <span class="c1"># First initialization</span>
+        <span class="n">init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">damp</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="c1"># Get current Function if alread yinitialized</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">damp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">damp</span> <span class="ow">or</span> <span class="n">Function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;damp&quot;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">bcs</span><span class="p">):</span>
+            <span class="n">bcs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">damp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbl</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">re_init</span> <span class="o">=</span> <span class="p">((</span><span class="n">bcs</span> <span class="o">==</span> <span class="s2">&quot;mask&quot;</span> <span class="ow">and</span> <span class="n">mmin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">damp</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span>
+                       <span class="p">(</span><span class="n">bcs</span> <span class="o">==</span> <span class="s2">&quot;damp&quot;</span> <span class="ow">and</span> <span class="n">mmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">damp</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">init</span> <span class="ow">or</span> <span class="n">re_init</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">re_init</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">init</span><span class="p">:</span>
+                    <span class="n">bcs_o</span> <span class="o">=</span> <span class="s2">&quot;damp&quot;</span> <span class="k">if</span> <span class="n">bcs</span> <span class="o">==</span> <span class="s2">&quot;mask&quot;</span> <span class="k">else</span> <span class="s2">&quot;mask&quot;</span>
+                    <span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Re-initializing damp profile from </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">bcs_o</span><span class="p">,</span> <span class="n">bcs</span><span class="p">))</span>
+                    <span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Model has to be created with `bcs=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">`&quot;</span>
+                            <span class="s2">&quot;for this WaveSolver&quot;</span> <span class="o">%</span> <span class="n">bcs</span><span class="p">)</span>
+                <span class="n">initialize_damp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">damp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">padsizes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spacing</span><span class="p">,</span>
+                                <span class="n">abc_type</span><span class="o">=</span><span class="n">bcs</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_physical_parameters</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="s1">&#39;damp&#39;</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">padsizes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Padding size for each dimension.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">padsizes</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbl</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="n">padsizes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fs</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbl</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">padsizes</span>
+
+    <span class="k">def</span> <span class="nf">physical_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return all set physical parameters and update to input values if provided</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">known</span> <span class="o">=</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">physical_parameters</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">i</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="ow">or</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">known</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_gen_phys_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">space_order</span><span class="p">,</span> <span class="n">is_param</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">default_value</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">field</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default_value</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">function</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="n">space_order</span><span class="p">,</span>
+                                <span class="n">parameter</span><span class="o">=</span><span class="n">is_param</span><span class="p">)</span>
+            <span class="n">initialize_function</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">padsizes</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">function</span> <span class="o">=</span> <span class="n">Constant</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">field</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_physical_parameters</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">name</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">function</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">physical_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">as_tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_physical_parameters</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Spatial dimension of the problem and model domain.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dim</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">spacing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Grid spacing for all fields in the physical model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">spacing</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">space_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Spatial dimensions of the grid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dimensions</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">spacing_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Map between spacing symbols and their values for each `SpaceDimension`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">spacing_map</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Data type for all assocaited data objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">domain_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Physical size of the domain as determined by shape and spacing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">d</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">s</span> <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spacing</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="SeismicModel"><a class="viewcode-back" href="../../../../sandbox.modules.devito.html#sandbox.modules.devito.model.SeismicModel">[documentos]</a><span class="k">class</span> <span class="nc">SeismicModel</span><span class="p">(</span><span class="n">GenericModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The physical model used in seismic inversion processes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    origin : tuple of floats</span>
+<span class="sd">        Origin of the model in m as a tuple in (x,y,z) order.</span>
+<span class="sd">    spacing : tuple of floats</span>
+<span class="sd">        Grid size in m as a Tuple in (x,y,z) order.</span>
+<span class="sd">    shape : tuple of int</span>
+<span class="sd">        Number of grid points size in (x,y,z) order.</span>
+<span class="sd">    space_order : int</span>
+<span class="sd">        Order of the spatial stencil discretisation.</span>
+<span class="sd">    vp : array_like or float</span>
+<span class="sd">        Velocity in km/s.</span>
+<span class="sd">    nbl : int, optional</span>
+<span class="sd">        The number of absorbin layers for boundary damping.</span>
+<span class="sd">    bcs: str or callable</span>
+<span class="sd">        Absorbing boundary type (&quot;damp&quot; or &quot;mask&quot;) or initializer.</span>
+<span class="sd">    dtype : np.float32 or np.float64</span>
+<span class="sd">        Defaults to np.float32.</span>
+<span class="sd">    epsilon : array_like or float, optional</span>
+<span class="sd">        Thomsen epsilon parameter (0&lt;epsilon&lt;1).</span>
+<span class="sd">    delta : array_like or float</span>
+<span class="sd">        Thomsen delta parameter (0&lt;delta&lt;1), delta&lt;epsilon.</span>
+<span class="sd">    theta : array_like or float</span>
+<span class="sd">        Tilt angle in radian.</span>
+<span class="sd">    phi : array_like or float</span>
+<span class="sd">        Asymuth angle in radian.</span>
+<span class="sd">    b : array_like or float</span>
+<span class="sd">        Buoyancy.</span>
+<span class="sd">    vs : array_like or float</span>
+<span class="sd">        S-wave velocity.</span>
+<span class="sd">    qp : array_like or float</span>
+<span class="sd">        P-wave attenuation.</span>
+<span class="sd">    qs : array_like or float</span>
+<span class="sd">        S-wave attenuation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_known_parameters</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;vp&#39;</span><span class="p">,</span> <span class="s1">&#39;damp&#39;</span><span class="p">,</span> <span class="s1">&#39;vs&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;epsilon&#39;</span><span class="p">,</span> <span class="s1">&#39;delta&#39;</span><span class="p">,</span>
+                         <span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="s1">&#39;phi&#39;</span><span class="p">,</span> <span class="s1">&#39;qp&#39;</span><span class="p">,</span> <span class="s1">&#39;qs&#39;</span><span class="p">,</span> <span class="s1">&#39;lam&#39;</span><span class="p">,</span> <span class="s1">&#39;mu&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">spacing</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">space_order</span><span class="p">,</span> <span class="n">vp</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">subdomains</span><span class="o">=</span><span class="p">(),</span> <span class="n">bcs</span><span class="o">=</span><span class="s2">&quot;mask&quot;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SeismicModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">spacing</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">space_order</span><span class="p">,</span> <span class="n">nbl</span><span class="p">,</span>
+                                           <span class="n">dtype</span><span class="p">,</span> <span class="n">subdomains</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">bcs</span><span class="o">=</span><span class="n">bcs</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span>
+
+        <span class="c1"># Initialize physics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_physics</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">space_order</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># User provided dt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dt</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dt&#39;</span><span class="p">)</span>
+        <span class="c1"># Some wave equation need a rescaled dt that can&#39;t be infered from the model</span>
+        <span class="c1"># parameters, such as isoacoustic OT4 that can use a dt sqrt(3) larger than</span>
+        <span class="c1"># isoacoustic OT2. This property should be set from a wavesolver or after model</span>
+        <span class="c1"># instanciation only via model.dt_scale = value.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dt_scale</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_initialize_physics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vp</span><span class="p">,</span> <span class="n">space_order</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize physical parameters and type of physics from inputs.</span>
+<span class="sd">        The types of physics supported are:</span>
+<span class="sd">        - acoustic: [vp, b]</span>
+<span class="sd">        - elastic: [vp, vs, b] represented through Lame parameters [lam, mu, b]</span>
+<span class="sd">        - visco-acoustic: [vp, b, qp]</span>
+<span class="sd">        - visco-elastic: [vp, vs, b, qs]</span>
+<span class="sd">        - vti: [vp, epsilon, delta]</span>
+<span class="sd">        - tti: [epsilon, delta, theta, phi]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Buoyancy</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Initialize elastic with Lame parametrization</span>
+        <span class="k">if</span> <span class="s1">&#39;vs&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">vs</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;vs&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lam</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_phys_param</span><span class="p">((</span><span class="n">vp</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">vs</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="n">b</span><span class="p">,</span> <span class="s1">&#39;lam&#39;</span><span class="p">,</span> <span class="n">space_order</span><span class="p">,</span>
+                                            <span class="n">is_param</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_phys_param</span><span class="p">(</span><span class="n">vs</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">b</span><span class="p">,</span> <span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="n">space_order</span><span class="p">,</span> <span class="n">is_param</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># All other seismic models have at least a velocity</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_phys_param</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="s1">&#39;vp&#39;</span><span class="p">,</span> <span class="n">space_order</span><span class="p">)</span>
+        <span class="c1"># Initialize rest of the input physical parameters</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_known_parameters</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_phys_param</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">name</span><span class="p">,</span> <span class="n">space_order</span><span class="p">)</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+                <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_max_vp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;vp&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_physical_parameters</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mmin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">mmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">mmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_thomsen_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Update scale for tti</span>
+        <span class="k">if</span> <span class="s1">&#39;epsilon&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_physical_parameters</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">mmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">))</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dt_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dt_scale</span>
+
+    <span class="nd">@dt_scale</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">dt_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dt_scale</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_cfl_coeff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Courant number from the physics and spatial discretization order.</span>
+<span class="sd">        The CFL coefficients are described in:</span>
+<span class="sd">        - https://doi.org/10.1137/0916052 for the elastic case</span>
+<span class="sd">        - https://library.seg.org/doi/pdf/10.1190/1.1444605 for the acoustic case</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Elasic coefficient (see e.g )</span>
+        <span class="k">if</span> <span class="s1">&#39;lam&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_physical_parameters</span> <span class="ow">or</span> <span class="s1">&#39;vs&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_physical_parameters</span><span class="p">:</span>
+            <span class="n">coeffs</span> <span class="o">=</span> <span class="n">fd_w</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">space_order</span><span class="o">//</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space_order</span><span class="o">//</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="mf">.5</span><span class="p">)</span>
+            <span class="n">c_fd</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">coeffs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">/</span> <span class="n">c_fd</span>
+        <span class="n">a1</span> <span class="o">=</span> <span class="mi">4</span>  <span class="c1"># 2nd order in time</span>
+        <span class="n">coeffs</span> <span class="o">=</span> <span class="n">fd_w</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">space_order</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space_order</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="mi">0</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a1</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dim</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">coeffs</span><span class="p">))))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">critical_dt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Critical computational time step value from the CFL condition.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># For a fixed time order this number decreases as the space order increases.</span>
+        <span class="c1">#</span>
+        <span class="c1"># The CFL condtion is then given by</span>
+        <span class="c1"># dt &lt;= coeff * h / (max(velocity))</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfl_coeff</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacing</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_thomsen_scale</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_vp</span><span class="p">)</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.3e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dt_scale</span> <span class="o">*</span> <span class="n">dt</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dt</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dt</span> <span class="o">&lt;=</span> <span class="n">dt</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dt</span>
+        <span class="k">return</span> <span class="n">dt</span>
+
+<div class="viewcode-block" id="SeismicModel.update"><a class="viewcode-back" href="../../../../sandbox.modules.devito.html#sandbox.modules.devito.model.SeismicModel.update">[documentos]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the physical parameter param.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">param</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="c1"># No physical parameter with tha name, create it</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_phys_param</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space_order</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="c1"># Update the square slowness according to new value</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">param</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="n">param</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">value</span><span class="p">[:]</span>
+            <span class="k">elif</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="n">initialize_function</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbl</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Incorrect input size </span><span class="si">%s</span><span class="s2"> for model&quot;</span> <span class="o">%</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span>
+                                 <span class="s2">&quot; </span><span class="si">%s</span><span class="s2"> without or </span><span class="si">%s</span><span class="s2"> with padding&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                                                     <span class="n">param</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">param</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">value</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">m</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Squared slowness.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vp</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a simple model perturbation from the velocity as `dm = div(vp)`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dm</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;dm&quot;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">space_order</span><span class="p">)</span>
+        <span class="n">Operator</span><span class="p">(</span><span class="n">Eq</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span> <span class="n">div</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vp</span><span class="p">)),</span> <span class="n">subs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">spacing_map</span><span class="p">)()</span>
+        <span class="k">return</span> <span class="n">dm</span>
+
+<div class="viewcode-block" id="SeismicModel.smooth"><a class="viewcode-back" href="../../../../sandbox.modules.devito.html#sandbox.modules.devito.model.SeismicModel.smooth">[documentos]</a>    <span class="k">def</span> <span class="nf">smooth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">physical_parameters</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">5.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply devito.gaussian_smooth to model physical parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        physical_parameters : string or tuple of string</span>
+<span class="sd">            Names of the fields to be smoothed.</span>
+<span class="sd">        sigma : float</span>
+<span class="sd">            Standard deviation of the smoothing operator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">model_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">physical_params</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">physical_parameters</span><span class="p">:</span>
+            <span class="n">gaussian_smooth</span><span class="p">(</span><span class="n">model_parameters</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="k">return</span></div></div>
+
+
+<span class="c1"># For backward compatibility</span>
+<span class="n">Model</span> <span class="o">=</span> <span class="n">SeismicModel</span>
+<span class="n">ModelElastic</span> <span class="o">=</span> <span class="n">SeismicModel</span>
+<span class="n">ModelViscoelastic</span> <span class="o">=</span> <span class="n">SeismicModel</span>
+<span class="n">ModelViscoacoustic</span> <span class="o">=</span> <span class="n">SeismicModel</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Código do módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

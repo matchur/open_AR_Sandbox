@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sandbox.markers.aruco_linux &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=e63ae33f"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/translations.js?v=3b002d5c"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fonte de sandbox.markers.aruco_linux</h1><div class="highlight"><pre>
+<span></span><span class="c1">#%%</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">tqdm.autonotebook</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">sandbox.sensor.kinectV2</span> <span class="kn">import</span> <span class="n">KinectV2</span>
+<span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">set_logger</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">set_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1">#%%</span>
+<span class="n">depth_params</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">color_params</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">distorted_depth</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">undistorted_depth</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">registered_RGB</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">big_depth</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">device</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">dp_camera_x</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">dp_camera_y</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">dp_camera_z</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">rgb</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">depth</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">x_correction</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">y_correction</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="c1">#%%</span>
+
+
+<div class="viewcode-block" id="set_correction"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco_linux.set_correction">[documentos]</a><span class="k">def</span> <span class="nf">set_correction</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">x_correction</span><span class="p">,</span> <span class="n">y_correction</span>
+    <span class="n">x_correction</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="n">y_correction</span> <span class="o">=</span> <span class="n">y</span></div>
+
+
+<div class="viewcode-block" id="set_device"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco_linux.set_device">[documentos]</a><span class="k">def</span> <span class="nf">set_device</span><span class="p">(</span><span class="n">kinect</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">device</span>
+    <span class="n">device</span> <span class="o">=</span> <span class="n">kinect</span><span class="o">.</span><span class="n">device</span></div>
+
+
+<div class="viewcode-block" id="set_device_params"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco_linux.set_device_params">[documentos]</a><span class="k">def</span> <span class="nf">set_device_params</span><span class="p">(</span><span class="n">kinect</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">depth_params</span><span class="p">,</span> <span class="n">color_params</span>
+    <span class="n">depth_params</span> <span class="o">=</span> <span class="n">kinect</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">ir_camera_params</span>
+    <span class="n">color_params</span> <span class="o">=</span> <span class="n">kinect</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">color_camera_params</span></div>
+
+
+<div class="viewcode-block" id="start_mapping"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco_linux.start_mapping">[documentos]</a><span class="k">def</span> <span class="nf">start_mapping</span><span class="p">(</span><span class="n">kinect</span><span class="p">:</span> <span class="n">KinectV2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Takes the kinect sensor and create the map to convert color space to depth space</span>
+<span class="sd">        Args:</span>
+<span class="sd">            kinect: Sensor</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pd.Dataframe</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="c1"># depth_to_color</span>
+    <span class="n">set_device</span><span class="p">(</span><span class="n">kinect</span><span class="p">)</span>
+    <span class="n">set_device_params</span><span class="p">(</span><span class="n">kinect</span><span class="p">)</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">kinect</span><span class="o">.</span><span class="n">_thread_status</span>
+    <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;running&quot;</span><span class="p">:</span>
+        <span class="n">kinect</span><span class="o">.</span><span class="n">_stop</span><span class="p">()</span>
+    <span class="n">depth</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">undistorted_depth</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">registration</span><span class="p">()</span>
+
+    <span class="n">_</span> <span class="o">=</span> <span class="n">depth_to_camera</span><span class="p">(</span><span class="n">undistorted_depth</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">create_CoordinateMap</span><span class="p">(</span><span class="n">depth</span><span class="o">.</span><span class="n">to_array</span><span class="p">())</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;CoordinateMap created&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;running&quot;</span><span class="p">:</span>
+        <span class="n">kinect</span><span class="o">.</span><span class="n">_run</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+<div class="viewcode-block" id="registration"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco_linux.registration">[documentos]</a><span class="k">def</span> <span class="nf">registration</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes an original frame from the freenect library to be able to create the undistorted depth frame</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        undistorted_depth, registered_RGB, big_depth</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">freenect2</span> <span class="kn">import</span> <span class="n">FrameType</span>
+    <span class="k">global</span> <span class="n">distorted_depth</span>
+
+    <span class="n">frames</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="n">device</span><span class="o">.</span><span class="n">running</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">type_</span><span class="p">,</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">device</span><span class="p">:</span>
+            <span class="n">frames</span><span class="p">[</span><span class="n">type_</span><span class="p">]</span> <span class="o">=</span> <span class="n">frame</span>
+            <span class="k">if</span> <span class="n">FrameType</span><span class="o">.</span><span class="n">Color</span> <span class="ow">in</span> <span class="n">frames</span> <span class="ow">and</span> <span class="n">FrameType</span><span class="o">.</span><span class="n">Depth</span> <span class="ow">in</span> <span class="n">frames</span> <span class="ow">and</span> <span class="n">FrameType</span><span class="o">.</span><span class="n">Ir</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">:</span>
+                <span class="k">break</span>
+    <span class="k">global</span> <span class="n">rgb</span><span class="p">,</span> <span class="n">depth</span>
+    <span class="n">rgb</span><span class="p">,</span> <span class="n">depth</span> <span class="o">=</span> <span class="n">frames</span><span class="p">[</span><span class="n">FrameType</span><span class="o">.</span><span class="n">Color</span><span class="p">],</span> <span class="n">frames</span><span class="p">[</span><span class="n">FrameType</span><span class="o">.</span><span class="n">Depth</span><span class="p">]</span>
+
+    <span class="k">global</span> <span class="n">undistorted_depth</span><span class="p">,</span> <span class="n">registered_RGB</span><span class="p">,</span> <span class="n">big_depth</span>
+    <span class="n">undistorted_depth</span><span class="p">,</span> <span class="n">registered_RGB</span><span class="p">,</span> <span class="n">big_depth</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">registration</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="n">rgb</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">with_big_depth</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">depth</span><span class="p">,</span> <span class="n">rgb</span><span class="p">,</span> <span class="n">undistorted_depth</span><span class="p">,</span> <span class="n">registered_RGB</span><span class="p">,</span> <span class="n">big_depth</span></div>
+
+
+<div class="viewcode-block" id="distort"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco_linux.distort">[documentos]</a><span class="k">def</span> <span class="nf">distort</span><span class="p">(</span><span class="n">mx</span><span class="p">,</span> <span class="n">my</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    see http://en.wikipedia.org/wiki/Distortion_(optics) for description</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="n">mx</span> <span class="o">-</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">cx</span><span class="p">)</span> <span class="o">/</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">fx</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="p">(</span><span class="n">my</span> <span class="o">-</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">cy</span><span class="p">)</span> <span class="o">/</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">fy</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">*</span> <span class="n">dx</span>
+    <span class="n">dy2</span> <span class="o">=</span> <span class="n">dy</span> <span class="o">*</span> <span class="n">dy</span>
+    <span class="n">r2</span> <span class="o">=</span> <span class="n">dx2</span> <span class="o">+</span> <span class="n">dy2</span>
+    <span class="n">dxdy2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span> <span class="o">*</span> <span class="n">dy</span>
+    <span class="n">kr</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="p">((</span><span class="n">depth_params</span><span class="o">.</span><span class="n">k3</span> <span class="o">*</span> <span class="n">r2</span> <span class="o">+</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">k2</span><span class="p">)</span> <span class="o">*</span> <span class="n">r2</span> <span class="o">+</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">k1</span><span class="p">)</span> <span class="o">*</span> <span class="n">r2</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">fx</span> <span class="o">*</span> <span class="p">(</span><span class="n">dx</span> <span class="o">*</span> <span class="n">kr</span> <span class="o">+</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">p2</span> <span class="o">*</span> <span class="p">(</span><span class="n">r2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span> <span class="o">+</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">p1</span> <span class="o">*</span> <span class="n">dxdy2</span><span class="p">)</span> <span class="o">+</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">cx</span><span class="p">;</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">fy</span> <span class="o">*</span> <span class="p">(</span><span class="n">dy</span> <span class="o">*</span> <span class="n">kr</span> <span class="o">+</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">p1</span> <span class="o">*</span> <span class="p">(</span><span class="n">r2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dy2</span><span class="p">)</span> <span class="o">+</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">p2</span> <span class="o">*</span> <span class="n">dxdy2</span><span class="p">)</span> <span class="o">+</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">cy</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div>
+
+
+<div class="viewcode-block" id="depth_to_color"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco_linux.depth_to_color">[documentos]</a><span class="k">def</span> <span class="nf">depth_to_color</span><span class="p">(</span><span class="n">mx</span><span class="p">,</span> <span class="n">my</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes the indexes mx, my from the depth space -and the value of depth at those indexes, to get the</span>
+<span class="sd">    index position in the color space</span>
+<span class="sd">    Args:</span>
+<span class="sd">        mx: index in x position</span>
+<span class="sd">        my: index in y position</span>
+<span class="sd">        z: z[my][mx]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        rx, ry</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># these seem to be hardcoded in the original SDK static const float</span>
+    <span class="n">depth_q</span> <span class="o">=</span> <span class="mf">0.01</span>
+    <span class="n">color_q</span> <span class="o">=</span> <span class="mf">0.002199</span>
+
+    <span class="n">mx</span> <span class="o">=</span> <span class="p">(</span><span class="n">mx</span> <span class="o">-</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">cx</span><span class="p">)</span> <span class="o">*</span> <span class="n">depth_q</span>
+    <span class="n">my</span> <span class="o">=</span> <span class="p">(</span><span class="n">my</span> <span class="o">-</span> <span class="n">depth_params</span><span class="o">.</span><span class="n">cy</span><span class="p">)</span> <span class="o">*</span> <span class="n">depth_q</span>
+
+    <span class="n">wx</span> <span class="o">=</span> <span class="p">(</span><span class="n">mx</span> <span class="o">*</span> <span class="n">mx</span> <span class="o">*</span> <span class="n">mx</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">mx_x3y0</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="p">(</span><span class="n">my</span> <span class="o">*</span> <span class="n">my</span> <span class="o">*</span> <span class="n">my</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">mx_x0y3</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="p">(</span><span class="n">mx</span> <span class="o">*</span> <span class="n">mx</span> <span class="o">*</span> <span class="n">my</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">mx_x2y1</span><span class="p">)</span> <span class="o">+</span> \
+         <span class="p">(</span><span class="n">my</span> <span class="o">*</span> <span class="n">my</span> <span class="o">*</span> <span class="n">mx</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">mx_x1y2</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="p">(</span><span class="n">mx</span> <span class="o">*</span> <span class="n">mx</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">mx_x2y0</span><span class="p">)</span> <span class="o">+</span> \
+         <span class="p">(</span><span class="n">my</span> <span class="o">*</span> <span class="n">my</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">mx_x0y2</span><span class="p">)</span> <span class="o">+</span> \
+         <span class="p">(</span><span class="n">mx</span> <span class="o">*</span> <span class="n">my</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">mx_x1y1</span><span class="p">)</span> <span class="o">+</span> \
+         <span class="p">(</span><span class="n">mx</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">mx_x1y0</span><span class="p">)</span> <span class="o">+</span> \
+         <span class="p">(</span><span class="n">my</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">mx_x0y1</span><span class="p">)</span> <span class="o">+</span> \
+         <span class="p">(</span><span class="n">color_params</span><span class="o">.</span><span class="n">mx_x0y0</span><span class="p">)</span>
+
+    <span class="n">wy</span> <span class="o">=</span> <span class="p">(</span><span class="n">mx</span> <span class="o">*</span> <span class="n">mx</span> <span class="o">*</span> <span class="n">mx</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">my_x3y0</span><span class="p">)</span> <span class="o">+</span> \
+         <span class="p">(</span><span class="n">my</span> <span class="o">*</span> <span class="n">my</span> <span class="o">*</span> <span class="n">my</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">my_x0y3</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="p">(</span><span class="n">mx</span> <span class="o">*</span> <span class="n">mx</span> <span class="o">*</span> <span class="n">my</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">my_x2y1</span><span class="p">)</span> <span class="o">+</span> \
+         <span class="p">(</span><span class="n">my</span> <span class="o">*</span> <span class="n">my</span> <span class="o">*</span> <span class="n">mx</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">my_x1y2</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="p">(</span><span class="n">mx</span> <span class="o">*</span> <span class="n">mx</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">my_x2y0</span><span class="p">)</span> <span class="o">+</span> \
+         <span class="p">(</span><span class="n">my</span> <span class="o">*</span> <span class="n">my</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">my_x0y2</span><span class="p">)</span> <span class="o">+</span> \
+         <span class="p">(</span><span class="n">mx</span> <span class="o">*</span> <span class="n">my</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">my_x1y1</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="p">(</span><span class="n">mx</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">my_x1y0</span><span class="p">)</span> <span class="o">+</span> \
+         <span class="p">(</span><span class="n">my</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">my_x0y1</span><span class="p">)</span> <span class="o">+</span> \
+         <span class="p">(</span><span class="n">color_params</span><span class="o">.</span><span class="n">my_x0y0</span><span class="p">)</span>
+
+    <span class="n">rx</span> <span class="o">=</span> <span class="p">(</span><span class="n">wx</span> <span class="o">/</span> <span class="p">(</span><span class="n">color_params</span><span class="o">.</span><span class="n">fx</span> <span class="o">*</span> <span class="n">color_q</span><span class="p">))</span> <span class="o">-</span> <span class="p">(</span><span class="n">color_params</span><span class="o">.</span><span class="n">shift_m</span> <span class="o">/</span> <span class="n">color_params</span><span class="o">.</span><span class="n">shift_d</span><span class="p">)</span>
+    <span class="n">ry</span> <span class="o">=</span> <span class="p">(</span><span class="n">wy</span> <span class="o">/</span> <span class="n">color_q</span><span class="p">)</span> <span class="o">+</span> <span class="n">color_params</span><span class="o">.</span><span class="n">cy</span>
+    <span class="c1"># calculating x offset for rgb image based on depth value</span>
+    <span class="n">rx</span> <span class="o">=</span> <span class="p">(</span><span class="n">rx</span> <span class="o">+</span> <span class="p">(</span><span class="n">color_params</span><span class="o">.</span><span class="n">shift_m</span> <span class="o">/</span> <span class="n">z</span><span class="p">))</span> <span class="o">*</span> <span class="n">color_params</span><span class="o">.</span><span class="n">fx</span> <span class="o">+</span> <span class="p">(</span><span class="n">color_params</span><span class="o">.</span><span class="n">cx</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">rx</span><span class="p">,</span> <span class="n">ry</span></div>
+
+
+<div class="viewcode-block" id="depth_to_camera"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco_linux.depth_to_camera">[documentos]</a><span class="k">def</span> <span class="nf">depth_to_camera</span><span class="p">(</span><span class="n">depth</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets the real space coordinates in [m], from the focal point of the camera</span>
+<span class="sd">    Args:</span>
+<span class="sd">        depth: undistorted_depth</span>
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">depth</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">undistorted</span> <span class="o">=</span> <span class="n">depth</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">undistorted</span> <span class="o">=</span> <span class="n">undistorted_depth</span>
+
+    <span class="k">global</span> <span class="n">dp_camera_x</span><span class="p">,</span> <span class="n">dp_camera_y</span><span class="p">,</span> <span class="n">dp_camera_z</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">registration</span><span class="o">.</span><span class="n">get_points_xyz_array</span><span class="p">(</span><span class="n">undistorted</span><span class="o">=</span><span class="n">undistorted</span><span class="p">)</span>
+    <span class="n">dp_camera_x</span><span class="p">,</span> <span class="n">dp_camera_y</span><span class="p">,</span> <span class="n">dp_camera_z</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">points</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">points</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">dp_camera_x</span><span class="p">,</span> <span class="n">dp_camera_y</span><span class="p">,</span> <span class="n">dp_camera_z</span></div>
+
+
+<div class="viewcode-block" id="create_CoordinateMap"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco_linux.create_CoordinateMap">[documentos]</a><span class="k">def</span> <span class="nf">create_CoordinateMap</span><span class="p">(</span><span class="n">depth</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Function to create a point to point map of the spatial/pixel equivalences between the depth space, color space and</span>
+<span class="sd">    camera space. This method requires the depth frame to assign a depth value to the color point.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        CoordinateMap: DataFrame with the x,y,z values of the depth frame; x,y equivalence between the depth space to camera space and</span>
+<span class="sd">        real world values of x,y and z in meters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">depth</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">xy_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">xx</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">yy</span><span class="o">.</span><span class="n">ravel</span><span class="p">()])</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">depth_x</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">depth_y</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">depth_z</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">camera_x</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">camera_y</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">camera_z</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">color_x</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">color_y</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xy_points</span><span class="p">)),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Creating CoordinateMap&quot;</span><span class="p">):</span>
+        <span class="n">x_point</span> <span class="o">=</span> <span class="n">xy_points</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">y_point</span> <span class="o">=</span> <span class="n">xy_points</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">z_point</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">y_point</span><span class="p">][</span><span class="n">x_point</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">z_point</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># values that do not have depth information cannot be projected to the color space</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">depth_to_color</span><span class="p">(</span><span class="n">x_point</span><span class="p">,</span> <span class="n">y_point</span><span class="p">,</span> <span class="n">z_point</span><span class="p">)</span>
+
+            <span class="n">camx</span> <span class="o">=</span> <span class="n">dp_camera_x</span><span class="p">[</span><span class="n">y_point</span><span class="p">][</span><span class="n">x_point</span><span class="p">]</span>
+            <span class="n">camy</span> <span class="o">=</span> <span class="n">dp_camera_y</span><span class="p">[</span><span class="n">y_point</span><span class="p">][</span><span class="n">x_point</span><span class="p">]</span>
+            <span class="n">camz</span> <span class="o">=</span> <span class="n">dp_camera_z</span><span class="p">[</span><span class="n">y_point</span><span class="p">][</span><span class="n">x_point</span><span class="p">]</span>
+            <span class="c1"># since the position of the camera and sensor are different, they will not have the same coverage.</span>
+            <span class="c1"># Specially in the extremes</span>
+            <span class="k">if</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+
+                <span class="n">depth_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_point</span><span class="p">)</span>
+                <span class="n">depth_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_point</span><span class="p">)</span>
+                <span class="n">depth_z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">z_point</span><span class="p">)</span>
+                <span class="n">camera_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">camx</span><span class="p">)</span>
+                <span class="n">camera_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">camy</span><span class="p">)</span>
+                <span class="n">camera_z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">camz</span><span class="p">)</span>
+                <span class="c1">####TODO: constants addded since image is not exact when doing the transformation</span>
+                <span class="n">color_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">x_correction</span><span class="p">)</span>
+                <span class="n">color_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">y_correction</span><span class="p">)</span>
+
+    <span class="n">CoordinateMap</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;Depth_x&#39;</span><span class="p">:</span> <span class="n">depth_x</span><span class="p">,</span>
+                                  <span class="s1">&#39;Depth_y&#39;</span><span class="p">:</span> <span class="n">depth_y</span><span class="p">,</span>
+                                  <span class="s1">&#39;Depth_Z(mm)&#39;</span><span class="p">:</span> <span class="n">depth_z</span><span class="p">,</span>
+                                  <span class="s1">&#39;Color_x&#39;</span><span class="p">:</span> <span class="n">color_x</span><span class="p">,</span>
+                                  <span class="s1">&#39;Color_y&#39;</span><span class="p">:</span> <span class="n">color_y</span><span class="p">,</span>
+                                  <span class="s1">&#39;Camera_x(m)&#39;</span><span class="p">:</span> <span class="n">camera_x</span><span class="p">,</span>
+                                  <span class="s1">&#39;Camera_y(m)&#39;</span><span class="p">:</span> <span class="n">camera_y</span><span class="p">,</span>
+                                  <span class="s1">&#39;Camera_z(m)&#39;</span><span class="p">:</span> <span class="n">camera_z</span>
+                                  <span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">CoordinateMap</span></div>
+
+
+<div class="viewcode-block" id="plot_all"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco_linux.plot_all">[documentos]</a><span class="k">def</span> <span class="nf">plot_all</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">7000</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;plot all the frames from the script&quot;&quot;&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">depth</span><span class="o">.</span><span class="n">to_array</span><span class="p">(),</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">undistorted_depth</span><span class="o">.</span><span class="n">to_array</span><span class="p">(),</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">registered_RGB</span><span class="o">.</span><span class="n">to_array</span><span class="p">(),</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">big_depth</span><span class="o">.</span><span class="n">to_array</span><span class="p">(),</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">df</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">df_ind</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">depth</span><span class="o">.</span><span class="n">to_array</span><span class="p">(),</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df_ind</span><span class="o">.</span><span class="n">Depth_x</span><span class="p">,</span> <span class="n">df_ind</span><span class="o">.</span><span class="n">Depth_y</span><span class="p">,</span> <span class="s1">&#39;*r&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">rgb</span><span class="o">.</span><span class="n">to_array</span><span class="p">(),</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df_ind</span><span class="o">.</span><span class="n">Color_x</span><span class="p">,</span> <span class="n">df_ind</span><span class="o">.</span><span class="n">Color_y</span><span class="p">,</span> <span class="s1">&#39;*r&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Código do módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

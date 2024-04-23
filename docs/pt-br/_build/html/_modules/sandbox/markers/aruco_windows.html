@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sandbox.markers.aruco_windows &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=e63ae33f"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/translations.js?v=3b002d5c"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fonte de sandbox.markers.aruco_windows</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">tqdm.autonotebook</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">sandbox.sensor.kinectV2</span> <span class="kn">import</span> <span class="n">KinectV2</span>
+<span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">set_logger</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">set_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1">#%%</span>
+<span class="n">device</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">x_correction</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">y_correction</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+<span class="c1">#%%</span>
+<div class="viewcode-block" id="set_correction"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco_windows.set_correction">[documentos]</a><span class="k">def</span> <span class="nf">set_correction</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">x_correction</span><span class="p">,</span> <span class="n">y_correction</span>
+    <span class="n">x_correction</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="n">y_correction</span> <span class="o">=</span> <span class="n">y</span></div>
+
+
+<div class="viewcode-block" id="set_device"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco_windows.set_device">[documentos]</a><span class="k">def</span> <span class="nf">set_device</span><span class="p">(</span><span class="n">kinect</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">device</span>
+    <span class="n">device</span> <span class="o">=</span> <span class="n">kinect</span><span class="o">.</span><span class="n">device</span></div>
+
+
+<div class="viewcode-block" id="start_mapping"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco_windows.start_mapping">[documentos]</a><span class="k">def</span> <span class="nf">start_mapping</span><span class="p">(</span><span class="n">kinect</span><span class="p">:</span> <span class="n">KinectV2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes the kinect sensor and create the map to convert color space to depth space</span>
+<span class="sd">    Args:</span>
+<span class="sd">        kinect: Sensor</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        pd.Dataframe</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">set_device</span><span class="p">(</span><span class="n">kinect</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">create_CoordinateMap</span><span class="p">(</span><span class="n">kinect</span><span class="o">.</span><span class="n">get_frame</span><span class="p">())</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;CoordinateMap created&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+<div class="viewcode-block" id="create_CoordinateMap"><a class="viewcode-back" href="../../../sandbox.markers.html#sandbox.markers.aruco_windows.create_CoordinateMap">[documentos]</a><span class="k">def</span> <span class="nf">create_CoordinateMap</span><span class="p">(</span><span class="n">depth</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Function to create a point to point map of the spatial/pixel equivalences between the depth space,</span>
+<span class="sd">    color space and camera space. This method requires the depth frame to assign a depth value to the color point.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        CoordinateMap: DataFrame with the x,y,z values of the depth frame; x,y equivalence between the depth space</span>
+<span class="sd">        to camera space and real world values of x,y and z in meters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">pykinect2</span> <span class="kn">import</span> <span class="n">PyKinectV2</span>
+    <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">depth</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">xy_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">xx</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">yy</span><span class="o">.</span><span class="n">ravel</span><span class="p">()])</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">depth_x</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">depth_y</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">depth_z</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">camera_x</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">camera_y</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">camera_z</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">color_x</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">color_y</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xy_points</span><span class="p">)),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Creating CoordinateMap&quot;</span><span class="p">):</span>
+        <span class="n">x_point</span> <span class="o">=</span> <span class="n">xy_points</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">y_point</span> <span class="o">=</span> <span class="n">xy_points</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">z_point</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">y_point</span><span class="p">][</span><span class="n">x_point</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">z_point</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>   <span class="c1"># values that do not have depth information cannot be projected to the color space</span>
+            <span class="n">point</span> <span class="o">=</span> <span class="n">PyKinectV2</span><span class="o">.</span><span class="n">_DepthSpacePoint</span><span class="p">(</span><span class="n">x_point</span><span class="p">,</span> <span class="n">y_point</span><span class="p">)</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">_mapper</span><span class="o">.</span><span class="n">MapDepthPointToColorSpace</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">z_point</span><span class="p">)</span>
+            <span class="n">cam</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">_mapper</span><span class="o">.</span><span class="n">MapDepthPointToCameraSpace</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">z_point</span><span class="p">)</span>
+            <span class="c1"># since the position of the camera and sensor are different, they will not have the same coverage. Specially in the extremes</span>
+            <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">y</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">depth_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_point</span><span class="p">)</span>
+                <span class="n">depth_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_point</span><span class="p">)</span>
+                <span class="n">depth_z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">z_point</span><span class="p">)</span>
+                <span class="n">camera_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cam</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">camera_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cam</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+                <span class="n">camera_z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cam</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+                <span class="c1"># TODO: constants addded since image is not exact when doing the transformation</span>
+                <span class="n">color_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">x_correction</span><span class="p">)</span>
+                <span class="n">color_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">y_correction</span><span class="p">)</span>
+
+    <span class="n">CoordinateMap</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;Depth_x&#39;</span><span class="p">:</span> <span class="n">depth_x</span><span class="p">,</span>
+                                  <span class="s1">&#39;Depth_y&#39;</span><span class="p">:</span> <span class="n">depth_y</span><span class="p">,</span>
+                                  <span class="s1">&#39;Depth_Z(mm)&#39;</span><span class="p">:</span> <span class="n">depth_z</span><span class="p">,</span>
+                                  <span class="s1">&#39;Color_x&#39;</span><span class="p">:</span> <span class="n">color_x</span><span class="p">,</span>
+                                  <span class="s1">&#39;Color_y&#39;</span><span class="p">:</span> <span class="n">color_y</span><span class="p">,</span>
+                                  <span class="s1">&#39;Camera_x(m)&#39;</span><span class="p">:</span> <span class="n">camera_x</span><span class="p">,</span>
+                                  <span class="s1">&#39;Camera_y(m)&#39;</span><span class="p">:</span> <span class="n">camera_y</span><span class="p">,</span>
+                                  <span class="s1">&#39;Camera_z(m)&#39;</span><span class="p">:</span> <span class="n">camera_z</span>
+                                  <span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">CoordinateMap</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Código do módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

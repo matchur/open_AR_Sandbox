@@ -1,36 +1,73 @@
 
+
 <!DOCTYPE html>
 
 <html lang="pt">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>sandbox.projector package &#8212; Documentação Open AR-Sandbox 1.0.0</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/translations.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/cloud.css?v=f9ae72be" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noticia+Text:400,i,b,bi|Open+Sans:400,i,b,bi|Roboto+Mono:400,i,b,bi&amp;display=swap" type="text/css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=e63ae33f"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/translations.js?v=3b002d5c"></script>
+
+    
+    
+     
+        <script src="_static/jquery.cookie.js"></script>
+    
+
+    
+     
+        <script src="_static/cloud.base.js"></script>
+    
+
+    
+     
+        <script src="_static/cloud.js"></script>
+    
+
     <link rel="index" title="Índice" href="genindex.html" />
     <link rel="search" title="Pesquisar" href="search.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
+    <link rel="next" title="sandbox.sensor package" href="sandbox.sensor.html" />
+    <link rel="prev" title="sandbox.modules.pytorch package" href="sandbox.modules.pytorch.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
   </head><body>
+    <div class="relbar-top">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navegação</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="Índice Geral"
+             accesskey="I">índice</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Índice de Módulos do Python"
+             >módulos</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="sandbox.sensor.html" title="sandbox.sensor package"
+             accesskey="N">próximo</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="sandbox.modules.pytorch.html" title="sandbox.modules.pytorch package"
+             accesskey="P">anterior</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">Documentação Open AR-Sandbox 1.0.0</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="sandbox.html" accesskey="U">sandbox package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">sandbox.projector package</a></li> 
+      </ul>
+    </div>
+    </div>
   
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <section id="sandbox-projector-package">
@@ -38,48 +75,513 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
 </section>
-<section id="sandbox-projector-cmap-module">
-<h2>sandbox.projector.cmap module<a class="headerlink" href="#sandbox-projector-cmap-module" title="Permalink to this heading">¶</a></h2>
+<section id="module-sandbox.projector.cmap">
+<span id="sandbox-projector-cmap-module"></span><h2>sandbox.projector.cmap module<a class="headerlink" href="#module-sandbox.projector.cmap" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.projector.cmap.CmapModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.projector.cmap.</span></span><span class="sig-name descname"><span class="pre">CmapModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gist_earth'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/cmap.html#CmapModule"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.cmap.CmapModule" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to manage changes in the colormap and plot in the desired projector figure</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.cmap.CmapModule.delete_image">
+<span class="sig-name descname"><span class="pre">delete_image</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/cmap.html#CmapModule.delete_image"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.cmap.CmapModule.delete_image" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Method to remove the image from the frame</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.cmap.CmapModule.render_frame">
+<span class="sig-name descname"><span class="pre">render_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/cmap.html#CmapModule.render_frame"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.cmap.CmapModule.render_frame" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Renders a new image or actualizes the current one</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.cmap.CmapModule.set_cmap">
+<span class="sig-name descname"><span class="pre">set_cmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cmap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">over</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">under</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/cmap.html#CmapModule.set_cmap"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.cmap.CmapModule.set_cmap" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Methods to mask the values outside the extent
+Args:</p>
+<blockquote>
+<div><p>cmap: (matplotlib colormap): colormap to use
+over (e.g. str): Color used for values above the expected data range.
+under (e.g. str): Color used for values below the expected data range.
+bad (e.g. str): Color used for invalid or masked data values.</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.cmap.CmapModule.set_data">
+<span class="sig-name descname"><span class="pre">set_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/cmap.html#CmapModule.set_data"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.cmap.CmapModule.set_data" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Change the numpy array that is being plotted without the need to errase the imshow figure
+Args:</p>
+<blockquote>
+<div><p>data:</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.cmap.CmapModule.set_extent">
+<span class="sig-name descname"><span class="pre">set_extent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/cmap.html#CmapModule.set_extent"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.cmap.CmapModule.set_extent" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.cmap.CmapModule.set_norm">
+<span class="sig-name descname"><span class="pre">set_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">norm</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/cmap.html#CmapModule.set_norm"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.cmap.CmapModule.set_norm" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.cmap.CmapModule.show_widgets">
+<span class="sig-name descname"><span class="pre">show_widgets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/cmap.html#CmapModule.show_widgets"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.cmap.CmapModule.show_widgets" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.cmap.CmapModule.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sb_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/cmap.html#CmapModule.update"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.cmap.CmapModule.update" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="sandbox-projector-contourlines-module">
-<h2>sandbox.projector.contourlines module<a class="headerlink" href="#sandbox-projector-contourlines-module" title="Permalink to this heading">¶</a></h2>
+<section id="module-sandbox.projector.contourlines">
+<span id="sandbox-projector-contourlines-module"></span><h2>sandbox.projector.contourlines module<a class="headerlink" href="#module-sandbox.projector.contourlines" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.projector.contourlines.ContourLinesModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.projector.contourlines.</span></span><span class="sig-name descname"><span class="pre">ContourLinesModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">contours</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contours_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contours_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contours_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'k'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contours_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contours_label_inline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contours_label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contours_label_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%3.0f'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minor_contours</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contours_step_minor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contours_width_minor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_change</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">automatic_levels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/contourlines.html#ContourLinesModule"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.contourlines.ContourLinesModule" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.contourlines.ContourLinesModule.add_label_contours">
+<span class="sig-name descname"><span class="pre">add_label_contours</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/contourlines.html#ContourLinesModule.add_label_contours"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.contourlines.ContourLinesModule.add_label_contours" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.contourlines.ContourLinesModule.add_major_contours">
+<span class="sig-name descname"><span class="pre">add_major_contours</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/contourlines.html#ContourLinesModule.add_major_contours"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.contourlines.ContourLinesModule.add_major_contours" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Renders contours to the current plot object.
+Uses the different attributes to style contour lines and contour labels.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.contourlines.ContourLinesModule.add_minor_contours">
+<span class="sig-name descname"><span class="pre">add_minor_contours</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/contourlines.html#ContourLinesModule.add_minor_contours"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.contourlines.ContourLinesModule.add_minor_contours" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="sandbox.projector.contourlines.ContourLinesModule.contours_levels">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">contours_levels</span></span><a class="headerlink" href="#sandbox.projector.contourlines.ContourLinesModule.contours_levels" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Returns the current contour levels, being aware of changes in calibration.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="sandbox.projector.contourlines.ContourLinesModule.contours_levels_minor">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">contours_levels_minor</span></span><a class="headerlink" href="#sandbox.projector.contourlines.ContourLinesModule.contours_levels_minor" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Returns the current contour levels, being aware of changes in calibration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.contourlines.ContourLinesModule.delete_contourns">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delete_contourns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/contourlines.html#ContourLinesModule.delete_contourns"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.contourlines.ContourLinesModule.delete_contourns" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sandbox.projector.contourlines.ContourLinesModule.dpi">
+<span class="sig-name descname"><span class="pre">dpi</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100</span></em><a class="headerlink" href="#sandbox.projector.contourlines.ContourLinesModule.dpi" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.contourlines.ContourLinesModule.plot_contour_lines">
+<span class="sig-name descname"><span class="pre">plot_contour_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/contourlines.html#ContourLinesModule.plot_contour_lines"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.contourlines.ContourLinesModule.plot_contour_lines" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.contourlines.ContourLinesModule.show_widgets">
+<span class="sig-name descname"><span class="pre">show_widgets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/contourlines.html#ContourLinesModule.show_widgets"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.contourlines.ContourLinesModule.show_widgets" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.contourlines.ContourLinesModule.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sb_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/contourlines.html#ContourLinesModule.update"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.contourlines.ContourLinesModule.update" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="sandbox-projector-projector-module">
-<h2>sandbox.projector.projector module<a class="headerlink" href="#sandbox-projector-projector-module" title="Permalink to this heading">¶</a></h2>
+<section id="module-sandbox.projector.projector">
+<span id="sandbox-projector-projector-module"></span><h2>sandbox.projector.projector module<a class="headerlink" href="#module-sandbox.projector.projector" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.projector.projector.</span></span><span class="sig-name descname"><span class="pre">Projector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calibprojector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_panel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1280</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">800</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_colorbar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position_colorbar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'vertical'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_legend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_hot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_profile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.calibrate_projector">
+<span class="sig-name descname"><span class="pre">calibrate_projector</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.calibrate_projector"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.calibrate_projector" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.clear_axes">
+<span class="sig-name descname"><span class="pre">clear_axes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.clear_axes"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.clear_axes" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Empty the axes of the current figure and trigger the update of the figure in the panel.
+Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.create_colorbar">
+<span class="sig-name descname"><span class="pre">create_colorbar</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.create_colorbar"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.create_colorbar" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.create_hot">
+<span class="sig-name descname"><span class="pre">create_hot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.create_hot"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.create_hot" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.create_legend">
+<span class="sig-name descname"><span class="pre">create_legend</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.create_legend"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.create_legend" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.create_panel">
+<span class="sig-name descname"><span class="pre">create_panel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.create_panel"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.create_panel" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Initializes the matplotlib figure and empty axes according to projector calibration.</p>
+<p>The figure can be accessed by its attribute. It will be “deactivated” to prevent random apperance in notebooks.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.create_profile">
+<span class="sig-name descname"><span class="pre">create_profile</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.create_profile"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.create_profile" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.css">
+<span class="sig-name descname"><span class="pre">css</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\n</span>&#160;&#160;&#160; <span class="pre">body</span> <span class="pre">{\n</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">margin:0px;\n</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">background-color:</span> <span class="pre">#FFFFFF;\n</span>&#160;&#160;&#160; <span class="pre">}\n</span>&#160;&#160;&#160; <span class="pre">.panel</span> <span class="pre">{\n</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">background-color:</span> <span class="pre">#000000;\n</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">overflow:</span> <span class="pre">hidden;\n</span>&#160;&#160;&#160; <span class="pre">}\n</span>&#160;&#160;&#160; <span class="pre">.bk.frame</span> <span class="pre">{\n</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">background-color:</span> <span class="pre">#FFFFFF;\n</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">color:</span> <span class="pre">#FFFFFF;\n</span>&#160;&#160;&#160; <span class="pre">}\n</span>&#160;&#160;&#160; <span class="pre">.bk.legend</span> <span class="pre">{\n</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">background-color:</span> <span class="pre">#16425B;\n</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">color:</span> <span class="pre">#CCCCCC;\n</span>&#160;&#160;&#160; <span class="pre">}\n</span>&#160;&#160;&#160; <span class="pre">.bk.hot</span> <span class="pre">{\n</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">background-color:</span> <span class="pre">#2896A5;\n</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">color:</span> <span class="pre">#CCCCCC;\n</span>&#160;&#160;&#160; <span class="pre">}\n</span>&#160;&#160;&#160; <span class="pre">.bk.profile</span> <span class="pre">{\n</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">background-color:</span> <span class="pre">#40C1C7;\n</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">color:</span> <span class="pre">#CCCCCC;\n</span>&#160;&#160;&#160; <span class="pre">}\n</span>&#160;&#160;&#160; <span class="pre">.bk.colorbar</span> <span class="pre">{\n</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">background-color:</span> <span class="pre">#2896A5;\n</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">color:</span> <span class="pre">#CCCCCC;\n</span>&#160;&#160;&#160; <span class="pre">'</span></em><a class="headerlink" href="#sandbox.projector.projector.Projector.css" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.dpi">
+<span class="sig-name descname"><span class="pre">dpi</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100</span></em><a class="headerlink" href="#sandbox.projector.projector.Projector.dpi" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.load_json">
+<span class="sig-name descname"><span class="pre">load_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.load_json"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.load_json" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Load a calibration file (.JSON format) and actualizes the panel parameters
+Args:</p>
+<blockquote>
+<div><p>file: address of the calibration to load</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.save_json">
+<span class="sig-name descname"><span class="pre">save_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'projector_calibration.json'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.save_json"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.save_json" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Saves the current state of the projector in a .JSON calibration file
+Args:</p>
+<blockquote>
+<div><p>file: address to save the calibration</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.set_colorbar">
+<span class="sig-name descname"><span class="pre">set_colorbar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'viridis'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.set_colorbar"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.set_colorbar" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Create a colorbar and display the figure in the colorbar widget
+Args:</p>
+<blockquote>
+<div><p>vmin: Minimun value of the colorbar
+vmax: Maximum value of the colorbar
+cmap: Colormap of the colorbar
+norm: (optionl) Normalization, in case that not, this is internally managed
+label: Text to display as label in the colorbar</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.set_colorbar_widget">
+<span class="sig-name descname"><span class="pre">set_colorbar_widget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.set_colorbar_widget"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.set_colorbar_widget" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.set_legend">
+<span class="sig-name descname"><span class="pre">set_legend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">handles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.set_legend"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.set_legend" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Create a legend with the information of frame with the ax.get_legend_handles_labels().
+External handles and labels can be used
+Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.show_widget_colorbar">
+<span class="sig-name descname"><span class="pre">show_widget_colorbar</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.show_widget_colorbar"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.show_widget_colorbar" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.show_widget_legend">
+<span class="sig-name descname"><span class="pre">show_widget_legend</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.show_widget_legend"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.show_widget_legend" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.show_widgets_sidepanels">
+<span class="sig-name descname"><span class="pre">show_widgets_sidepanels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.show_widgets_sidepanels"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.show_widgets_sidepanels" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.start_server">
+<span class="sig-name descname"><span class="pre">start_server</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.start_server"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.start_server" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Display the panel object in a new browser window
+Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.trigger">
+<span class="sig-name descname"><span class="pre">trigger</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.trigger"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.trigger" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Update the panel figure if modified 
+Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.projector.Projector.write_text">
+<span class="sig-name descname"><span class="pre">write_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'cgre-aachen</span> <span class="pre">/</span> <span class="pre">open_AR_Sandbox'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/projector.html#Projector.write_text"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.projector.Projector.write_text" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Display a custom text to be displayed in the middle of the sandbox
+Args:</p>
+<blockquote>
+<div><p>text: message to display</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="sandbox-projector-shading-module">
-<h2>sandbox.projector.shading module<a class="headerlink" href="#sandbox-projector-shading-module" title="Permalink to this heading">¶</a></h2>
+<section id="module-sandbox.projector.shading">
+<span id="sandbox-projector-shading-module"></span><h2>sandbox.projector.shading module<a class="headerlink" href="#module-sandbox.projector.shading" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="sandbox.projector.shading.LightSource">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sandbox.projector.shading.</span></span><span class="sig-name descname"><span class="pre">LightSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latitude</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50.779170300000004</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitude</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">6.068920799008829</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">datetime.datetime(2024,</span> <span class="pre">4,</span> <span class="pre">23,</span> <span class="pre">10,</span> <span class="pre">7,</span> <span class="pre">29,</span> <span class="pre">334873,</span> <span class="pre">tzinfo=datetime.timezone.utc)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/shading.html#LightSource"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.shading.LightSource" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Get the altitude and azimuth of the sun for an specific latitude, longitude and time.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.shading.LightSource.add_time">
+<span class="sig-name descname"><span class="pre">add_time</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/shading.html#LightSource.add_time"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.shading.LightSource.add_time" title="Link permanente para esta definição">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="sandbox.projector.shading.LightSource.altitude">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">altitude</span></span><a class="headerlink" href="#sandbox.projector.shading.LightSource.altitude" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Get the altitude of the sun position based on the latitude, longitude and date</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="sandbox.projector.shading.LightSource.azimuth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">azimuth</span></span><a class="headerlink" href="#sandbox.projector.shading.LightSource.azimuth" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Get the azimuth of the sun position based on the latitude, longitude and date</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.shading.LightSource.set_address">
+<span class="sig-name descname"><span class="pre">set_address</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'RWTH</span> <span class="pre">Aachen,</span> <span class="pre">Germany'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/shading.html#LightSource.set_address"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.shading.LightSource.set_address" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Provide an address, city, or country to search for the latitude and longitude
+Args:</p>
+<blockquote>
+<div><p>address: e.g. “Aachen”, “Germany”, “India”, “Colombia”, “RWTH Aachen University”</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.shading.LightSource.set_altitude">
+<span class="sig-name descname"><span class="pre">set_altitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">altitude</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/shading.html#LightSource.set_altitude"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.shading.LightSource.set_altitude" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Set the altitude manually. self.manual must be True
+Args:</p>
+<blockquote>
+<div><p>altitude:</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.shading.LightSource.set_azimuth">
+<span class="sig-name descname"><span class="pre">set_azimuth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">azimuth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/shading.html#LightSource.set_azimuth"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.shading.LightSource.set_azimuth" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Set the azimuth manually. self.manual must be True
+Args:</p>
+<blockquote>
+<div><p>azimuth:</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.shading.LightSource.set_datetime">
+<span class="sig-name descname"><span class="pre">set_datetime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">year</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2021</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">month</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">day</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">19</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hour</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">13</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tzinfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">datetime.timezone.utc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/shading.html#LightSource.set_datetime"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.shading.LightSource.set_datetime" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Set the datetime to acquire the sun position
+Args:</p>
+<blockquote>
+<div><p>year: int
+month: int [1-12]
+day: int [1-31]
+hour: int [0-23]
+minute: int [0-59]
+second: int [0-59]
+date: datetime.date
+time: datetime.time
+tzinfo: datetime.timezone</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.shading.LightSource.set_latitude_longitude">
+<span class="sig-name descname"><span class="pre">set_latitude_longitude</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/shading.html#LightSource.set_latitude_longitude"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.shading.LightSource.set_latitude_longitude" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Set the latitude and longitude based on the self.address
+Returns:</p>
+<blockquote>
+<div><p>set the self.latitude_deg and self.longitude_deg</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sandbox.projector.shading.LightSource.set_ve">
+<span class="sig-name descname"><span class="pre">set_ve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ve</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/sandbox/projector/shading.html#LightSource.set_ve"><span class="viewcode-link"><span class="pre">[código</span> <span class="pre">fonte]</span></span></a><a class="headerlink" href="#sandbox.projector.shading.LightSource.set_ve" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Set vertical exaggeration
+Args:</p>
+<blockquote>
+<div><p>ve: Vertical exaggeration</p>
+</div></blockquote>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="sandbox.projector.shading.LightSource.url">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">url</span></span><a class="headerlink" href="#sandbox.projector.shading.LightSource.url" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Search address in web page: <a class="reference external" href="https://nominatim.openstreetmap.org/ui/search.html">https://nominatim.openstreetmap.org/ui/search.html</a>
+Returns:</p>
+<blockquote>
+<div><p>url address</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="sandbox.projector.shading.LightSource.ve">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ve</span></span><a class="headerlink" href="#sandbox.projector.shading.LightSource.ve" title="Link permanente para esta definição">¶</a></dt>
+<dd><p>Vertical exaggeration
+Returns:</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this heading">¶</a></h2>
+<section id="module-sandbox.projector">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-sandbox.projector" title="Permalink to this heading">¶</a></h2>
 </section>
 </section>
 
 
+            <div class="clearer"></div>
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">Open AR-Sandbox</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navegação</h3>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  </ul></li>
+        <div class="sphinxsidebarwrapper"><div class="sphinx-toc sphinxlocaltoc">
+    <h3><a href="index.html">Page contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">sandbox.projector package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-sandbox.projector.cmap">sandbox.projector.cmap module</a><ul>
+<li><a class="reference internal" href="#sandbox.projector.cmap.CmapModule"><code class="docutils literal notranslate"><span class="pre">CmapModule</span></code></a><ul>
+<li><a class="reference internal" href="#sandbox.projector.cmap.CmapModule.delete_image"><code class="docutils literal notranslate"><span class="pre">CmapModule.delete_image()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.cmap.CmapModule.render_frame"><code class="docutils literal notranslate"><span class="pre">CmapModule.render_frame()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.cmap.CmapModule.set_cmap"><code class="docutils literal notranslate"><span class="pre">CmapModule.set_cmap()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.cmap.CmapModule.set_data"><code class="docutils literal notranslate"><span class="pre">CmapModule.set_data()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.cmap.CmapModule.set_extent"><code class="docutils literal notranslate"><span class="pre">CmapModule.set_extent()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.cmap.CmapModule.set_norm"><code class="docutils literal notranslate"><span class="pre">CmapModule.set_norm()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.cmap.CmapModule.show_widgets"><code class="docutils literal notranslate"><span class="pre">CmapModule.show_widgets()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.cmap.CmapModule.update"><code class="docutils literal notranslate"><span class="pre">CmapModule.update()</span></code></a></li>
 </ul>
-</div>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-sandbox.projector.contourlines">sandbox.projector.contourlines module</a><ul>
+<li><a class="reference internal" href="#sandbox.projector.contourlines.ContourLinesModule"><code class="docutils literal notranslate"><span class="pre">ContourLinesModule</span></code></a><ul>
+<li><a class="reference internal" href="#sandbox.projector.contourlines.ContourLinesModule.add_label_contours"><code class="docutils literal notranslate"><span class="pre">ContourLinesModule.add_label_contours()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.contourlines.ContourLinesModule.add_major_contours"><code class="docutils literal notranslate"><span class="pre">ContourLinesModule.add_major_contours()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.contourlines.ContourLinesModule.add_minor_contours"><code class="docutils literal notranslate"><span class="pre">ContourLinesModule.add_minor_contours()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.contourlines.ContourLinesModule.contours_levels"><code class="docutils literal notranslate"><span class="pre">ContourLinesModule.contours_levels</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.contourlines.ContourLinesModule.contours_levels_minor"><code class="docutils literal notranslate"><span class="pre">ContourLinesModule.contours_levels_minor</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.contourlines.ContourLinesModule.delete_contourns"><code class="docutils literal notranslate"><span class="pre">ContourLinesModule.delete_contourns()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.contourlines.ContourLinesModule.dpi"><code class="docutils literal notranslate"><span class="pre">ContourLinesModule.dpi</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.contourlines.ContourLinesModule.plot_contour_lines"><code class="docutils literal notranslate"><span class="pre">ContourLinesModule.plot_contour_lines()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.contourlines.ContourLinesModule.show_widgets"><code class="docutils literal notranslate"><span class="pre">ContourLinesModule.show_widgets()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.contourlines.ContourLinesModule.update"><code class="docutils literal notranslate"><span class="pre">ContourLinesModule.update()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-sandbox.projector.projector">sandbox.projector.projector module</a><ul>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector"><code class="docutils literal notranslate"><span class="pre">Projector</span></code></a><ul>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.calibrate_projector"><code class="docutils literal notranslate"><span class="pre">Projector.calibrate_projector()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.clear_axes"><code class="docutils literal notranslate"><span class="pre">Projector.clear_axes()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.create_colorbar"><code class="docutils literal notranslate"><span class="pre">Projector.create_colorbar()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.create_hot"><code class="docutils literal notranslate"><span class="pre">Projector.create_hot()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.create_legend"><code class="docutils literal notranslate"><span class="pre">Projector.create_legend()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.create_panel"><code class="docutils literal notranslate"><span class="pre">Projector.create_panel()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.create_profile"><code class="docutils literal notranslate"><span class="pre">Projector.create_profile()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.css"><code class="docutils literal notranslate"><span class="pre">Projector.css</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.dpi"><code class="docutils literal notranslate"><span class="pre">Projector.dpi</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.load_json"><code class="docutils literal notranslate"><span class="pre">Projector.load_json()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.save_json"><code class="docutils literal notranslate"><span class="pre">Projector.save_json()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.set_colorbar"><code class="docutils literal notranslate"><span class="pre">Projector.set_colorbar()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.set_colorbar_widget"><code class="docutils literal notranslate"><span class="pre">Projector.set_colorbar_widget()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.set_legend"><code class="docutils literal notranslate"><span class="pre">Projector.set_legend()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.show_widget_colorbar"><code class="docutils literal notranslate"><span class="pre">Projector.show_widget_colorbar()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.show_widget_legend"><code class="docutils literal notranslate"><span class="pre">Projector.show_widget_legend()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.show_widgets_sidepanels"><code class="docutils literal notranslate"><span class="pre">Projector.show_widgets_sidepanels()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.start_server"><code class="docutils literal notranslate"><span class="pre">Projector.start_server()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.trigger"><code class="docutils literal notranslate"><span class="pre">Projector.trigger()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.projector.Projector.write_text"><code class="docutils literal notranslate"><span class="pre">Projector.write_text()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-sandbox.projector.shading">sandbox.projector.shading module</a><ul>
+<li><a class="reference internal" href="#sandbox.projector.shading.LightSource"><code class="docutils literal notranslate"><span class="pre">LightSource</span></code></a><ul>
+<li><a class="reference internal" href="#sandbox.projector.shading.LightSource.add_time"><code class="docutils literal notranslate"><span class="pre">LightSource.add_time()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.shading.LightSource.altitude"><code class="docutils literal notranslate"><span class="pre">LightSource.altitude</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.shading.LightSource.azimuth"><code class="docutils literal notranslate"><span class="pre">LightSource.azimuth</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.shading.LightSource.set_address"><code class="docutils literal notranslate"><span class="pre">LightSource.set_address()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.shading.LightSource.set_altitude"><code class="docutils literal notranslate"><span class="pre">LightSource.set_altitude()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.shading.LightSource.set_azimuth"><code class="docutils literal notranslate"><span class="pre">LightSource.set_azimuth()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.shading.LightSource.set_datetime"><code class="docutils literal notranslate"><span class="pre">LightSource.set_datetime()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.shading.LightSource.set_latitude_longitude"><code class="docutils literal notranslate"><span class="pre">LightSource.set_latitude_longitude()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.shading.LightSource.set_ve"><code class="docutils literal notranslate"><span class="pre">LightSource.set_ve()</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.shading.LightSource.url"><code class="docutils literal notranslate"><span class="pre">LightSource.url</span></code></a></li>
+<li><a class="reference internal" href="#sandbox.projector.shading.LightSource.ve"><code class="docutils literal notranslate"><span class="pre">LightSource.ve</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-sandbox.projector">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div class="sphinxprev">
+    <h4>Previous page</h4>
+    <p class="topless"><a href="sandbox.modules.pytorch.html"
+                          title="Previous page">&larr; sandbox.modules.pytorch package</a></p>
+  </div>
+  <div class="sphinxnext">
+    <h4>Next page</h4>
+    <p class="topless"><a href="sandbox.sensor.html"
+                          title="Next page">&rarr; sandbox.sensor package</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>Esta Página</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/sandbox.projector.rst.txt"
+            rel="nofollow">Exibir Fonte</a></li>
+    </ul>
+   </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Pesquisa rápida</h3>
     <div class="searchformwrapper">
@@ -90,32 +592,56 @@
     </div>
 </div>
 <script>document.getElementById('searchbox').style.display = "block"</script>
-
-
-
-
-
-
-
-
         </div>
       </div>
+    
+    
+        <div class="sidebar-toggle-group no-js">
+            
+            <button class="sidebar-toggle" id="sidebar-hide" title="Hide the sidebar menu">
+                 «
+                <span class="show-for-small">hide menu</span>
+                
+            </button>
+            <button class="sidebar-toggle" id="sidebar-show" title="Show the sidebar menu">
+                
+                <span class="show-for-small">menu</span>
+                <span class="hide-for-small">sidebar</span>
+                 »
+            </button>
+        </div>
+    
       <div class="clearer"></div>
     </div>
-    <div class="footer">
-      &copy;2024, Matheus Vinicius da Costa.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
-      |
-      <a href="_sources/sandbox.projector.rst.txt"
-          rel="nofollow">Page source</a>
+    <div class="relbar-bottom">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navegação</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="Índice Geral"
+             >índice</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Índice de Módulos do Python"
+             >módulos</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="sandbox.sensor.html" title="sandbox.sensor package"
+             >próximo</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="sandbox.modules.pytorch.html" title="sandbox.modules.pytorch package"
+             >anterior</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">Documentação Open AR-Sandbox 1.0.0</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="sandbox.html" >sandbox package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">sandbox.projector package</a></li> 
+      </ul>
+    </div>
     </div>
 
-    
-
-    
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Matheus Vinicius da Costa.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
   </body>
 </html>

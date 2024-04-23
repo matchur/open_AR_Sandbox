@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sandbox.sensor.calibration_sensor &#8212; Documentação Open AR-Sandbox 1.0.0</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=e63ae33f"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/translations.js?v=3b002d5c"></script>
+    <link rel="index" title="Índice" href="../../../genindex.html" />
+    <link rel="search" title="Pesquisar" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fonte de sandbox.sensor.calibration_sensor</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">panel</span> <span class="k">as</span> <span class="nn">pn</span>
+<span class="n">pn</span><span class="o">.</span><span class="n">extension</span><span class="p">()</span>
+<span class="kn">from</span> <span class="nn">sandbox.sensor</span> <span class="kn">import</span> <span class="n">Sensor</span>
+<span class="kn">from</span> <span class="nn">sandbox.projector</span> <span class="kn">import</span> <span class="n">Projector</span>
+<span class="kn">from</span> <span class="nn">sandbox</span> <span class="kn">import</span> <span class="n">_calibration_dir</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+<span class="kn">from</span> <span class="nn">matplotlib.figure</span> <span class="kn">import</span> <span class="n">Figure</span>
+
+
+<div class="viewcode-block" id="CalibSensor"><a class="viewcode-back" href="../../../sandbox.sensor.html#sandbox.sensor.calibration_sensor.CalibSensor">[documentos]</a><span class="k">class</span> <span class="nc">CalibSensor</span><span class="p">:</span>  <span class="c1"># TODO: include automatic</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Module to calibrate the sensor&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">calibprojector</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;kinectv2&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># color map setup</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c_under</span> <span class="o">=</span> <span class="s1">&#39;#DBD053&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c_over</span> <span class="o">=</span> <span class="s1">&#39;#DB3A34&#39;</span>
+        <span class="c1"># margin patches setup</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c_margin</span> <span class="o">=</span> <span class="s1">&#39;#084C61&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">margin_alpha</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calibprojector</span> <span class="o">=</span> <span class="n">calibprojector</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span> <span class="o">=</span> <span class="n">Sensor</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">clip_values</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">gauss_filter</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projector</span> <span class="o">=</span> <span class="n">Projector</span><span class="p">(</span><span class="n">calibprojector</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">calibprojector</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="kn">import</span> <span class="nn">copy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmap</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">mpl</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s2">&quot;Greys_r&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmap</span><span class="o">.</span><span class="n">set_over</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c_over</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmap</span><span class="o">.</span><span class="n">set_under</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c_under</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmap</span><span class="o">.</span><span class="n">set_bad</span><span class="p">(</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_panel_frame</span><span class="p">()</span>
+
+        <span class="c1"># fig = plt.figure()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">figure</span> <span class="o">=</span> <span class="n">Figure</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_notebook_frame</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">add_axes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ax_notebook_frame</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">calib_notebook_frame</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">pane</span><span class="o">.</span><span class="n">Matplotlib</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="p">,</span> <span class="n">tight</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  <span class="c1"># close figure to prevent inline display</span>
+
+        <span class="n">pn</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">add_periodic_callback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">update_panel_frame</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="c1"># self.projector.panel.add_periodic_callback(self.update_panel_frame, 5)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_raw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">get_raw_frame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_notebook_frame</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_raw</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_min</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_max</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cmap</span><span class="p">,</span>
+                                      <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calib_notebook_frame</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">trigger</span><span class="p">(</span><span class="s1">&#39;object&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_widgets</span><span class="p">()</span>
+
+
+    <span class="k">def</span> <span class="nf">_refresh_panel_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">get_frame</span><span class="p">(),</span>
+                                                      <span class="n">vmin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_min</span><span class="p">,</span>
+                                                      <span class="n">vmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_max</span><span class="p">,</span>
+                                                      <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cmap</span><span class="p">,</span>
+                                                  <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span>
+                                                  <span class="n">aspect</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CalibSensor.update"><a class="viewcode-back" href="../../../sandbox.sensor.html#sandbox.sensor.calibration_sensor.CalibSensor.update">[documentos]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_panel_frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">ax</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_notebook_frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ax_panel_frame</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CalibSensor.update_panel_frame"><a class="viewcode-back" href="../../../sandbox.sensor.html#sandbox.sensor.calibration_sensor.CalibSensor.update_panel_frame">[documentos]</a>    <span class="k">def</span> <span class="nf">update_panel_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig_frame</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+        <span class="c1"># self.projector.ax.set_xlim(0, self.sensor.s_frame_width)</span>
+        <span class="c1"># self.projector.ax.set_ylim(0, self.sensor.s_frame_height)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig_frame</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_min</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_max</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">trigger</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="CalibSensor.update_notebook_frame"><a class="viewcode-back" href="../../../sandbox.sensor.html#sandbox.sensor.calibration_sensor.CalibSensor.update_notebook_frame">[documentos]</a>    <span class="k">def</span> <span class="nf">update_notebook_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Adds margin patches to the current plot object.</span>
+<span class="sd">        This is only useful when an uncropped dataframe is passed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_notebook_frame</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_notebook_frame</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_raw</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_min</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_max</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cmap</span><span class="p">,</span>
+                                      <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+
+        <span class="n">rec_t</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_height</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_top</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_top</span><span class="p">,</span>
+                              <span class="n">fc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">c_margin</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">margin_alpha</span><span class="p">)</span>
+        <span class="n">rec_r</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_width</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_right</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_right</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_height</span><span class="p">,</span>
+                              <span class="n">fc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">c_margin</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">margin_alpha</span><span class="p">)</span>
+        <span class="n">rec_b</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_bottom</span><span class="p">,</span>
+                              <span class="n">fc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">c_margin</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">margin_alpha</span><span class="p">)</span>
+        <span class="n">rec_l</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_left</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_height</span><span class="p">,</span>
+                              <span class="n">fc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">c_margin</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">margin_alpha</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_notebook_frame</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">rec_t</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_notebook_frame</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">rec_r</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_notebook_frame</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">rec_b</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_notebook_frame</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">rec_l</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calib_notebook_frame</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">trigger</span><span class="p">(</span><span class="s1">&#39;object&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CalibSensor.calibrate_sensor"><a class="viewcode-back" href="../../../sandbox.sensor.html#sandbox.sensor.calibration_sensor.CalibSensor.calibrate_sensor">[documentos]</a>    <span class="k">def</span> <span class="nf">calibrate_sensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">widgets</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">WidgetBox</span><span class="p">(</span><span class="s1">&#39;&lt;b&gt;Load a projector calibration file&lt;/b&gt;&#39;</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_widget_json_filename_load_projector</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_widget_json_load_projector</span><span class="p">,</span>
+                               <span class="s1">&#39;&lt;b&gt;Distance from edges (pixel)&lt;/b&gt;&#39;</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_top</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_right</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_bottom</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_left</span><span class="p">,</span>
+                               <span class="c1"># self._widget_s_enable_auto_cropping,</span>
+                               <span class="c1"># self._widget_s_automatic_cropping,</span>
+                               <span class="n">pn</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">VSpacer</span><span class="p">(</span><span class="n">height</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+                               <span class="s1">&#39;&lt;b&gt;Distance from sensor (mm)&lt;/b&gt;&#39;</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_min</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_max</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_widget_refresh_frame</span><span class="p">)</span>
+        <span class="n">box</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s1">&#39;&lt;b&gt;Physical dimensions of the sandbox&lt;/b&gt;&#39;</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_box_width</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_box_height</span><span class="p">,</span>
+                        <span class="p">)</span>
+        <span class="n">save</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s1">&#39;&lt;b&gt;Save file&lt;/b&gt;&#39;</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">_widget_json_filename</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">_widget_json_save</span>
+                         <span class="p">)</span>
+
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Row</span><span class="p">(</span><span class="n">widgets</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib_notebook_frame</span><span class="p">)</span>
+        <span class="n">panel</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s1">&#39;## Sensor calibration&#39;</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+        <span class="n">tabs</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">Tabs</span><span class="p">((</span><span class="s1">&#39;Calibration&#39;</span><span class="p">,</span> <span class="n">panel</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s2">&quot;Box dimensions&quot;</span><span class="p">,</span> <span class="n">box</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s2">&quot;Save files&quot;</span><span class="p">,</span> <span class="n">save</span><span class="p">)</span>
+                       <span class="p">)</span>
+        <span class="k">return</span> <span class="n">tabs</span></div>
+
+    <span class="k">def</span> <span class="nf">_create_widgets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># sensor widgets and links</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_top</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Sensor top margin&#39;</span><span class="p">,</span>
+                                                  <span class="n">bar_color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">c_margin</span><span class="p">,</span>
+                                                  <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_top</span><span class="p">,</span>
+                                                  <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                                  <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_top</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_s_top</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_right</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Sensor right margin&#39;</span><span class="p">,</span>
+                                                    <span class="n">bar_color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">c_margin</span><span class="p">,</span>
+                                                    <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_right</span><span class="p">,</span>
+                                                    <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                                    <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_width</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_right</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_s_right</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_bottom</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Sensor bottom margin&#39;</span><span class="p">,</span>
+                                                     <span class="n">bar_color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">c_margin</span><span class="p">,</span>
+                                                     <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_bottom</span><span class="p">,</span>
+                                                     <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                                     <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_bottom</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_s_bottom</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_left</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Sensor left margin&#39;</span><span class="p">,</span>
+                                                   <span class="n">bar_color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">c_margin</span><span class="p">,</span>
+                                                   <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_left</span><span class="p">,</span>
+                                                   <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                                   <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_width</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_left</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_s_left</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_min</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Vertical minimum&#39;</span><span class="p">,</span>
+                                                  <span class="n">bar_color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">c_under</span><span class="p">,</span>
+                                                  <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_min</span><span class="p">,</span>
+                                                  <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                                  <span class="n">end</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_min</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_s_min</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_max</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Vertical maximum&#39;</span><span class="p">,</span>
+                                                  <span class="n">bar_color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">c_over</span><span class="p">,</span>
+                                                  <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_max</span><span class="p">,</span>
+                                                  <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                                  <span class="n">end</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_s_max</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_s_max</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Auto cropping widgets:</span>
+
+        <span class="c1"># self._widget_s_enable_auto_cropping = pn.widgets.Checkbox(name=&#39;Enable Automatic Cropping&#39;, value=False)</span>
+        <span class="c1"># self._widget_s_enable_auto_cropping.param.watch(self._callback_enable_auto_cropping, &#39;value&#39;,</span>
+        <span class="c1">#                                                onlychanged=False)</span>
+
+        <span class="c1"># self._widget_s_automatic_cropping = pn.widgets.Button(name=&quot;Crop&quot;, button_type=&quot;success&quot;)</span>
+        <span class="c1"># self._widget_s_automatic_cropping.param.watch(self._callback_automatic_cropping, &#39;clicks&#39;,</span>
+        <span class="c1">#                                              onlychanged=False)</span>
+
+        <span class="c1"># box widgets:</span>
+
+        <span class="c1"># self._widget_s_enable_auto_calibration = CheckboxGroup(labels=[&quot;Enable Automatic Sensor Calibration&quot;],</span>
+        <span class="c1">#                                                                  active=[1])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_box_width</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;width of sandbox in mm&#39;</span><span class="p">,</span>
+                                                      <span class="n">bar_color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">c_margin</span><span class="p">,</span>
+                                                      <span class="n">value</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">box_width</span><span class="p">),</span>
+                                                      <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                                      <span class="n">end</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_box_width</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_box_width</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># self._widget_s_automatic_calibration = pn.widgets.Toggle(name=&quot;Run&quot;, button_type=&quot;success&quot;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_box_height</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;height of sandbox in mm&#39;</span><span class="p">,</span>
+                                                       <span class="n">bar_color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">c_margin</span><span class="p">,</span>
+                                                       <span class="n">value</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">box_height</span><span class="p">),</span>
+                                                       <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                                       <span class="n">end</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_box_height</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_box_height</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># refresh button</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_refresh_frame</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Refresh sensor frame</span><span class="se">\n</span><span class="s1">(3 sec. delay)!&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_refresh_frame</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_refresh_frame</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># save selection</span>
+
+        <span class="c1"># Only for reading files --&gt; Is there no location picker in panel widgets???</span>
+        <span class="c1"># self._widget_json_location = pn.widgets.FileInput(name=&#39;JSON location&#39;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_json_filename</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Choose a calibration filename:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_json_filename</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_json_filename</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_json_filename</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">_calibration_dir</span> <span class="o">+</span> <span class="s1">&#39;my_sensor_calibration.json&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_json_save</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Save calibration&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_json_save</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_json_save</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_json_filename_load_projector</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">TextInput</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Choose the projector calibration filename:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_json_filename_load_projector</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_json_filename_load_projector</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_json_filename_load_projector</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">_calibration_dir</span> <span class="o">+</span> <span class="s1">&#39;my_projector_calibration.json&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_json_load_projector</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Load calibration&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widget_json_load_projector</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">watch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback_json_load_projector</span><span class="p">,</span> <span class="s1">&#39;clicks&#39;</span><span class="p">,</span> <span class="n">onlychanged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="c1"># sensor callbacks</span>
+    <span class="k">def</span> <span class="nf">_callback_s_top</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_top</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+        <span class="c1"># change plot and trigger panel update</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_notebook_frame</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_s_right</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_right</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+        <span class="c1"># self._refresh_panel_frame() #TODO: dirty workaround</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_notebook_frame</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_s_bottom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_bottom</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_notebook_frame</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_s_left</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_left</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+        <span class="c1"># self._refresh_panel_frame()  # TODO: dirty workaround</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_notebook_frame</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_s_min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_min</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+        <span class="c1"># self._refresh_panel_frame()  # TODO: dirty workaround</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_notebook_frame</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_s_max</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">s_max</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+        <span class="c1"># self._refresh_panel_frame()  # TODO: dirty workaround</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_notebook_frame</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_refresh_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="c1"># only here, get a new frame before updating the plot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame_raw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">get_raw_frame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_notebook_frame</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_callback_json_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">json_filename</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_json_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">json_filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">json_filename</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_json_filename_load_projector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calibprojector</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">new</span>
+
+    <span class="k">def</span> <span class="nf">_callback_json_load_projector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibprojector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">projector</span> <span class="o">=</span> <span class="n">Projector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calibprojector</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_box_width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">box_width</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">new</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_box_height</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="o">.</span><span class="n">box_height</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">new</span><span class="p">)</span>
+
+    <span class="c1"># TODO: Make sense to enable this automatic calibration?</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;def _callback_enable_auto_calibration(self, event):</span>
+<span class="sd">        self.automatic_calibration = event.new</span>
+<span class="sd">        if self.automatic_calibration == True:</span>
+<span class="sd">            self.plot.render_frame(self.Aruco.p_arucoMarker(), vmin=0, vmax=256)</span>
+<span class="sd">            self.projector.frame.object = self.plot.figure</span>
+<span class="sd">        else:</span>
+<span class="sd">            self.plot.create_empty_frame()</span>
+<span class="sd">            self.projector.frame.object = self.plot.figure</span>
+
+<span class="sd">    def _callback_automatic_calibration(self, event):</span>
+<span class="sd">        if self.automatic_calibration == True:</span>
+<span class="sd">            p_frame_left, p_frame_top, p_frame_width, p_frame_height = self.Aruco.move_image()</span>
+<span class="sd">            self.calib.p_frame_left = p_frame_left</span>
+<span class="sd">            self.calib.p_frame_top = p_frame_top</span>
+<span class="sd">            self._widget_p_frame_left.value = self.calib.p_frame_left</span>
+<span class="sd">            self._widget_p_frame_top.value = self.calib.p_frame_top</span>
+<span class="sd">            self.calib.p_frame_width = p_frame_width</span>
+<span class="sd">            self.calib.p_frame_height = p_frame_height</span>
+<span class="sd">            self._widget_p_frame_width.value = self.calib.p_frame_width</span>
+<span class="sd">            self._widget_p_frame_height.value = self.calib.p_frame_height</span>
+<span class="sd">            self.plot.render_frame(self.Aruco.p_arucoMarker(), vmin=0, vmax=256)</span>
+<span class="sd">            self.projector.frame.object = self.plot.figure</span>
+<span class="sd">            self.update_calib_plot()</span>
+
+
+<span class="sd">    def _callback_enable_auto_cropping(self, event):</span>
+<span class="sd">        self.automatic_cropping = event.new</span>
+
+
+<span class="sd">    def _callback_automatic_cropping(self, event):</span>
+<span class="sd">        if self.automatic_cropping == True:</span>
+<span class="sd">            self.pause()</span>
+<span class="sd">            s_top, s_left, s_bottom, s_right = self.Aruco.crop_image_aruco()</span>
+<span class="sd">            self.calib.s_top = s_top</span>
+<span class="sd">            self.calib.s_bottom = s_bottom</span>
+<span class="sd">            self.calib.s_left = s_left</span>
+<span class="sd">            self.calib.s_right = s_right</span>
+<span class="sd">            self._widget_s_top.value = self.calib.s_top</span>
+<span class="sd">            self._widget_s_bottom.value = self.calib.s_bottom</span>
+<span class="sd">            self._widget_s_left.value = self.calib.s_left</span>
+<span class="sd">            self._widget_s_right.value = self.calib.s_right</span>
+<span class="sd">            self.update_calib_plot()</span>
+<span class="sd">            self.resume()&quot;&quot;&quot;</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Open AR-Sandbox</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegação</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Código do módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Pesquisa rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Ir" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, Matheus Vinicius da Costa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

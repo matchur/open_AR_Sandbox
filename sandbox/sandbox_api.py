@@ -79,7 +79,7 @@ def start_server(calibprojector: str = None,  # _calibration_dir + "my_projector
 
 class Sandbox:
     """
-    Wrapping API-class
+    Teste Portugues
     """
 
     def __init__(self,
